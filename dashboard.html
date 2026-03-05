@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haven Plus — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjvd2oEOZvYfoVddUXFOZeJHPAQc01_bE&libraries=places&callback=initPlaces" async defer></script>
+<style>
+:root {
+  --navy: #1B2A4A;
+  --navy-light: #2a3f6a;
+  --orange: #ff6b35;
+  --orange-light: #f7931e;
+  --bg: #f5f6fa;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --text-light: #666;
+  --border: #e8eaed;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --green-bg: #e8f5e9;
+  --green-txt: #1e5c3a;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+
+/* ── Loading ─────────────────────────────────────────── */
+.loading-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .3s; }
+.loading-screen.hide { opacity: 0; pointer-events: none; }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,.2); border-top-color: var(--orange); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Nav ─────────────────────────────────────────────── */
+.dash-nav { background: linear-gradient(135deg, var(--navy), var(--navy-light)); height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+.dash-nav-inner { max-width: 1000px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
+.dash-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.dash-logo svg { width: 32px; height: 32px; }
+.dash-brand { font-size: 18px; font-weight: 900; color: white; letter-spacing: 1px; line-height: 1; }
+.dash-brand span { font-weight: 300; opacity: .6; }
+.dash-brand-sub { font-size: 8px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.dash-nav-right { display: flex; align-items: center; gap: 16px; }
+.dash-user-name { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 500; }
+@media (max-width: 480px) { .dash-user-name { display: none; } }
+.dash-btn-logout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+.dash-btn-logout:hover { background: rgba(255,255,255,.2); color: white; }
+
+/* ── Main ────────────────────────────────────────────── */
+.dash-main { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+@media (max-width: 600px) { .dash-main { padding: 20px 16px; } }
+
+/* ── Welcome ─────────────────────────────────────────── */
+.welcome-section { margin-bottom: 32px; }
+.welcome-title { font-size: 28px; font-weight: 900; color: var(--navy); margin-bottom: 6px; }
+.welcome-sub { color: var(--text-light); font-size: 15px; }
+@media (max-width: 600px) { .welcome-title { font-size: 22px; } }
+
+/* ── Progress ────────────────────────────────────────── */
+.progress-section { background: var(--card); border-radius: 16px; padding: 24px 28px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.04); border: 1px solid var(--border); }
+.progress-label { font-size: 13px; font-weight: 600; color: var(--text-light); margin-bottom: 12px; }
+.progress-steps { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.progress-step { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-light); }
+.progress-step.active { color: var(--navy); }
+.progress-step.done { color: var(--success); }
+.progress-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-light); flex-shrink: 0; }
+.progress-step.active .progress-dot { border-color: var(--orange); background: var(--orange); color: white; }
+.progress-step.done .progress-dot { border-color: var(--success); background: var(--success); color: white; }
+.progress-line { flex: 1; height: 2px; background: var(--border); min-width: 20px; }
+.progress-line.done { background: var(--success); }
+
+/* ── Action Cards ────────────────────────────────────── */
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+@media (max-width: 600px) { .action-grid { grid-template-columns: 1fr; } }
+.action-card { background: var(--card); border-radius: 16px; padding: 28px; border: 2px solid var(--border); cursor: pointer; transition: all .2s; color: inherit; display: block; }
+.action-card:hover:not(.disabled) { border-color: var(--orange); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+.action-card.disabled { opacity: .5; pointer-events: none; }
+.action-card.completed { border-color: var(--success); background: #f8fdf9; }
+.action-icon { font-size: 32px; margin-bottom: 14px; }
+.action-title { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.action-desc { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+.action-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-top: 12px; }
+.badge-todo   { background: #fff3e0; color: var(--orange); }
+.badge-done   { background: var(--green-bg); color: var(--success); }
+.badge-locked { background: #f5f5f5; color: #999; }
+
+/* ── Active Subscription State ───────────────────────── */
+#stateOnboard, #stateActive, #stateSHOnly { display: none; }
+#stateOnboard.show, #stateActive.show, #stateSHOnly.show { display: block; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+@media (max-width: 700px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 420px) { .stat-grid { grid-template-columns: 1fr; } }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.stat-card.hl { border-color: var(--navy); background: #f0f3fa; }
+.stat-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 900; color: var(--navy); line-height: 1; margin-bottom: 3px; }
+.stat-sub { font-size: 12px; color: var(--text-light); }
+.stat-badge { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; background: var(--green-bg); color: var(--green-txt); }
+
+.action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+.btn-action { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 14px; font-weight: 700; padding: 11px 22px; border-radius: 12px; cursor: pointer; transition: all .2s; border: none; text-decoration: none; }
+.btn-primary { background: var(--orange); color: white; }
+.btn-primary:hover { background: #e85a24; box-shadow: 0 4px 14px rgba(255,107,53,.3); transform: translateY(-1px); }
+.btn-secondary { background: white; color: var(--navy); border: 2px solid var(--border); }
+.btn-secondary:hover { border-color: var(--navy); }
+
+/* Plan detail card */
+.info-section { background: var(--card); border-radius: 16px; padding: 24px 28px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.info-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 14px; }
+.pd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 600px) { .pd-grid { grid-template-columns: 1fr 1fr; } }
+.pd-item-label { font-size: 11px; color: var(--text-light); font-weight: 600; margin-bottom: 2px; }
+.pd-item-val { font-size: 14px; font-weight: 700; color: var(--navy); }
+.plan-active-pill { background: var(--green-bg); color: var(--green-txt); font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-left: 10px; vertical-align: middle; }
+
+/* SH balance */
+.sh-bal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.sh-bal-item { background: #f8f9fa; border-radius: 10px; padding: 12px 14px; border: 1px solid var(--border); }
+.sh-bal-item-label { font-size: 11px; color: var(--text-light); font-weight: 600; margin-bottom: 3px; }
+.sh-bal-item-val { font-size: 20px; font-weight: 900; color: var(--navy); }
+.sh-bal-item-val .u { font-size: 12px; font-weight: 500; color: var(--text-light); margin-left: 3px; }
+
+/* SH-only nudge */
+.nudge { background: linear-gradient(135deg, var(--navy), var(--navy-light)); border-radius: 16px; padding: 28px; margin-bottom: 20px; color: white; box-shadow: 0 4px 16px rgba(27,42,74,.2); }
+.nudge-title { font-size: 18px; font-weight: 900; margin-bottom: 6px; }
+.nudge-sub { font-size: 13px; color: rgba(255,255,255,.65); margin-bottom: 18px; line-height: 1.6; }
+.btn-nudge { display: inline-flex; align-items: center; gap: 7px; background: var(--orange); color: white; font-family: inherit; font-size: 14px; font-weight: 900; padding: 11px 22px; border-radius: 12px; border: none; cursor: pointer; text-decoration: none; transition: all .2s; }
+.btn-nudge:hover { background: #e85a24; transform: translateY(-1px); }
+
+/* ── Property List ───────────────────────────────────── */
+.prop-card { background: #f8f9fa; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.prop-card-left { flex: 1; min-width: 0; }
+.prop-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.prop-card-addr { font-size: 14px; font-weight: 700; color: var(--navy); }
+.prop-card-type { font-size: 11px; color: var(--text-light); background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; }
+.prop-card-detail { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.prop-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.btn-edit-prop { background: white; border: 1.5px solid var(--border); color: var(--navy); font-family: inherit; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.btn-edit-prop:hover { border-color: var(--orange); color: var(--orange); }
+.btn-edit-prop.locked { background: #f5f6fa; color: #aaa; cursor: default; border-style: dashed; pointer-events: none; }
+.btn-delete-prop { background: white; border: 1.5px solid #fca5a5; color: #b91c1c; font-family: inherit; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.btn-delete-prop:hover { background: #fef2f2; border-color: #b91c1c; }
+
+.btn-add-property { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: white; border: 2px dashed var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 10px; }
+.btn-add-property:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ── Modals (shared) ─────────────────────────────────── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 60px; overflow-y: auto; }
+.modal-overlay.active { display: flex; }
+.modal-box { background: white; width: 90%; max-width: 560px; border-radius: 20px; overflow: hidden; margin-bottom: 40px; }
+.modal-box.narrow { max-width: 440px; }
+.modal-header { padding: 22px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 18px; font-weight: 800; color: var(--navy); }
+.modal-close { background: none; border: none; font-size: 22px; color: #999; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: #333; }
+.modal-body { padding: 24px 28px; }
+
+/* Form styles */
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text); transition: border-color .2s; outline: none; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--orange); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+.form-row-half { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .form-row, .form-row-half { grid-template-columns: 1fr; } }
+.form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+.suburb-auto { font-size: 11px; margin-top: 4px; min-height: 16px; }
+
+.spinner-wrap { display: flex; align-items: center; border: 2px solid var(--border); border-radius: 10px; overflow: hidden; }
+.spinner-btn { width: 38px; height: 42px; background: #f5f6fa; border: none; font-size: 18px; cursor: pointer; color: var(--navy); font-weight: 700; transition: background .15s; }
+.spinner-btn:hover { background: #e8eaed; }
+.spinner-value { flex: 1; text-align: center; border: none; outline: none; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--navy); background: white; }
+
+.form-error, .form-success { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: none; }
+.form-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.form-success { background: #f0fdf4; color: var(--green-txt); border: 1px solid #bbf7d0; }
+
+.btn-submit { width: 100%; padding: 14px; background: var(--orange); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 4px; }
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,107,53,.35); }
+.btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+/* ── Property Selection / Confirm Modals ─────────────── */
+.prop-select-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.prop-select-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: border-color .2s, background .2s; }
+.prop-select-item:hover { border-color: var(--orange); background: #fff8f5; }
+.prop-select-item.selected { border-color: var(--orange); background: #fff8f5; }
+.prop-select-item input[type="radio"] { margin-top: 3px; accent-color: var(--orange); flex-shrink: 0; width: 16px; height: 16px; }
+.prop-select-addr { font-size: 14px; font-weight: 700; color: var(--navy); }
+.prop-select-sub  { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+.confirm-addr-box { background: #f8f9fa; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
+.confirm-addr-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
+.confirm-addr-val { font-size: 16px; font-weight: 700; color: var(--navy); }
+.confirm-desc { font-size: 13px; color: var(--text-light); margin-bottom: 18px; line-height: 1.6; }
+
+/* ── Toast ───────────────────────────────────────────── */
+.toast { position: fixed; bottom: 1.6rem; right: 1.6rem; z-index: 950; background: var(--navy); color: white; font-size: 13px; font-weight: 500; padding: 11px 18px; border-radius: 11px; max-width: 300px; transform: translateY(60px); opacity: 0; transition: all .28s cubic-bezier(.22,1,.36,1); pointer-events: none; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.err { background: #b91c1c; }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div></div>
+
+<!-- Nav -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="index.html" class="dash-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"/>
+        <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="rgba(255,255,255,0.95)"/>
+        <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"/>
+        <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"/>
+      </svg>
+      <div>
+        <div class="dash-brand">HAVEN<span>PLUS</span></div>
+        <div class="dash-brand-sub">PROPERTY CARE</div>
+      </div>
+    </a>
+    <div class="dash-nav-right">
+      <span class="dash-user-name" id="dashUserName"></span>
+      <button class="dash-btn-logout" onclick="handleLogout()">Log out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="dash-main" id="dashContent" style="display:none">
+
+  <div class="welcome-section">
+    <div class="welcome-title" id="welcomeTitle">Welcome!</div>
+    <div class="welcome-sub" id="welcomeSub">Managing your property with Haven Plus.</div>
+  </div>
+
+  <!-- ── STATE A: ONBOARDING ───────────────────────── -->
+  <div id="stateOnboard">
+    <div class="progress-section">
+      <div class="progress-label">ONBOARDING PROGRESS</div>
+      <div class="progress-steps">
+        <div class="progress-step done"><div class="progress-dot">✓</div><span>Sign Up</span></div>
+        <div class="progress-line done"></div>
+        <div class="progress-step" id="pStep2"><div class="progress-dot" id="pDot2">2</div><span>Property</span></div>
+        <div class="progress-line" id="pLine2"></div>
+        <div class="progress-step" id="pStep3"><div class="progress-dot" id="pDot3">3</div><span>Plan</span></div>
+        <div class="progress-line" id="pLine3"></div>
+        <div class="progress-step" id="pStep4"><div class="progress-dot">4</div><span>Payment</span></div>
+      </div>
+    </div>
+
+    <div class="action-grid">
+      <div class="action-card" id="cardProperty" onclick="openAddPropertyModal()">
+        <div class="action-icon">🏠</div>
+        <div class="action-title">Register Property</div>
+        <div class="action-desc">Add your property address, type, and access details</div>
+        <div class="action-badge badge-todo" id="badgeProperty">TO DO</div>
+      </div>
+      <div class="action-card disabled" id="cardPlan" onclick="handleChoosePlan()">
+        <div class="action-icon">📋</div>
+        <div class="action-title">Select a Plan</div>
+        <div class="action-desc">Select a subscription or purchase Service Hours</div>
+        <div class="action-badge badge-locked" id="badgePlan">Register property first</div>
+      </div>
+    </div>
+
+    <!-- Property list (shown after first registration) -->
+    <div class="info-section" id="propInfoSection" style="display:none">
+      <div class="info-title">🏠 My Properties</div>
+      <div id="propertyList"></div>
+      <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
+    </div>
+  </div>
+
+  <!-- ── STATE B: ACTIVE SUBSCRIPTION ─────────────── -->
+  <div id="stateActive">
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card hl">
+        <div class="stat-label">Current Plan</div>
+        <div class="stat-value" id="statPlanName">—</div>
+        <div class="stat-sub" id="statPlanPrice"></div>
+        <div class="stat-badge">Active</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Next Renewal</div>
+        <div class="stat-value" id="statRenewal">—</div>
+        <div class="stat-sub">Auto-renews monthly</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Cleaning Hrs Left</div>
+        <div class="stat-value" id="statCleanRem">0</div>
+        <div class="stat-sub" id="statCleanBreakdown">of annual allocation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Service Hrs Left</div>
+        <div class="stat-value" id="statSHTotal">0</div>
+        <div class="stat-sub" id="statSHBreakdown">voucher + purchased</div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <a href="plans.html" class="btn-action btn-primary">+ Add Service Hours</a>
+      <button class="btn-action btn-secondary" onclick="showToast('Coming soon — we\'ll notify you when upgrades are available.')">Upgrade Plan</button>
+    </div>
+
+    <div class="info-section">
+      <div class="info-title">
+        📋 Plan Details
+        <span class="plan-active-pill" id="pdActivePill">Active</span>
+      </div>
+      <div class="pd-grid">
+        <div><div class="pd-item-label">Plan</div><div class="pd-item-val" id="pdName">—</div></div>
+        <div><div class="pd-item-label">Cleaning visits / yr</div><div class="pd-item-val" id="pdVisits">—</div></div>
+        <div><div class="pd-item-label">Cleaning hrs / yr</div><div class="pd-item-val" id="pdHours">—</div></div>
+        <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
+        <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
+        <div><div class="pd-item-label">SH vouchers / yr</div><div class="pd-item-val" id="pdVouchers">—</div></div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-title">⏱ Hour Balance</div>
+      <div class="sh-bal-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="sh-bal-item">
+          <div class="sh-bal-item-label">🧹 Cleaning hrs remaining</div>
+          <div class="sh-bal-item-val"><span id="shBalCleanRem">0</span><span class="u">hrs</span></div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px"><span id="shBalCleanUsed">0</span> used of <span id="shBalCleanTotal">0</span> total</div>
+        </div>
+        <div class="sh-bal-item">
+          <div class="sh-bal-item-label">🔧 SH vouchers remaining</div>
+          <div class="sh-bal-item-val"><span id="shBalVouchRem">0</span><span class="u">hrs</span></div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px"><span id="shBalVouchUsed">0</span> used this year</div>
+        </div>
+        <div class="sh-bal-item">
+          <div class="sh-bal-item-label">💳 SH purchased bundles</div>
+          <div class="sh-bal-item-val"><span id="shBalPurchased">0</span><span class="u">hrs</span></div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">No expiry</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-light);background:#f8f9fa;border-radius:8px;padding:10px 14px">
+        💡 <strong>Conversion:</strong> 1 Service Hour = 1.5 Cleaning Hours — contact us to convert.
+      </div>
+    </div>
+
+    <div class="info-section" id="propInfoActive" style="display:none">
+      <div class="info-title">🏠 My Properties</div>
+      <div id="propertyListActive"></div>
+      <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
+    </div>
+  </div>
+
+  <!-- ── STATE C: SH ONLY ──────────────────────────── -->
+  <div id="stateSHOnly">
+    <div class="info-section">
+      <div class="info-title">⏱ Service Hours Balance</div>
+      <div style="font-size:28px;font-weight:900;color:var(--navy);margin-bottom:12px"><span id="shOnlyTotal">0</span> hrs</div>
+      <div class="sh-bal-grid">
+        <div class="sh-bal-item">
+          <div class="sh-bal-item-label">Purchased bundles</div>
+          <div class="sh-bal-item-val"><span id="shOnlyPurchased">0</span><span class="u">hrs</span></div>
+        </div>
+        <div class="sh-bal-item">
+          <div class="sh-bal-item-label">Call-out fee</div>
+          <div class="sh-bal-item-val" style="font-size:16px;font-weight:700;color:var(--success)">$0 Always</div>
+        </div>
+      </div>
+    </div>
+    <div class="nudge">
+      <div class="nudge-title">Add regular cleaning to your plan</div>
+      <div class="nudge-sub">Subscribe to get quarterly or monthly professional cleans, repair checkups, and smoke alarm servicing — plus annual Service Hour vouchers included.</div>
+      <a href="plans.html" class="btn-nudge">View Subscription Plans →</a>
+    </div>
+    <div class="info-section" id="propInfoSH" style="display:none">
+      <div class="info-title">🏠 My Properties</div>
+      <div id="propertyListSH"></div>
+      <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
+    </div>
+  </div>
+
+</div><!-- /dash-main -->
+
+<!-- ══ ADD Property Modal ══════════════════════════════ -->
+<div class="modal-overlay" id="propertyModal" onclick="if(event.target===this)closePropertyModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="propModalTitle">Register Your Property</div>
+      <button class="modal-close" onclick="closePropertyModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-error" id="propError"></div>
+      <div class="form-success" id="propSuccess"></div>
+      <input type="hidden" id="propEditId">
+      <div class="form-group">
+        <label class="form-label">Address *</label>
+        <input type="text" class="form-input" id="propAddress" placeholder="Start typing your address..." autocomplete="off">
+        <div class="form-hint">Select from suggestions to auto-fill suburb &amp; postcode</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Suburb *</label>
+          <input type="text" class="form-input" id="propSuburb" placeholder="Auto-filled">
+          <div class="suburb-auto" id="suburbAuto"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Postcode *</label>
+          <input type="text" class="form-input" id="propPostcode" placeholder="Auto-filled" maxlength="4"
+            oninput="this.value=this.value.replace(/\D/g,'');manualPostcodeLookup()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Property Type *</label>
+        <select class="form-select" id="propType">
+          <option value="">Select type</option>
+          <option value="house">House</option>
+          <option value="apartment">Apartment / Unit</option>
+          <option value="townhouse">Townhouse</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-row-half">
+        <div class="form-group">
+          <label class="form-label">Bedrooms</label>
+          <div class="spinner-wrap">
+            <button type="button" class="spinner-btn" onclick="spinValue('propBedrooms',-1)">−</button>
+            <input type="text" class="spinner-value" id="propBedrooms" value="0" readonly>
+            <button type="button" class="spinner-btn" onclick="spinValue('propBedrooms',1)">+</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bathrooms</label>
+          <div class="spinner-wrap">
+            <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',-1)">−</button>
+            <input type="text" class="spinner-value" id="propBathrooms" value="0" readonly>
+            <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Access Instructions</label>
+        <textarea class="form-textarea" id="propAccess"
+          placeholder="e.g. Key under pot near front door, gate code 1234, lockbox on fence..."></textarea>
+        <div class="form-hint">How should our team access the property? This information is securely stored.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Key Holder (if applicable)</label>
+        <input type="text" class="form-input" id="propKeyHolder"
+          placeholder="e.g. Neighbour at unit 3, real estate agent name">
+      </div>
+      <button class="btn-submit" id="btnSaveProperty" onclick="saveProperty()">Save Property</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Property SELECTION Modal (multiple props) ═══════ -->
+<div class="modal-overlay" id="propSelectModal" onclick="if(event.target===this)closePropSelectModal()">
+  <div class="modal-box narrow">
+    <div class="modal-header">
+      <div class="modal-title">Select a Property</div>
+      <button class="modal-close" onclick="closePropSelectModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-desc">Which property would you like to associate with your plan?</p>
+      <div class="prop-select-list" id="propSelectList"></div>
+      <button class="btn-submit" onclick="confirmPropSelection()">Continue to Plans →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Property CONFIRM Modal (single prop) ════════════ -->
+<div class="modal-overlay" id="propConfirmModal" onclick="if(event.target===this)closePropConfirmModal()">
+  <div class="modal-box narrow">
+    <div class="modal-header">
+      <div class="modal-title">Confirm Property</div>
+      <button class="modal-close" onclick="closePropConfirmModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-desc">Your plan will be linked to this property:</p>
+      <div class="confirm-addr-box">
+        <div class="confirm-addr-label">Property</div>
+        <div class="confirm-addr-val" id="confirmAddrVal"></div>
+      </div>
+      <button class="btn-submit" onclick="closePropConfirmModal(); window.location.href='plans.html'">Continue to Plans →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
+
+const PLAN_META = {
+  essential:{ name:'Essential Care', price:'$55/mo', visits:'4× per year',  hours:'8 hrs',  vouchers:'2 / year' },
+  smart:    { name:'Smart Care',     price:'$75/mo', visits:'6× per year',  hours:'12 hrs', vouchers:'3 / year' },
+  premium:  { name:'Premium Care',   price:'$150/mo',visits:'12× per year', hours:'24 hrs', vouchers:'6 / year' },
+};
+
+let sb = null, currentUser = null, allProperties = [], selectedPropId = null;
+let isAdmin = false, hasActiveSub = false;
+
+/* ── Init ─────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'index.html'; return; }
+  currentUser = session.user;
+
+  const meta = currentUser.user_metadata || {};
+  const name = meta.full_name || meta.name || (currentUser.email ? currentUser.email.split('@')[0] : 'Account');
+  document.getElementById('dashUserName').textContent = name;
+  document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
+
+  // Fetch role BEFORE loadDashboard so isAdmin is set when renderPropertyList runs
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+  isAdmin = profile?.role === 'admin';
+
+  await loadDashboard();
+
+  document.getElementById('loadingScreen').classList.add('hide');
+  document.getElementById('dashContent').style.display = 'block';
+});
+
+/* ── Load & route state ──────────────────────────────── */
+async function loadDashboard() {
+  ['stateOnboard','stateActive','stateSHOnly'].forEach(id =>
+    document.getElementById(id).classList.remove('show'));
+
+  const [subRes, shBalRes, propRes] = await Promise.all([
+    sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').maybeSingle(),
+    sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle(),
+    sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at'),
+  ]);
+
+  const sub         = subRes.data;
+  const shBal       = shBalRes.data;
+  allProperties     = propRes.data || [];
+  hasActiveSub      = !!sub;
+
+  // plan key: use 'plan' if set, fall back to 'plan_type'
+  const planKey = sub ? (sub.plan || sub.plan_type || '') : '';
+
+  // Cleaning hours (from subscription)
+  const cleanTotal     = sub ? (sub.cleaning_hours_total || 0) : 0;
+  const cleanUsed      = sub ? (sub.cleaning_hours_used  || 0) : 0;
+  const cleanRemaining = cleanTotal - cleanUsed;
+
+  // SH vouchers (from subscription)
+  const shVoucherTotal = sub ? (sub.sh_hours_total || sub.voucher_sh_total || 0) : 0;
+  const shVoucherUsed  = sub ? (sub.sh_hours_used  || 0) : 0;
+  const shVoucherRem   = shVoucherTotal - shVoucherUsed;
+
+  // SH purchased bundles (from sh_balance table)
+  const shPurchasedRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
+
+  if (sub) {
+    showStateActive(sub, planKey, cleanTotal, cleanUsed, cleanRemaining, shVoucherTotal, shVoucherUsed, shVoucherRem, shPurchasedRem);
+  } else if (shPurchasedRem > 0) {
+    showStateSHOnly(shPurchasedRem);
+  } else {
+    showStateOnboard();
+  }
+}
+
+/* ── State A ─────────────────────────────────────────── */
+function showStateOnboard() {
+  document.getElementById('welcomeSub').textContent = 'Complete the steps below to get started with Haven Plus.';
+  document.getElementById('stateOnboard').classList.add('show');
+  if (allProperties.length > 0) {
+    // Mark property done, unlock plan
+    const card = document.getElementById('cardProperty');
+    card.classList.add('completed');
+    document.getElementById('badgeProperty').textContent = `${allProperties.length} registered`;
+    document.getElementById('badgeProperty').className = 'action-badge badge-done';
+    const planCard = document.getElementById('cardPlan');
+    planCard.classList.remove('disabled');
+    document.getElementById('badgePlan').textContent = 'TO DO';
+    document.getElementById('badgePlan').className = 'action-badge badge-todo';
+    // Progress steps
+    markStepDone('pStep2','pDot2','pLine2');
+    document.getElementById('pStep3').classList.add('active');
+    // Show property list
+    renderPropertyList('propertyList');
+    document.getElementById('propInfoSection').style.display = 'block';
+  } else {
+    document.getElementById('pStep2').classList.add('active');
+  }
+}
+
+/* ── State B ─────────────────────────────────────────── */
+function showStateActive(sub, planKey, cleanTotal, cleanUsed, cleanRem, shVoucherTotal, shVoucherUsed, shVoucherRem, shPurchasedRem) {
+  document.getElementById('welcomeSub').textContent = 'Your property is in good hands.';
+  document.getElementById('stateActive').classList.add('show');
+  const m = PLAN_META[planKey] || {};
+  const renewal = sub.end_date
+    ? new Date(sub.end_date).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})
+    : sub.current_period_end
+    ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})
+    : '—';
+
+  // Stat cards
+  setText('statPlanName', m.name || sub.plan);
+  setText('statPlanPrice', m.price || '');
+  setText('statRenewal', renewal);
+  setText('statCleanRem', cleanRem);
+  setText('statCleanBreakdown', `${cleanUsed} used · ${cleanTotal} total`);
+  setText('statSHTotal', shVoucherRem + shPurchasedRem);
+  setText('statSHBreakdown', `${shVoucherRem} voucher + ${shPurchasedRem} purchased`);
+
+  // Plan detail
+  setText('pdName', m.name || sub.plan);
+  setText('pdVisits', m.visits || '—');
+  setText('pdHours', m.hours || '—');
+  setText('pdVouchers', m.vouchers || '—');
+
+  // Hour balance detail
+  setText('shBalCleanRem',   cleanRem);
+  setText('shBalCleanUsed',  cleanUsed);
+  setText('shBalCleanTotal', cleanTotal);
+  setText('shBalVouchRem',   shVoucherRem);
+  setText('shBalVouchUsed',  shVoucherUsed);
+  setText('shBalPurchased',  shPurchasedRem);
+
+  if (allProperties.length > 0) {
+    renderPropertyList('propertyListActive');
+    document.getElementById('propInfoActive').style.display = 'block';
+  }
+}
+
+/* ── State C ─────────────────────────────────────────── */
+function showStateSHOnly(shPurchasedRem) {
+  document.getElementById('welcomeSub').textContent = 'You have Service Hours available.';
+  document.getElementById('stateSHOnly').classList.add('show');
+  setText('shOnlyTotal', shPurchasedRem);
+  setText('shOnlyPurchased', shPurchasedRem);
+  if (allProperties.length > 0) {
+    renderPropertyList('propertyListSH');
+    document.getElementById('propInfoSH').style.display = 'block';
+  }
+}
+
+/* ── Render property list ────────────────────────────── */
+function renderPropertyList(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  // Edit allowed: admin always | user only before subscription
+  const canEdit = isAdmin || !hasActiveSub;
+  container.innerHTML = allProperties.map(p => {
+    const notes = [];
+    if (p.notes) notes.push(p.notes);
+    if (p.access_instructions) notes.push(`Access: ${p.access_instructions}`);
+    const editBtn = canEdit
+      ? `<button class="btn-edit-prop" onclick="openEditPropertyModal('${p.id}')">Edit</button>`
+      : `<span class="btn-edit-prop locked" title="Contact support to update property details">Locked${isAdmin ? '' : ' 🔒'}</span>`;
+    const deleteBtn = isAdmin
+      ? `<button class="btn-delete-prop" onclick="deleteProperty('${p.id}', '${p.address}')">Delete</button>`
+      : '';
+    return `
+      <div class="prop-card">
+        <div class="prop-card-left">
+          <div class="prop-card-header">
+            <span class="prop-card-addr">${p.address}, ${p.suburb} ${p.postcode}</span>
+            <span class="prop-card-type">${p.property_type || ''}</span>
+          </div>
+          ${notes.map(n => `<div class="prop-card-detail">${n}</div>`).join('')}
+        </div>
+        <div class="prop-card-actions">${editBtn}${deleteBtn}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ── Delete Property (admin only) ────────────────────── */
+async function deleteProperty(propId, address) {
+  if (!isAdmin) return;
+  if (!confirm(`Delete "${address}"?\n\nThis cannot be undone.`)) return;
+  const { error } = await sb.from('properties').delete().eq('id', propId);
+  if (error) { showToast('Failed to delete property.', true); return; }
+  showToast('Property deleted.');
+  await loadDashboard();
+}
+function markStepDone(stepId, dotId, lineId) {
+  const step = document.getElementById(stepId);
+  step.classList.remove('active'); step.classList.add('done');
+  document.getElementById(dotId).textContent = '✓';
+  if (lineId) document.getElementById(lineId).classList.add('done');
+}
+
+/* ── Choose Plan flow ────────────────────────────────── */
+function handleChoosePlan() {
+  if (document.getElementById('cardPlan').classList.contains('disabled')) return;
+  if (allProperties.length === 0) return;
+  if (allProperties.length === 1) {
+    // Single property → confirm modal
+    document.getElementById('confirmAddrVal').textContent =
+      `${allProperties[0].address}, ${allProperties[0].suburb} ${allProperties[0].postcode}`;
+    document.getElementById('propConfirmModal').classList.add('active');
+  } else {
+    // Multiple → selection modal
+    const list = document.getElementById('propSelectList');
+    list.innerHTML = allProperties.map((p, i) => `
+      <label class="prop-select-item" onclick="selectPropItem(this, '${p.id}')">
+        <input type="radio" name="propSel" value="${p.id}" ${i===0?'checked':''}>
+        <div>
+          <div class="prop-select-addr">${p.address}, ${p.suburb} ${p.postcode}</div>
+          <div class="prop-select-sub">${p.property_type || ''}</div>
+        </div>
+      </label>
+    `).join('');
+    selectedPropId = allProperties[0].id;
+    document.getElementById('propSelectList').querySelector('.prop-select-item').classList.add('selected');
+    document.getElementById('propSelectModal').classList.add('active');
+  }
+}
+
+function selectPropItem(el, id) {
+  document.querySelectorAll('.prop-select-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPropId = id;
+  el.querySelector('input[type="radio"]').checked = true;
+}
+
+function confirmPropSelection() {
+  if (!selectedPropId) return;
+  sessionStorage.setItem('hp_selected_property', selectedPropId);
+  closePropSelectModal();
+  window.location.href = 'plans.html';
+}
+
+function closePropSelectModal()  { document.getElementById('propSelectModal').classList.remove('active'); }
+function closePropConfirmModal() { document.getElementById('propConfirmModal').classList.remove('active'); }
+
+/* ── Add Property Modal ──────────────────────────────── */
+function openAddPropertyModal() {
+  resetPropertyForm();
+  document.getElementById('propEditId').value = '';
+  document.getElementById('propModalTitle').textContent = 'Register Your Property';
+  document.getElementById('btnSaveProperty').textContent = 'Save Property';
+  document.getElementById('propertyModal').classList.add('active');
+  if (!placesAC && window.google) initPlaces();
+}
+
+/* ── Edit Property Modal ─────────────────────────────── */
+function openEditPropertyModal(propId) {
+  const p = allProperties.find(x => x.id === propId);
+  if (!p) return;
+  resetPropertyForm();
+  document.getElementById('propEditId').value = propId;
+  document.getElementById('propModalTitle').textContent = 'Edit Property';
+  document.getElementById('btnSaveProperty').textContent = 'Update Property';
+  document.getElementById('propAddress').value  = p.address || '';
+  document.getElementById('propSuburb').value   = p.suburb  || '';
+  document.getElementById('propPostcode').value = p.postcode|| '';
+  document.getElementById('propType').value     = p.property_type || '';
+  document.getElementById('propAccess').value   = p.access_instructions || '';
+  document.getElementById('propKeyHolder').value= p.key_holder || '';
+  // Extract bedrooms/bathrooms from notes
+  if (p.notes) {
+    const bedMatch  = p.notes.match(/Bedrooms:\s*(\d+)/);
+    const bathMatch = p.notes.match(/Bathrooms:\s*(\d+)/);
+    if (bedMatch)  document.getElementById('propBedrooms').value  = bedMatch[1];
+    if (bathMatch) document.getElementById('propBathrooms').value = bathMatch[1];
+  }
+  document.getElementById('propertyModal').classList.add('active');
+  if (!placesAC && window.google) initPlaces();
+}
+
+function resetPropertyForm() {
+  ['propAddress','propSuburb','propPostcode','propAccess','propKeyHolder']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('propType').value = '';
+  document.getElementById('propBedrooms').value = '0';
+  document.getElementById('propBathrooms').value = '0';
+  document.getElementById('suburbAuto').textContent = '';
+  document.getElementById('propError').style.display = 'none';
+  document.getElementById('propSuccess').style.display = 'none';
+}
+
+function closePropertyModal() { document.getElementById('propertyModal').classList.remove('active'); }
+
+/* ── Save / Update Property ──────────────────────────── */
+async function saveProperty() {
+  const editId  = document.getElementById('propEditId').value;
+  const address = document.getElementById('propAddress').value.trim();
+  const suburb  = document.getElementById('propSuburb').value.trim();
+  const pc      = document.getElementById('propPostcode').value.trim();
+  const type    = document.getElementById('propType').value;
+  const beds    = parseInt(document.getElementById('propBedrooms').value) || 0;
+  const baths   = parseInt(document.getElementById('propBathrooms').value) || 0;
+  const access  = document.getElementById('propAccess').value.trim();
+  const key     = document.getElementById('propKeyHolder').value.trim();
+
+  if (!address || !suburb || !pc || !type)
+    return showPropMsg('Please fill in all required fields (*).', 'error');
+  if (!/^\d{4}$/.test(pc))
+    return showPropMsg('Please enter a valid 4-digit postcode.', 'error');
+
+  const btn = document.getElementById('btnSaveProperty');
+  btn.disabled = true;
+  btn.textContent = editId ? 'Updating…' : 'Saving…';
+
+  try {
+    const notes = [beds > 0 ? `Bedrooms: ${beds}` : '', baths > 0 ? `Bathrooms: ${baths}` : '']
+      .filter(Boolean).join(', ');
+    const payload = {
+      address, suburb, postcode: pc, property_type: type,
+      access_instructions: access || null,
+      key_holder: key || null,
+      notes: notes || null,
+    };
+    let error;
+    if (editId) {
+      ({ error } = await sb.from('properties').update(payload).eq('id', editId).eq('user_id', currentUser.id));
+    } else {
+      payload.user_id = currentUser.id;
+      ({ error } = await sb.from('properties').insert(payload));
+    }
+    if (error) throw error;
+    showPropMsg(editId ? 'Property updated!' : 'Property registered successfully!', 'success');
+    setTimeout(async () => { closePropertyModal(); await loadDashboard(); }, 900);
+  } catch (err) {
+    showPropMsg(err.message || 'Failed to save. Please try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editId ? 'Update Property' : 'Save Property';
+  }
+}
+
+function showPropMsg(msg, type) {
+  const err = document.getElementById('propError');
+  const ok  = document.getElementById('propSuccess');
+  if (type === 'error') { err.textContent = msg; err.style.display = 'block'; ok.style.display = 'none'; }
+  else                  { ok.textContent  = msg; ok.style.display  = 'block'; err.style.display = 'none'; }
+}
+
+/* ── Google Places ───────────────────────────────────── */
+let placesAC = null;
+function initPlaces() {
+  const input = document.getElementById('propAddress');
+  if (!input || !window.google) return;
+  placesAC = new google.maps.places.Autocomplete(input, {
+    componentRestrictions: { country: 'au' }, types: ['address'],
+    fields: ['address_components', 'formatted_address'],
+  });
+  placesAC.addListener('place_changed', () => {
+    const place = placesAC.getPlace();
+    if (!place.address_components) return;
+    let num='',street='',suburb='',postcode='',state='';
+    place.address_components.forEach(c => {
+      if (c.types.includes('street_number'))           num     = c.long_name;
+      if (c.types.includes('route'))                   street  = c.long_name;
+      if (c.types.includes('locality'))                suburb  = c.long_name;
+      if (c.types.includes('postal_code'))             postcode= c.long_name;
+      if (c.types.includes('administrative_area_level_1')) state = c.short_name;
+    });
+    document.getElementById('propAddress').value  = [num, street].filter(Boolean).join(' ');
+    document.getElementById('propSuburb').value   = suburb;
+    document.getElementById('propPostcode').value = postcode;
+    const lbl = document.getElementById('suburbAuto');
+    if (state && state !== 'WA') { lbl.textContent = '⚠ This address is not in Western Australia'; lbl.style.color = '#f39c12'; }
+    else if (suburb && postcode) { lbl.textContent = '✓ Auto-filled from Google'; lbl.style.color = '#27ae60'; }
+  });
+}
+
+const PERTH = {'6000':'Perth CBD','6003':'Northbridge','6004':'East Perth','6005':'West Perth','6006':'North Perth','6007':'Leederville','6008':'Subiaco','6009':'Crawley','6010':'Claremont','6011':'Cottesloe','6012':'Mosman Park','6014':'Wembley','6015':'City Beach','6016':'Mount Hawthorn','6017':'Osborne Park','6018':'Karrinyup','6019':'Scarborough','6020':'Watermans Bay','6021':'Balcatta','6022':'Hamersley','6023':'Duncraig','6024':'Hillarys','6025':'Craigie','6026':'Kingsley','6027':'Joondalup','6028':'Connolly','6029':'Kallaroo','6030':'Clarkson','6031':'Merriwa','6032':'Yanchep','6033':'Two Rocks','6050':'Mount Lawley','6051':'Maylands','6052':'Bedford','6053':'Bayswater','6054':'Bassendean','6055':'Guildford','6056':'Midland','6057':'Middle Swan','6059':'Dianella','6060':'Yokine','6061':'Mirrabooka','6062':'Morley','6063':'Beechboro','6064':'Alexander Heights','6065':'Wanneroo','6066':'Ballajura','6068':'Ellenbrook','6069':'The Vines','6070':'Darlington','6071':'Mundaring','6076':'Kalamunda','6078':'Forrestfield','6090':'Malaga','6100':'Victoria Park','6101':'Carlisle','6102':'Rivervale','6103':'Belmont','6104':'Redcliffe','6105':'Cloverdale','6106':'Welshpool','6107':'Cannington','6108':'Thornlie','6109':'Maddington','6110':'Gosnells','6112':'Armadale','6147':'Langford','6148':'Shelley','6149':'Bull Creek','6150':'Rossmoyne','6151':'Wilson','6152':'Como','6153':'Applecross','6154':'Myaree','6155':'Willetton','6156':'Melville','6157':'Palmyra','6158':'East Fremantle','6159':'North Fremantle','6160':'Fremantle','6161':'South Fremantle','6162':'Hamilton Hill','6163':'Spearwood','6164':'Cockburn Central','6165':'Yangebup','6166':'Kwinana','6167':'Wandi','6168':'Rockingham','6169':'Shoalwater','6170':'Baldivis','6171':'Wellard','6173':'Warnbro','6174':'Port Kennedy','6175':'Secret Harbour','6176':'Singleton','6180':'Mandurah','6181':'Meadow Springs','6182':'Halls Head'};
+
+function manualPostcodeLookup() {
+  const pc  = document.getElementById('propPostcode').value.trim();
+  const sub = document.getElementById('propSuburb');
+  const lbl = document.getElementById('suburbAuto');
+  if (sub.value.trim()) return;
+  if (pc.length === 4 && PERTH[pc]) { sub.value = PERTH[pc]; lbl.textContent = '✓ Auto-filled'; lbl.style.color = '#27ae60'; }
+  else if (pc.length === 4 && !/^6\d{3}$/.test(pc)) { lbl.textContent = '⚠ WA postcodes start with 6'; lbl.style.color = '#f39c12'; }
+  else lbl.textContent = '';
+}
+
+function spinValue(id, delta) {
+  const el = document.getElementById(id);
+  el.value = Math.max(0, (parseInt(el.value) || 0) + delta);
+}
+
+/* ── Auth ─────────────────────────────────────────────── */
+async function handleLogout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
+
+/* ── Helpers ──────────────────────────────────────────── */
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+function showToast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closePropertyModal();
+    closePropSelectModal();
+    closePropConfirmModal();
+  }
+});
+</script>
+</body>
+</html>

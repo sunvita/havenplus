@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haven Plus — Choose Your Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & palette ─────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
+
+:root {
+  --navy:      #1B2A4A;
+  --orange:    #FF6B35;
+  --orange-d:  #E85A24;
+  --cream-h:   #ffffff;
+  --sage:      #FAFAF8;
+  --cream:     #FAFAF8;
+  --bg:        #FAFAF8;
+  --white:     #FFFFFF;
+  --border:    #EFEFEF;
+  --txt:       #1B2A4A;
+  --txt-s:     #6B7280;
+  --green-bg:  #D4EAD4;
+  --green-txt: #1E5C3A;
+}
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--txt);
+  max-width: 1080px;
+  margin: 0 auto;
+  line-height: 1.6;
+  overflow-x: hidden;
+  padding-bottom: 90px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════ */
+.header {
+  background: var(--cream-h);
+  padding: 84px 80px 96px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+@media (max-width: 1080px) { .header { padding: 66px 40px 78px; } }
+@media (max-width: 768px)  { .header { padding: 48px 20px 60px; } }
+
+.back-btn {
+  position: absolute; top: 18px; left: 40px;
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--txt-s); text-decoration: none;
+  font-size: 13px; font-weight: 500; transition: color .2s;
+}
+.back-btn:hover { color: var(--navy); }
+.back-btn svg { width: 14px; height: 14px; }
+@media (max-width: 768px) { .back-btn { left: 16px; top: 14px; } }
+
+/* CI logo */
+.ci {
+  display: inline-flex; align-items: center; gap: 16px;
+  margin-bottom: 22px;
+}
+.ci svg { width: 88px; height: 88px; flex-shrink: 0; }
+.ci-text { text-align: left; }
+.ci-brand {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 900; color: var(--navy);
+  letter-spacing: 2px; line-height: 1; margin-bottom: 5px;
+}
+.ci-brand span { font-weight: 300; opacity: .45; }
+.ci-sub {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 4px; color: var(--orange);
+  text-transform: uppercase;
+}
+
+.h-title {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: clamp(40px, 5.2vw, 58px);
+  font-weight: 800; color: var(--navy); margin-bottom: 0;
+  letter-spacing: -1.5px; line-height: 1.05;
+}
+.h-title .h-plan { color: var(--orange); }
+.h-sub {
+  font-size: clamp(15px, 1.8vw, 18px);
+  color: var(--orange); font-weight: 600;
+  font-style: italic; letter-spacing: 0.1px;
+  margin-top: 18px;
+}
+.h-punchline {
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: 400; color: rgba(27,42,74,0.5);
+  letter-spacing: 0; line-height: 1.5;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+.h-punchline em { color: var(--orange); font-style: italic; font-weight: 500; }
+.h-punchline em:not(:first-child) { color: rgba(27,42,74,0.5); font-size: 0.9em; vertical-align: middle; margin: 0; }
+
+/* ═══════════════════════════════════════════════════════
+   SUCCESS BANNER
+═══════════════════════════════════════════════════════ */
+.success-banner {
+  display: none;
+  background: var(--sage); border-bottom: 1px solid var(--border);
+}
+.success-banner.show {
+  display: block; padding: 16px 80px;
+}
+@media (max-width: 768px) { .success-banner.show { padding: 14px 20px; } }
+.success-inner {
+  background: var(--white); border: 2px solid #86EFAC;
+  border-radius: 12px; padding: 14px 20px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.success-inner svg { width: 20px; height: 20px; color: #16A34A; flex-shrink: 0; margin-top: 2px; }
+.success-inner strong { display: block; font-size: 14px; font-weight: 900; color: var(--navy); }
+.success-inner p { font-size: 13px; color: var(--txt-s); }
+
+/* ═══════════════════════════════════════════════════════
+   STEP 1 — TWO CHOICE CARDS
+═══════════════════════════════════════════════════════ */
+.choice-section {
+  background: var(--sage);
+  padding: 72px 80px 76px;
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 1080px) { .choice-section { padding: 56px 40px 60px; } }
+@media (max-width: 768px)  { .choice-section { padding: 44px 20px 48px; } }
+
+.choice-intro {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: clamp(18px, 2.2vw, 24px); font-weight: 800;
+  text-transform: none; letter-spacing: 0;
+  color: var(--navy);
+  margin-bottom: 24px;
+}
+
+.choice-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+@media (max-width: 640px) { .choice-grid { grid-template-columns: 1fr; } }
+
+.choice-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 30px;
+  cursor: pointer;
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+  position: relative;
+  display: flex; flex-direction: column;
+  user-select: none;
+  box-shadow: 0 2px 12px rgba(27,42,74,.04);
+}
+.choice-card:hover {
+  border-color: var(--orange);
+  box-shadow: 0 8px 32px rgba(255,107,53,.1);
+  transform: translateY(-2px);
+}
+.choice-card.chosen {
+  border-color: var(--orange);
+  background: #FFF8F5;
+  box-shadow: 0 8px 32px rgba(255,107,53,.12);
+}
+.choice-num {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 52px; font-weight: 900; color: rgba(27,42,74,.07);
+  line-height: 1; margin-bottom: 10px;
+}
+.choice-num-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 10px;
+}
+.choice-num-row .choice-num { margin-bottom: 0; }
+.choice-icon {
+  font-size: 24px; opacity: .75;
+  background: rgba(27,42,74,.05); border-radius: 12px;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.choice-title { font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(17px, 2vw, 20px); font-weight: 800; color: var(--navy); margin-bottom: 10px; }
+.choice-desc  { font-size: 13px; color: var(--txt-s); line-height: 1.65; flex: 1; }
+.choice-cta   {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex; align-items: center; gap: 5px;
+  font-size: 16px; font-weight: 700; color: var(--orange);
+}
+.choice-cta svg { width: 16px; height: 16px; }
+
+/* Active-subscription indicator on subscription choice card */
+.choice-active-pill {
+  display: none;
+  position: absolute; top: 14px; right: 14px;
+  background: var(--green-bg); color: var(--green-txt);
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+}
+.choice-card.has-active .choice-active-pill { display: block; }
+
+/* ═══════════════════════════════════════════════════════
+   STEP 2 — PANELS  (hidden until choice clicked)
+═══════════════════════════════════════════════════════ */
+.panel { display: none; }
+.panel.open { display: block; }
+
+/* section chrome */
+.sec {
+  padding: 36px 80px 40px;
+  border-bottom: 1px solid var(--border);
+}
+.sec.sage  { background: var(--sage); }
+.sec.cream { background: var(--cream); }
+.sec.white { background: var(--white); }
+@media (max-width: 1080px) { .sec { padding: 28px 40px 32px; } }
+@media (max-width: 768px)  { .sec { padding: 22px 20px 26px; } }
+
+.sec-plans-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; }
+.sec-plans-title { font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(18px, 2.2vw, 24px); font-weight: 800; color: var(--navy); }
+.sec-plans-sub { font-size: 12px; color: #bbb; }
+.sec-title { font-size: clamp(16px, 2.1vw, 21px); font-weight: 900; color: var(--navy); margin-bottom: 4px; }
+.sec-desc  { font-size: 13px; color: var(--txt-s); margin-bottom: 24px; }
+
+/* ═══════════════════════════════════════════════════════
+   SUBSCRIPTION PLAN CARDS
+═══════════════════════════════════════════════════════ */
+.plans-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; align-items: stretch;
+}
+@media (max-width: 900px) { .plans-grid { grid-template-columns: 1fr; } }
+
+.plan-card {
+  background: var(--white); border: 2.5px solid var(--border);
+  border-radius: 18px; padding: 32px 24px 28px;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+  position: relative; display: flex; flex-direction: column;
+  user-select: none;
+}
+.plan-card:hover:not(.locked) {
+  border-color: var(--orange);
+  box-shadow: 0 5px 18px rgba(255,107,53,.12);
+  transform: translateY(-2px);
+}
+.plan-card.selected {
+  border-color: var(--navy);
+  background: var(--navy);
+  box-shadow: 0 8px 32px rgba(27,42,74,.25);
+}
+.plan-card.selected .sel-mark { opacity: 1; background: var(--orange); }
+
+/* card-name: Bricolage Grotesque uppercase — same font family as "Subscription Plans" */
+.card-name {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: clamp(13px, 1.4vw, 15px); font-weight: 800;
+  color: var(--navy); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 6px;
+}
+
+.plan-card.selected .card-name   { color: white; }
+.plan-card.selected .card-target { color: rgba(255,255,255,.5); }
+.plan-card.selected .price-big,
+.plan-card.selected .price-sup   { color: white; }
+.plan-card.selected .price-mo    { color: rgba(255,255,255,.4); }
+.plan-card.selected .price-yr    { color: rgba(255,255,255,.35); }
+.plan-card.selected .clean-badge { background: rgba(255,255,255,.1); }
+.plan-card.selected .clean-main  { color: white; }
+.plan-card.selected .clean-sub   { color: rgba(255,255,255,.5); }
+.plan-card.selected .divider     { background: rgba(255,255,255,.12); }
+.plan-card.selected .feat        { color: rgba(255,255,255,.75); }
+.plan-card.selected .feat::before { color: var(--orange); }
+.plan-card.selected .feat.sh     { color: white; }
+.plan-card.selected .sh-val      { color: rgba(255,255,255,.5); }
+.plan-card.selected .val-amber   { color: #ffaa80; }
+
+.sel-mark {
+  position: absolute; top: 13px; right: 13px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--orange);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .18s;
+}
+.sel-mark svg { width: 11px; height: 11px; color: white; }
+
+.active-badge {
+  position: absolute; top: 13px; right: 13px;
+  background: var(--green-bg); color: var(--green-txt);
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+}
+
+.plan-card.locked {
+  cursor: default; border-color: var(--green-txt); background: #F2FBF4;
+}
+.plan-card.locked:hover { transform: none; box-shadow: none; }
+
+.card-target {
+  font-size: 11px; color: var(--txt-s); line-height: 1.5;
+  margin-bottom: 20px;
+  min-height: 3.6em;
+}
+
+.price-row  { display: flex; align-items: baseline; gap: 2px; margin-bottom: 2px; }
+.price-big  { font-size: clamp(36px, 4.5vw, 48px); font-weight: 900; color: var(--navy); line-height: 1; }
+.price-sup  { font-size: 18px; font-weight: 700; color: var(--navy); align-self: flex-start; margin-top: 7px; }
+.price-mo   { font-size: 12px; color: var(--txt-s); margin-bottom: 2px; }
+.price-yr   { font-size: 11px; color: #A8A8A8; margin-bottom: 14px; }
+
+.clean-badge {
+  background: rgba(27,42,74,.07); border-radius: 9px;
+  padding: 10px 13px; margin-bottom: 18px;
+}
+.clean-main { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.clean-sub  { font-size: 11px; color: var(--txt-s); }
+
+.divider { height: 1px; background: var(--border); margin-bottom: 16px; }
+
+.features { flex: 1; }
+.feat {
+  font-size: 12px; color: #444;
+  padding-left: 17px; position: relative;
+  margin-bottom: 10px; line-height: 1.5;
+}
+.feat::before { content: '✓'; position: absolute; left: 0; color: #4CAF50; font-weight: 900; font-size: 12px; }
+.feat.sh { color: var(--navy); font-weight: 700; padding-left: 19px; }
+.feat.sh::before { content: '🎁'; font-size: 11px; top: 1px; }
+.feat .sh-val { display: block; font-size: 11px; color: var(--txt-s); font-weight: 400; margin-top: 1px; }
+.val-amber { font-style: normal; font-weight: 700; color: #D4790B; }
+
+/* Most Popular — white base */
+.plan-card.most-popular {
+  background: white; border-color: var(--border);
+}
+.plan-card.most-popular:hover:not(.locked) { transform: translateY(-2px); }
+.most-popular-badge { display: none; }
+
+/* Force navy on most-popular when selected */
+.plan-card.most-popular.selected {
+  background: var(--navy); border-color: var(--navy);
+  box-shadow: 0 8px 32px rgba(27,42,74,.25);
+}
+
+.sh-explain-inline {
+  font-size: 12px; color: #666; line-height: 1.6;
+  border-top: 1px solid var(--border);
+  padding-top: 10px; margin-top: 10px; margin-bottom: 4px;
+}
+.sh-explain-inline strong { color: var(--navy); font-size: 12px; }
+
+.agree-reassure {
+  font-size: 12px; color: var(--txt-s);
+  background: #f8f9fa; border-radius: 9px;
+  padding: 10px 14px; margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SERVICE HOUR CARDS
+═══════════════════════════════════════════════════════ */
+.sh-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; align-items: start;
+}
+@media (max-width: 768px) { .sh-grid { grid-template-columns: 1fr; } }
+
+.sh-card {
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: 18px; padding: 28px 24px 24px;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+  position: relative;
+  display: flex; flex-direction: column;
+  user-select: none;
+}
+.sh-card:hover {
+  border-color: var(--orange);
+  box-shadow: 0 5px 18px rgba(255,107,53,.12);
+  transform: translateY(-2px);
+}
+.sh-card.selected {
+  border-color: var(--navy);
+  background: var(--navy);
+  box-shadow: 0 8px 32px rgba(27,42,74,.25);
+}
+.sh-card .sel-mark { background: var(--orange); }
+.sh-card.selected .sel-mark { opacity: 1; }
+
+/* SH card selected text overrides — color hierarchy */
+.sh-card.selected .sh-badge.pay-as-you-go { background: rgba(255,255,255,.12); color: rgba(255,255,255,.6); }
+.sh-card.selected .sh-badge.recommended   { background: rgba(255,107,53,.3); color: #ffb899; }
+.sh-card.selected .sh-badge.best-value    { background: rgba(255,107,53,.3); color: #ffb899; }
+.sh-card.selected .sh-pack  { color: rgba(255,255,255,.85); }   /* hours count — prominent */
+.sh-card.selected .sh-rate,
+.sh-card.selected .sh-sup   { color: white; }                   /* price — brightest */
+.sh-card.selected .sh-unit  { color: rgba(255,255,255,.45); }   /* per hour label — dim */
+.sh-card.selected .sh-total { color: rgba(255,255,255,.8); }    /* total $ — medium-bright */
+.sh-card.selected .sh-save  { color: #ffb899; }                 /* save msg — warm highlight */
+.sh-card.selected .sh-div   { background: rgba(255,255,255,.12); }
+.sh-card.selected .sh-use   { color: rgba(255,255,255,.4); }    /* use description — dimmest */
+
+/* Badge row — same size, centred */
+.sh-badge-row { height: 26px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.sh-badge {
+  font-size: 10px; font-weight: 900; letter-spacing: 1px;
+  text-transform: uppercase; padding: 4px 14px; border-radius: 20px;
+}
+.sh-badge.pay-as-you-go { background: rgba(180,83,9,.1);  color: #B45309; }
+.sh-badge.recommended   { background: rgba(255,107,53,.1); color: var(--orange); }
+.sh-badge.best-value    { background: rgba(255,107,53,.1); color: var(--orange); }
+
+.sh-pack  { font-family: 'Bricolage Grotesque', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin-bottom: 5px; }
+.sh-rate-row { display: flex; align-items: baseline; gap: 2px; margin-bottom: 2px; }
+.sh-rate  { font-size: clamp(34px, 4.2vw, 44px); font-weight: 900; color: var(--navy); line-height: 1; }
+.sh-sup   { font-size: 17px; font-weight: 700; align-self: flex-start; margin-top: 6px; }
+.sh-unit  { font-size: 12px; color: var(--txt-s); margin-bottom: 3px; }
+.sh-total { font-size: 12px; color: #A8A8A8; min-height: 18px; margin-bottom: 3px; }
+.sh-save  { font-size: 12px; font-weight: 700; color: #B45309; min-height: 18px; margin-bottom: 3px; }
+.sh-div   { height: 1px; background: var(--border); margin: 12px 0 10px; }
+.sh-use   { font-size: 12px; color: var(--txt-s); line-height: 1.65; flex: 1; }
+
+/* ═══════════════════════════════════════════════════════
+   AGREEMENT
+═══════════════════════════════════════════════════════ */
+.agree-row {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 16px 20px; background: var(--white);
+  border: 2px solid var(--border); border-radius: 13px;
+}
+.agree-row input[type="checkbox"] {
+  width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0;
+  accent-color: var(--navy); cursor: pointer;
+}
+.agree-label { font-size: 13px; color: #333; line-height: 1.7; cursor: pointer; }
+.agree-link {
+  color: #2563EB; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 2px;
+  cursor: pointer; background: none; border: none;
+  font-family: inherit; font-size: inherit; padding: 0;
+}
+.agree-link:hover { color: #1D4ED8; }
+
+/* ═══════════════════════════════════════════════════════
+   CTA BAR
+═══════════════════════════════════════════════════════ */
+.cta-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: var(--navy);
+  padding: 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 -4px 24px rgba(27,42,74,.18);
+}
+.cta-bar-inner {
+  max-width: 1080px; margin: 0 auto;
+  padding: 20px 80px;
+  display: flex; align-items: center;
+  justify-content: center; gap: 100px;
+  flex-wrap: wrap;
+}
+@media (max-width: 1080px) { .cta-bar-inner { padding: 18px 40px; gap: 60px; } }
+@media (max-width: 768px)  { .cta-bar-inner { padding: 14px 20px; gap: 32px; } }
+@media (max-width: 600px)  {
+  .cta-bar-inner { flex-direction: column; align-items: center; gap: 12px; }
+  .cta-left { width: 100%; text-align: center; }
+}
+
+
+.cta-left  { width: 340px; flex-shrink: 0; }
+.cta-micro { font-size: 12px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.65); margin-bottom: 5px; }
+.cta-sel   { font-size: clamp(16px, 2vw, 22px); font-weight: 900; color: white; }
+.cta-sel.empty { color: rgba(255,255,255,.3); font-weight: 400; font-style: italic; }
+.cta-note  { font-size: 12px; color: rgba(255,255,255,.35); margin-top: 4px; }
+
+.btn-pay {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #4A8C6A; color: white;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 19px; font-weight: 700;
+  padding: 20px 60px; border-radius: 16px;
+  border: none; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background .2s, transform .2s, box-shadow .2s;
+}
+.btn-pay:hover:not(:disabled) {
+  background: #3d7a5c;
+  box-shadow: 0 6px 22px rgba(74,140,106,.35); transform: translateY(-1px);
+}
+.btn-pay:disabled { background: rgba(255,255,255,.1); color: rgba(255,255,255,.25); cursor: not-allowed; }
+.btn-pay svg { width: 16px; height: 16px; }
+
+.cta-trust {
+  background: var(--navy); padding: 9px 80px 18px;
+  display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
+  font-size: 11px; color: rgba(255,255,255,.25);
+}
+@media (max-width: 768px) { .cta-trust { padding: 8px 20px 16px; gap: 12px; } }
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════ */
+.footer {
+  background: var(--cream-h); border-top: 1px solid var(--border);
+  text-align: center; padding: 20px 40px;
+  font-size: 12px; color: var(--txt-s);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CONTRACT POPUP
+═══════════════════════════════════════════════════════ */
+.popup-overlay {
+  display: none; position: fixed; inset: 0; z-index: 800;
+  background: rgba(15,25,45,.55); backdrop-filter: blur(3px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.popup-overlay.show { display: flex; }
+.popup-box {
+  background: var(--white); border-radius: 18px;
+  width: 100%; max-width: 660px; max-height: 84vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.22); overflow: hidden;
+}
+.popup-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.popup-head-title { font-size: 15px; font-weight: 900; color: var(--navy); }
+.popup-close {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--border);
+  border: none; cursor: pointer; font-size: 15px; color: var(--txt-s);
+  display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.popup-close:hover { background: #D0CEC8; }
+.popup-body {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  font-size: 13px; color: #444; line-height: 1.85;
+}
+.popup-body h3 { font-size: 13px; font-weight: 900; color: var(--navy); margin: 18px 0 6px; }
+.popup-body h3:first-child { margin-top: 0; }
+.popup-body p { margin-bottom: 8px; }
+.popup-body::-webkit-scrollbar { width: 4px; }
+.popup-body::-webkit-scrollbar-thumb { background: #CCC; border-radius: 3px; }
+.popup-foot {
+  padding: 14px 24px; border-top: 1px solid var(--border);
+  background: var(--sage); flex-shrink: 0;
+}
+.popup-hint { font-size: 11px; color: var(--txt-s); text-align: center; margin-bottom: 10px; }
+.btn-agree {
+  width: 100%; background: var(--navy); color: white;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 900;
+  padding: 12px; border-radius: 10px; border: none; cursor: pointer; transition: background .2s;
+}
+.btn-agree:hover { background: #2a3f6a; }
+
+/* ═══════════════════════════════════════════════════════
+   LOADING / TOAST
+═══════════════════════════════════════════════════════ */
+.loading {
+  display: none; position: fixed; inset: 0; z-index: 900;
+  background: rgba(250,250,248,.88); backdrop-filter: blur(4px);
+  flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+}
+.loading.show { display: flex; }
+.spinner {
+  width: 34px; height: 34px; border: 3px solid var(--border);
+  border-top-color: var(--navy); border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p { font-size: 14px; font-weight: 700; color: var(--navy); }
+
+.toast {
+  position: fixed; bottom: 1.6rem; right: 1.6rem; z-index: 950;
+  background: var(--navy); color: white;
+  font-size: 13px; font-weight: 500; padding: 11px 18px;
+  border-radius: 11px; max-width: 280px;
+  transform: translateY(60px); opacity: 0;
+  transition: all .28s cubic-bezier(.22,1,.36,1); pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.err  { background: #B91C1C; }
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.plan-card:nth-child(1) { animation: fadeUp .35s .04s ease both; }
+.plan-card:nth-child(2) { animation: fadeUp .35s .10s ease both; }
+.plan-card:nth-child(3) { animation: fadeUp .35s .16s ease both; }
+.sh-card:nth-child(1)   { animation: fadeUp .35s .04s ease both; }
+.sh-card:nth-child(2)   { animation: fadeUp .35s .09s ease both; }
+.sh-card:nth-child(3)   { animation: fadeUp .35s .14s ease both; }
+
+/* ── Top Nav Bar (shared with dashboard) ─────────────── */
+.top-nav { background: linear-gradient(135deg, #1B2A4A, #2a3f6a); height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 24px; position: sticky; top: 0; z-index: 300; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+.top-nav-inner { max-width: 1200px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
+.top-nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.top-nav-logo svg { width: 32px; height: 32px; }
+.top-nav-brand { font-size: 18px; font-weight: 900; color: white; letter-spacing: 1px; line-height: 1; }
+.top-nav-brand span { font-weight: 300; opacity: .6; }
+.top-nav-brand-sub { font-size: 8px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.top-nav-right { display: flex; align-items: center; gap: 14px; }
+.top-nav-back { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,.75); text-decoration: none; font-size: 13px; font-weight: 600; transition: color .2s; }
+.top-nav-back:hover { color: white; }
+.top-nav-back svg { width: 14px; height: 14px; }
+.top-nav-user { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; visibility: visible; }
+@media (max-width: 480px) { .top-nav-user { display: none; } }
+.top-nav-logout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+.top-nav-logout:hover { background: rgba(255,255,255,.2); color: white; }
+</style>
+</head>
+<body>
+
+<!-- ══ TOP NAV ═════════════════════════════════════════════ -->
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="dashboard.html" class="top-nav-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"/>
+        <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="rgba(255,255,255,0.95)"/>
+        <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"/>
+        <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"/>
+      </svg>
+      <div>
+        <div class="top-nav-brand">HAVEN<span>PLUS</span></div>
+        <div class="top-nav-brand-sub">PROPERTY CARE</div>
+      </div>
+    </a>
+    <div class="top-nav-right">
+      <span class="top-nav-user" id="navUserName"></span>
+      <a href="dashboard.html" class="top-nav-back">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        Dashboard
+      </a>
+      <button class="top-nav-logout" onclick="handleLogout()">Log out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ HEADER ══════════════════════════════════════════════ -->
+<div class="header">
+  <div class="h-punchline"><em>Worry-free</em> property care <em>·</em> predictable &amp; flexible.</div>
+  <div class="h-title">Select Your <span class="h-plan">Plan</span> from Below</div>
+  <div class="h-sub">Your property, always cared for.</div>
+</div>
+
+<!-- ══ SUCCESS BANNER ══════════════════════════════════════ -->
+<div class="success-banner" id="successBanner">
+  <div class="success-inner">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/>
+    </svg>
+    <div>
+      <strong>Payment successful — welcome to Haven Plus.</strong>
+      <p>Your plan is now active. Confirmation email on its way.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 1 — TWO CHOICE CARDS ══════════════════════════ -->
+<div class="choice-section" id="choiceSection">
+  <div class="choice-intro">Which plan do you need for now?</div>
+  <div class="choice-grid">
+
+    <div class="choice-card" id="cardSub" onclick="selectChoice('subscription')">
+      <div class="choice-active-pill">Active</div>
+      <div class="choice-num-row">
+        <div class="choice-num">01</div>
+        <div class="choice-icon">🏠</div>
+      </div>
+      <div class="choice-title">Subscription Plan</div>
+      <div class="choice-desc">Regular cleaning visits · property checkups · smoke alarm servicing. Service Hour vouchers included every year.</div>
+      <div class="choice-cta">
+        View plans
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div class="choice-card" id="cardSH" onclick="selectChoice('sh')">
+      <div class="choice-num-row">
+        <div class="choice-num">02</div>
+        <div class="choice-icon">🔧</div>
+      </div>
+      <div class="choice-title">Service Hours</div>
+      <div class="choice-desc">Hands-on work at your property — handyman tasks, gutter cleaning, minor repairs, appliance checks, and more. No call-out fee, ever. Book when you need it, rest assured.</div>
+      <div class="choice-cta">
+        View bundles
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ STEP 2A — SUBSCRIPTION PANEL ═══════════════════════ -->
+<div class="panel" id="panelSub">
+  <div class="sec sage">
+    <div class="sec-plans-header">
+      <div class="sec-plans-title">Subscription Plans</div>
+    </div>
+    <div class="plans-grid">
+
+      <!-- Essential Care -->
+      <div class="plan-card" data-plan="essential" onclick="selectPlan(this)">
+        <div class="sel-mark"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg></div>
+        <div class="card-name">Essential Care</div>
+        <div class="card-target">Busy professional · Interstate investor</div>
+        <div class="price-row"><span class="price-sup">$</span><span class="price-big">55</span></div>
+        <div class="price-mo">per month · GST incl.</div>
+        <div class="price-yr">Annual $660</div>
+        <div class="divider"></div>
+        <div class="features">
+          <div class="feat">4× cleaning / year</div>
+          <div class="feat">8 cleaning hours</div>
+          <div class="feat">2 SH vouchers / year</div>
+          <div class="feat">Smoke alarm inspection</div>
+        </div>
+      </div>
+
+      <!-- Smart Care -->
+      <div class="plan-card most-popular" data-plan="smart" onclick="selectPlan(this)">
+        <div class="sel-mark"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg></div>
+        <div class="most-popular-badge">Most Popular</div>
+        <div class="card-name">Smart Care</div>
+        <div class="card-target">Busy professional · Interstate investor · High-yield rental investor</div>
+        <div class="price-row"><span class="price-sup">$</span><span class="price-big">75</span></div>
+        <div class="price-mo">per month · GST incl.</div>
+        <div class="price-yr">Annual $900</div>
+        <div class="divider"></div>
+        <div class="features">
+          <div class="feat">6× cleaning / year</div>
+          <div class="feat">12 cleaning hours</div>
+          <div class="feat">3 SH vouchers / year</div>
+          <div class="feat">Smoke alarm inspection</div>
+        </div>
+      </div>
+
+      <!-- Premium Care -->
+      <div class="plan-card" data-plan="premium" onclick="selectPlan(this)">
+        <div class="sel-mark"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg></div>
+        <div class="card-name">Premium Care</div>
+        <div class="card-target">Busy professional · Interstate investor · Multi-property owner · Property manager</div>
+        <div class="price-row"><span class="price-sup">$</span><span class="price-big">150</span></div>
+        <div class="price-mo">per month · GST incl.</div>
+        <div class="price-yr">Annual $1,800</div>
+        <div class="divider"></div>
+        <div class="features">
+          <div class="feat">12× cleaning / year</div>
+          <div class="feat">24 cleaning hours</div>
+          <div class="feat">6 SH vouchers / year</div>
+          <div class="feat">Smoke alarm inspection</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ STEP 2B — SERVICE HOURS PANEL ═══════════════════════ -->
+<div class="panel" id="panelSH">
+  <div class="sec cream">
+    <div class="sec-label">Service Hours</div>
+    <div class="sec-title">Maintenance &amp; repairs, on demand</div>
+    <div class="sec-desc">Your subscription handles the routine. Service Hours handle everything else.</div>
+    <div class="sh-grid">
+
+      <!-- 1 SH -->
+      <div class="sh-card" data-plan="sh_1" onclick="selectSH(this)">
+        <div class="sel-mark"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg></div>
+        <div class="sh-badge-row"><span class="sh-badge pay-as-you-go">Pay as You Go</span></div>
+        <div class="sh-pack">1 × Service Hour</div>
+        <div class="sh-rate-row"><span class="sh-sup">$</span><span class="sh-rate">99</span></div>
+        <div class="sh-unit">per hour · GST incl.</div>
+        <div class="sh-total">Total $99</div>
+        <div class="sh-save">&nbsp;</div>
+        <div class="sh-div"></div>
+        <div class="sh-use">Cleaning · Gutter cleaning · Minor repairs · Property upkeep, and more</div>
+      </div>
+
+      <!-- 4 SH -->
+      <div class="sh-card" data-plan="sh_4" onclick="selectSH(this)">
+        <div class="sel-mark"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg></div>
+        <div class="sh-badge-row"><span class="sh-badge recommended">Recommended</span></div>
+        <div class="sh-pack">4 × Service Hours</div>
+        <div class="sh-rate-row"><span class="sh-sup">$</span><span class="sh-rate">85</span></div>
+        <div class="sh-unit">per hour · GST incl.</div>
+        <div class="sh-total">Total $340</div>
+        <div class="sh-save">Save $56 vs single</div>
+        <div class="sh-div"></div>
+        <div class="sh-use">Cleaning · Gutter cleaning · Minor repairs · Property upkeep, and more</div>
+      </div>
+
+      <!-- 8 SH -->
+      <div class="sh-card" data-plan="sh_8" onclick="selectSH(this)">
+        <div class="sel-mark"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg></div>
+        <div class="sh-badge-row"><span class="sh-badge best-value">Best Value</span></div>
+        <div class="sh-pack">8 × Service Hours</div>
+        <div class="sh-rate-row"><span class="sh-sup">$</span><span class="sh-rate">80</span></div>
+        <div class="sh-unit">per hour · GST incl.</div>
+        <div class="sh-total">Total $640</div>
+        <div class="sh-save">Save $152 vs single</div>
+        <div class="sh-div"></div>
+        <div class="sh-use">Cleaning · Gutter cleaning · Minor repairs · Property upkeep, and more</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ AGREEMENT PANEL ═════════════════════════════════════ -->
+<div class="panel" id="panelAgree">
+  <div class="sec white">
+    <div class="sec-label" style="margin-bottom:14px;">Before you proceed</div>
+    <div class="agree-reassure">📄 You can review the full service agreement at any time — no surprises, no hidden terms.</div>
+    <label class="agree-row" for="contractCheck">
+      <input type="checkbox" id="contractCheck" onclick="onCheckboxClick(event)">
+      <span class="agree-label">
+        I have read and agree to the
+        <button class="agree-link" type="button" onclick="openPopup(event)">Haven Plus Service Agreement</button>.
+        I confirm I have authority over the nominated property and understand that subscriptions and Service Hours are separate services.
+      </span>
+    </label>
+  </div>
+</div>
+
+<!-- ══ CTA BAR — fixed bottom ══════════════════════════════ -->
+<div id="panelCTA">
+  <div class="cta-bar">
+    <div class="cta-bar-inner">
+      <div class="cta-left">
+        <div class="cta-micro">Your Selection</div>
+        <div class="cta-sel empty" id="ctaSel">Select a plan above to continue</div>
+        <div class="cta-note" id="ctaNote"></div>
+      </div>
+      <button class="btn-pay" id="btnPay" disabled onclick="startCheckout()">
+        Proceed to Payment
+      </button>
+    </div>
+  </div>
+  <div class="cta-trust">
+    <span>🔒 Secured by Stripe</span>
+    <span>🇦🇺 AUD · GST incl.</span>
+    <span>✕ Cancel anytime</span>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+<div class="footer">Haven Plus Property Care · Perth, WA</div>
+
+<!-- ══ CONTRACT POPUP ══════════════════════════════════════ -->
+<div class="popup-overlay" id="popup" onclick="if(event.target===this)closePopup()">
+  <div class="popup-box">
+    <div class="popup-head">
+      <div class="popup-head-title">Haven Plus Service Agreement</div>
+      <button class="popup-close" onclick="closePopup()">✕</button>
+    </div>
+    <div class="popup-body">
+      <h3>1. Services Provided</h3>
+      <p>Haven Plus provides property care subscriptions comprising regular cleaning visits, property condition reports, smoke alarm servicing, and access to Service Hour (SH) vouchers as specified in your selected plan. Subscription visits and Service Hours are distinct services; SH vouchers cover handyman, gutter cleaning, and non-emergency repair work.</p>
+      <h3>2. Billing &amp; Cancellation</h3>
+      <p>Subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. No partial refunds are issued for unused days within a billing period. Cancellation does not affect pre-purchased SH bundle hours.</p>
+      <h3>3. Service Hour Vouchers</h3>
+      <p>Annual SH vouchers included with subscriptions must be used within 12 months of issuance; unused vouchers are refunded at 70% of face value upon written request. Purchased SH bundles expire 24 months from date of purchase. Vouchers are non-transferable.</p>
+      <h3>4. Scheduling &amp; Access</h3>
+      <p>You agree to provide reasonable access to the property for scheduled visits with at least 24 hours' notice. Failure to provide access without 24 hours' cancellation notice may result in forfeiture of that visit.</p>
+      <h3>5. Liability</h3>
+      <p>Haven Plus carries public liability insurance. Our liability for any single claim is limited to the value of three months' subscription fees. We are not liable for pre-existing property defects identified during inspections.</p>
+      <h3>6. Australian Consumer Law</h3>
+      <p>Nothing in this agreement limits rights you have under the Australian Consumer Law (Competition and Consumer Act 2010, Schedule 2). Penalty clauses are genuine pre-estimates of loss and are not punitive. A hardship provision applies — contact us if you experience financial difficulty.</p>
+      <h3>7. Dispute Resolution</h3>
+      <p>Disputes should first be raised with Haven Plus in writing. If unresolved within 14 days, either party may seek mediation through a recognised WA dispute resolution body.</p>
+      <h3>8. Privacy</h3>
+      <p>Personal information is collected in accordance with the Australian Privacy Act 1988. Property data and images are used solely for service delivery and not shared without consent.</p>
+      <p style="margin-top:18px;font-size:11px;color:#A8A8A8;">— Placeholder content. Full executed agreement provided upon activation. —</p>
+    </div>
+    <div class="popup-foot">
+      <div class="popup-hint">Please read the full agreement before agreeing.</div>
+      <button class="btn-agree" onclick="agreeContract()">✓ &nbsp;I agree to the Haven Plus Service Agreement</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>Redirecting to secure payment…</p>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ SCRIPT — Supabase loaded after DOM ready ════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* All UI functions are global so onclick works immediately,
+   even before Supabase finishes initialising.              */
+
+const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
+const SERVER_URL    = 'http://localhost:3001';
+
+const planLabels = {
+  essential: 'Essential Care — $55/mo',
+  smart:     'Smart Care — $75/mo',
+  premium:   'Premium Care — $150/mo',
+  sh_1:      '1 × Service Hour — $99',
+  sh_4:      '4 × Service Hours — $340',
+  sh_8:      '8 × Service Hours — $640',
+};
+
+let sb            = null;
+let currentUser   = null;
+let activePlanKey = null;
+let selectedPlan  = null;
+let selectedSH    = null;
+let activeChoice  = null;
+
+/* ── Init Supabase after DOM ─────────────────────────── */
+async function handleLogout() {
+  if (sb) await sb.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  } catch(e) {
+    console.warn('Supabase init failed:', e);
+    return;
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'index.html'; return; }
+  currentUser = session.user;
+
+  // Show user name in nav
+  const meta = currentUser.user_metadata || {};
+  const rawName = meta.full_name || meta.name || meta.email || currentUser.email || '';
+  const name = rawName.includes('@') ? rawName.split('@')[0] : (rawName || 'Account');
+  const navUser = document.getElementById('navUserName');
+  if (navUser) {
+    navUser.textContent = name;
+    navUser.style.visibility = 'visible';
+  }
+
+  /* Check active subscription */
+  try {
+    const { data: sub } = await sb
+      .from('subscriptions')
+      .select('plan, plan_type, status')
+      .eq('user_id', currentUser.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (sub) {
+      activePlanKey = sub.plan || sub.plan_type || '';
+      if (activePlanKey) document.getElementById('cardSub').classList.add('has-active');
+    }
+  } catch(e) { console.warn('Sub check failed:', e); }
+
+  /* Handle Stripe return */
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('payment') === 'success') {
+    const pSH = sessionStorage.getItem('hp_pending_sh');
+    if (pSH) {
+      sessionStorage.removeItem('hp_pending_sh');
+      showToast('Subscription confirmed. Processing Service Hours…');
+      document.getElementById('loading').classList.add('show');
+      await triggerCheckout(pSH);
+      return;
+    }
+    document.getElementById('successBanner').classList.add('show');
+    window.history.replaceState({}, '', 'plans.html');
+  }
+  if (p.get('payment') === 'sh_success') {
+    document.getElementById('successBanner').classList.add('show');
+    window.history.replaceState({}, '', 'plans.html');
+  }
+  if (p.get('payment') === 'cancelled') {
+    sessionStorage.removeItem('hp_pending_sh');
+    showToast('Payment was cancelled. No charge was made.');
+    window.history.replaceState({}, '', 'plans.html');
+  }
+});
+
+/* ── Step 1: choice click ────────────────────────────── */
+function selectChoice(type) {
+  const prevChoice = activeChoice;
+  activeChoice = type;
+
+  // Reset only the OTHER panel's selection, keep current panel's selection
+  if (prevChoice !== type) {
+    if (type === 'subscription') {
+      selectedSH = null;
+      document.querySelectorAll('.sh-card').forEach(c => c.classList.remove('selected'));
+    } else {
+      selectedPlan = null;
+      document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    }
+  }
+
+  /* Highlight chosen card */
+  document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('chosen'));
+  document.getElementById(type === 'subscription' ? 'cardSub' : 'cardSH').classList.add('chosen');
+
+  /* Show relevant panel, hide other */
+  const showSub = type === 'subscription';
+  document.getElementById('panelSub').classList.toggle('open', showSub);
+  document.getElementById('panelSH').classList.toggle('open', !showSub);
+  document.getElementById('panelAgree').classList.add('open');
+
+  /* Lock active plan if subscription panel opened */
+  if (showSub && activePlanKey) lockActivePlan(activePlanKey);
+
+  /* Scroll to panel */
+  setTimeout(() => {
+    const el = document.getElementById(showSub ? 'panelSub' : 'panelSH');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+
+  updateCTA();
+}
+
+/* ── Lock active subscription card ───────────────────── */
+function lockActivePlan(planKey) {
+  document.querySelectorAll('.plan-card').forEach(card => {
+    if (card.dataset.plan === planKey && !card.classList.contains('locked')) {
+      card.classList.add('locked');
+      card.onclick = null;
+      const mark = card.querySelector('.sel-mark');
+      if (mark) mark.remove();
+      if (!card.querySelector('.active-badge')) {
+        const b = document.createElement('div');
+        b.className = 'active-badge'; b.textContent = 'Active';
+        card.appendChild(b);
+      }
+    }
+  });
+}
+
+/* ── Selection ────────────────────────────────────────── */
+function selectPlan(card) {
+  if (card.classList.contains('locked')) return;
+  document.querySelectorAll('.plan-card:not(.locked)').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedPlan = card.dataset.plan;
+  updateCTA();
+}
+
+function selectSH(card) {
+  document.querySelectorAll('.sh-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedSH = card.dataset.plan;
+  updateCTA();
+}
+
+/* ── CTA update ───────────────────────────────────────── */
+function updateCTA() {
+  const btn     = document.getElementById('btnPay');
+  const sel     = document.getElementById('ctaSel');
+  const note    = document.getElementById('ctaNote');
+  const agreed  = document.getElementById('contractCheck').checked;
+  const hasAny  = selectedPlan || selectedSH;
+
+  if (hasAny && agreed) {
+    btn.disabled = false;
+    sel.className = 'cta-sel';
+    if (selectedPlan && selectedSH) {
+      sel.textContent = planLabels[selectedPlan] + '  +  ' + planLabels[selectedSH];
+      note.textContent = '2 separate payments — subscription first, then Service Hours.';
+    } else {
+      sel.textContent = planLabels[selectedPlan || selectedSH];
+      note.textContent = '';
+    }
+  } else {
+    btn.disabled = true;
+    sel.className = 'cta-sel empty';
+    sel.textContent = !hasAny ? 'Select a plan above to continue' : 'Please agree to the service agreement';
+    note.textContent = '';
+  }
+}
+
+/* ── Contract popup ───────────────────────────────────── */
+let contractRead = false; // true only after agree button clicked
+
+function onCheckboxClick(e) {
+  const cb = document.getElementById('contractCheck');
+  if (cb.checked && !contractRead) {
+    // Blind check — block and open popup instead
+    e.preventDefault();
+    openPopup();
+  } else {
+    // Already read, or unchecking — allow
+    updateCTA();
+  }
+}
+
+function openPopup(e) {
+  if (e) e.preventDefault();
+  document.getElementById('popup').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closePopup() {
+  document.getElementById('popup').classList.remove('show');
+  document.body.style.overflow = '';
+}
+function agreeContract() {
+  contractRead = true;
+  document.getElementById('contractCheck').checked = true;
+  closePopup();
+  updateCTA();
+  showToast('Service agreement accepted.');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+
+/* ── Checkout ─────────────────────────────────────────── */
+async function startCheckout() {
+  if (!document.getElementById('contractCheck').checked)
+    return showToast('Please agree to the service agreement.', true);
+  if (!selectedPlan && !selectedSH)
+    return showToast('Please select a plan.', true);
+  if (!sb || !currentUser)
+    return showToast('Session error. Please refresh.', true);
+
+  document.getElementById('loading').classList.add('show');
+
+  if (selectedPlan && selectedSH) {
+    sessionStorage.setItem('hp_pending_sh', selectedSH);
+    await triggerCheckout(selectedPlan);
+  } else {
+    sessionStorage.removeItem('hp_pending_sh');
+    await triggerCheckout(selectedPlan || selectedSH);
+  }
+}
+
+async function triggerCheckout(planKey) {
+  const isSub = ['essential','smart','premium'].includes(planKey);
+  try {
+    const res = await fetch(`${SERVER_URL}/api/create-checkout-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        planKey,
+        userId:         currentUser.id,
+        userEmail:      currentUser.email,
+        contractAgreed: true,
+        successParam:   isSub ? 'success' : 'sh_success',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || 'Checkout failed');
+    window.location.href = data.url;
+  } catch(err) {
+    document.getElementById('loading').classList.remove('show');
+    sessionStorage.removeItem('hp_pending_sh');
+    showToast(err.message, true);
+  }
+}
+
+/* ── Toast ────────────────────────────────────────────── */
+function showToast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3400);
+}
+</script>
+</body>
+</html>

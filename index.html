@@ -1,0 +1,3032 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haven Plus Property Care</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-x: hidden; }
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            max-width: 1080px;
+            width: 100%;
+            margin: 0 auto;
+            background: white; 
+            color: #1a1a1a; 
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .container { 
+            width: 100%;
+            max-width: 1080px;
+            padding: 60px 80px; 
+        }
+        
+        @media (max-width: 1080px) {
+            .container { padding: 40px 40px; }
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 30px 20px; }
+            .header { padding: 40px 20px 50px; margin-bottom: 50px; }
+            .logo-box { flex-direction: column; gap: 10px; }
+            .brand { text-align: center; }
+            .lang-toggle { top: 12px; right: 15px; padding: 4px 10px; }
+            .lang-btn { font-size: 12px; padding: 4px 6px; min-height: 32px; min-width: 32px; justify-content: center; }
+            .problems { padding: 30px 20px; margin-bottom: 50px; }
+            .problem-item { flex-direction: column; text-align: center; gap: 15px; padding: 25px 20px; }
+            .problem-icon { font-size: 50px; }
+            .problem-title { font-size: 22px; }
+            .problem-desc { font-size: 16px; }
+            .core-values { padding: 30px 20px; margin-bottom: 50px; }
+            .value-message { padding: 30px 20px; margin-bottom: 50px; }
+            .value-comparison { padding: 25px 15px; }
+            .service-hours { margin-bottom: 50px; }
+            .process { margin-bottom: 50px; }
+            .early-adopter { margin-bottom: 50px; }
+            .pricing-collapsible { margin-bottom: 50px; }
+            .footer-cta { padding: 40px 20px 35px; }
+        }
+        
+        @media (max-width: 480px) {
+            .solution-item { padding: 25px 20px; }
+            .value-message { border-width: 3px; }
+        }
+
+        /* 헤더 */
+        .header { 
+            text-align: center; 
+            padding: 60px 40px 70px; 
+            background: linear-gradient(135deg, #1B2A4A 0%, #3d5a80 100%); 
+            margin: 0 0 80px;
+            position: relative;
+        }
+        
+        @media (min-width: 1080px) {
+            .header {
+                margin: 0 -80px 80px;
+                padding: 60px 0 70px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                margin: 0 -20px 50px;
+                padding: 40px 20px 50px;
+            }
+        }
+        .logo-box { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
+        .brand { text-align: left; max-width: 100%; }
+        .brand-name { 
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: clamp(28px, 6vw, 64px); 
+            font-weight: 900; 
+            color: white; 
+            line-height: 1; 
+            margin-bottom: 8px; 
+            letter-spacing: clamp(1px, 0.3vw, 3px);
+            word-break: keep-all;
+        }
+        .brand-sub { 
+            font-size: clamp(11px, 1.7vw, 18px); 
+            color: #ff6b35; 
+            font-weight: 700; 
+            letter-spacing: clamp(2px, 0.4vw, 4px);
+        }
+        .tagline { 
+            font-size: clamp(14px, 2.2vw, 24px); 
+            color: rgba(255,255,255,0.9); 
+            font-weight: 400; 
+            font-style: italic; 
+            margin-top: 25px; 
+            letter-spacing: 0.3px;
+        }
+
+        /* 언어 토글 */
+        .lang-toggle {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            z-index: 100;
+            height: 32px;
+        }
+        
+        .lang-btn {
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 0 6px;
+            transition: all 0.3s ease;
+            user-select: none;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+            touch-action: manipulation;
+            min-width: 36px;
+            min-height: 32px;
+            justify-content: center;
+        }
+        
+        .lang-btn:hover {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .lang-btn.active {
+            color: white;
+            font-weight: 700;
+        }
+        
+        .lang-separator {
+            color: rgba(255,255,255,0.4);
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 언어별 표시/숨김 */
+        .lang-en {
+            display: none;
+        }
+        
+        .lang-ko {
+            display: block;
+        }
+
+        /* 섹션 제목 */
+        .section-title { 
+            font-size: clamp(26px, 4vw, 42px); 
+            font-weight: 900; 
+            color: #1B2A4A; 
+            margin-bottom: 40px; 
+            text-align: center; 
+            position: relative; 
+            padding-bottom: 20px; 
+        }
+        .section-title::after { 
+            content: ''; 
+            position: absolute; 
+            bottom: 0; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 100px; 
+            height: 4px; 
+            background: linear-gradient(90deg, #1B2A4A, #D4790B); 
+        }
+        
+
+        /* 문제점 */
+        .problems { background: #f8f9fa; padding: 60px; border-radius: 30px; margin-bottom: 80px; }
+        .problem-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 40px; }
+        .problem-item { background: white; padding: 35px 40px; border-radius: 20px; border-left: 6px solid; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 30px; }
+        .problem-item:nth-child(1) { border-color: #ffc107; }
+        .problem-item:nth-child(2) { border-color: #03a9f4; }
+        .problem-item:nth-child(3) { border-color: #f44336; }
+        .problem-icon { font-size: clamp(40px, 6vw, 70px); flex-shrink: 0; }
+        .problem-content { flex: 1; }
+        .problem-title { font-size: clamp(20px, 3vw, 32px); font-weight: 900; margin-bottom: 10px; color: #1a1a1a; }
+        .problem-desc { font-size: clamp(15px, 2vw, 22px); color: #666; }
+
+        /* 솔루션 */
+        .solutions { margin-bottom: 80px; }
+        .solution-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; }
+        
+        @media (max-width: 768px) {
+            .solution-grid { grid-template-columns: 1fr; }
+        }
+        .solution-item { background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%); padding: 40px; border-radius: 20px; text-align: center; border: 3px solid #1B2A4A; }
+        .solution-icon { font-size: clamp(40px, 6vw, 70px); margin-bottom: 20px; }
+        .solution-title { font-size: clamp(18px, 2.5vw, 28px); font-weight: 900; color: #1B2A4A; margin-bottom: 15px; }
+        .solution-desc { font-size: clamp(14px, 1.8vw, 20px); color: #333; line-height: 1.6; }
+
+        /* 핵심 가치 */
+        .core-values { 
+            background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%); 
+            padding: 60px; 
+            border-radius: 30px; 
+            margin-bottom: 80px; 
+        }
+        .core-values-title {
+            font-size: clamp(24px, 3.3vw, 36px);
+            font-weight: 900;
+            color: #1B2A4A;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .core-values-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+        .value-card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .value-card-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .value-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1B2A4A;
+            margin-bottom: 12px;
+        }
+        .value-card-desc {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .value-card-wide {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-top: 25px;
+            text-align: center;
+        }
+        
+        .value-card-wide .value-card-icon {
+            display: none;
+        }
+        
+        .value-card-content {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1B2A4A;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 900px) {
+            .core-values-grid { grid-template-columns: 1fr; }
+            .value-card-wide {
+                flex-direction: column;
+                text-align: center;
+            }
+            .value-card-content {
+                text-align: center;
+            }
+        }
+
+        /* 가격 */
+        .pricing-collapsible {
+            margin-bottom: 80px;
+        }
+        
+        .pricing-header {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);
+            padding: 30px 60px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 30px;
+            border: 3px solid #D4790B;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: rgba(212,121,11,0.2);
+            touch-action: manipulation;
+            user-select: none;
+        }
+        
+        .pricing-header:hover {
+            background: linear-gradient(135deg, #fff5cc 0%, #ffeba6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212,121,11,0.2);
+        }
+        
+        .pricing-header-title {
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: 900;
+            color: #1B2A4A;
+            pointer-events: none;
+        }
+        .pricing-header-title-wrapper,
+        .early-adopter-title-wrapper {
+            pointer-events: none;
+        }
+        
+        @media (max-width: 768px) {
+            .pricing-header {
+                padding: 20px 25px;
+            }
+        }
+        
+        .pricing-content {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .pricing-content.open {
+            display: block;
+        }
+        
+        .pricing { background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%); padding: 60px; border-radius: 30px; margin-bottom: 0; }
+        .section-title.yellow { color: #d97706; }
+        .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 40px; margin-bottom: 30px; align-items: start; }
+        
+        @media (max-width: 900px) {
+            .price-grid { grid-template-columns: 1fr; }
+            .price-card.featured { transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            .pricing { padding: 40px 30px; }
+        }
+        .price-card { background: white; padding: 40px 30px 30px; border-radius: 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 3px solid #e0e0e0; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .price-card.featured { border-color: #ff6b35; }
+        .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 900; white-space: nowrap; }
+        .plan-name { font-size: clamp(20px, 2.4vw, 26px); font-weight: 900; color: #1a1a1a; margin-bottom: 10px; }
+        .plan-target { font-size: clamp(12px, 1.4vw, 15px); color: #666; margin-bottom: 25px; }
+        .price { font-size: clamp(38px, 5.4vw, 58px); font-weight: 900; color: #1B2A4A; margin-bottom: 8px; }
+        .price-label { font-size: clamp(14px, 1.7vw, 18px); color: #333; margin-bottom: 5px; font-weight: 600; }
+        .price-annual { font-size: clamp(12px, 1.3vw, 14px); color: #999; margin-bottom: 20px; min-height: 20px; }
+        .hours-badge { background: rgba(27,42,74,0.1); padding: 12px; border-radius: 12px; font-size: clamp(13px, 1.5vw, 16px); font-weight: 700; color: #1B2A4A; margin-bottom: 25px; }
+        .benefits-title { font-size: 16px; font-weight: 700; color: #1B2A4A; margin-bottom: 15px; text-align: left; }
+        .features { text-align: left; }
+        .feature { font-size: 15px; color: #333; margin-bottom: 12px; padding-left: 25px; position: relative; line-height: 1.5; }
+        .feature::before { content: '✓'; position: absolute; left: 0; color: #4caf50; font-weight: 900; font-size: 18px; }
+        .pricing-footnote { text-align: center; font-size: 14px; color: #666; margin-top: 20px; }
+
+        /* 가격 카드 내부 텍스트 크기 조정 */
+        .price-card .plan-target,
+        .price-card .feature,
+        .price-card .pricing-footnote {
+            font-size: 1em;
+            line-height: 1.4;
+            opacity: 1;
+        }
+
+        /* 얼리 어답터 (Collapsible) */
+        .early-adopter {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);
+            border-radius: 30px;
+            margin-bottom: 80px;
+            overflow: hidden;
+        }
+        .early-adopter-header {
+            padding: 30px 60px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .early-adopter-header:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .early-adopter-title {
+            font-size: clamp(18px, 2.6vw, 28px);
+            font-weight: 900;
+            color: #1B2A4A;
+            pointer-events: none;
+        }
+        .toggle-icon {
+            font-size: 24px;
+            color: #1B2A4A;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .toggle-icon.open {
+            transform: rotate(180deg);
+        }
+        .early-adopter-content {
+            padding: 0 60px 50px;
+            display: none;
+        }
+        .early-adopter-content.open {
+            display: block;
+        }
+        .benefit-list {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .benefit-item {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        .benefit-item:last-child {
+            margin-bottom: 0;
+        }
+        .cta-buttons-large {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            margin-top: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .cta-primary-large, .cta-secondary-large {
+            padding: 32px 40px;
+            font-size: 22px;
+            border-radius: 15px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 80px;
+        }
+        .cta-icon {
+            font-size: 30px;
+        }
+        .cta-primary-large {
+            background: linear-gradient(135deg, rgba(255,107,53,0.9), #f7931e);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(255,107,53,0.3);
+        }
+        .cta-secondary-large {
+            background: white;
+            border: 2px solid #1B2A4A;
+            color: #1B2A4A;
+        }
+        .cta-primary-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,53,0.4);
+            background: linear-gradient(135deg, #ff6b35, rgba(255,107,53,0.9));
+        }
+        .cta-secondary-large:hover {
+            background: rgba(27,42,74,0.05);
+        }
+        
+        @media (max-width: 768px) {
+            .early-adopter-header { padding: 25px 30px; }
+            .early-adopter-content { padding: 0 30px 40px; }
+            .cta-buttons-large { grid-template-columns: 1fr; }
+        }
+
+        /* 추가 구매 */
+        .additional-purchase { 
+            background: #f0f7ff; 
+            padding: 40px 60px; 
+            border-radius: 20px; 
+            margin: 0 0 80px; 
+        }
+        
+        .additional-purchase-integrated {
+            background: rgba(255,255,255,0.5);
+            padding: 40px 50px;
+            border-radius: 20px;
+            margin-top: 40px;
+        }
+        
+        .additional-title { font-size: 28px; font-weight: 900; color: #1B2A4A; text-align: center; margin-bottom: 30px; }
+        .additional-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-bottom: 20px; }
+        
+        @media (max-width: 768px) {
+            .additional-grid { grid-template-columns: 1fr; gap: 20px; }
+        }
+        .additional-item { text-align: center; }
+        .additional-plan { font-size: 16px; color: #666; margin-bottom: 10px; font-weight: 600; }
+        .additional-price { font-size: 36px; font-weight: 900; color: #1B2A4A; }
+        .additional-note { text-align: center; font-size: 16px; color: #666; margin-top: 20px; }
+
+        /* Service Hours */
+        .service-hours { margin-bottom: 80px; }
+        .sh-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 40px; margin-bottom: 50px; }
+        
+        @media (max-width: 900px) {
+            .sh-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 600px) {
+            .sh-grid { grid-template-columns: 1fr; }
+        }
+        .sh-item { background: white; padding: 35px 30px; border-radius: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 2px solid #e0e0e0; }
+        .sh-icon { font-size: clamp(36px, 5.5vw, 60px); margin-bottom: 20px; }
+        .sh-title { font-size: clamp(16px, 2vw, 22px); font-weight: 900; color: #1a1a1a; margin-bottom: 15px; }
+        .sh-desc { font-size: clamp(13px, 1.5vw, 16px); color: #666; line-height: 1.6; }
+        .sh-values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        
+        @media (max-width: 768px) {
+            .sh-values { grid-template-columns: 1fr; }
+        }
+        .sh-value-item { background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%); padding: 30px 25px; border-radius: 20px; text-align: center; border: 2px solid #1B2A4A; }
+        .sh-value-icon { font-size: 40px; margin-bottom: 15px; }
+        .sh-value-title { font-size: 20px; font-weight: 900; color: #1B2A4A; margin-bottom: 10px; }
+        .sh-value-desc { font-size: 15px; color: #333; line-height: 1.5; }
+
+        /* 가치 메시지 */
+        .value-message { background: white; padding: 60px; border-radius: 30px; margin-bottom: 80px; border: 4px solid #1B2A4A; }
+        .value-headline { font-size: clamp(22px, 4.3vw, 46px); font-weight: 900; color: #1B2A4A; text-align: center; margin-bottom: 30px; line-height: 1.2; }
+        
+        .value-intro { font-size: clamp(15px, 2vw, 22px); color: #333; text-align: center; line-height: 1.8; margin-bottom: 50px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .value-comparison { background: #e8f5e9; padding: 40px; border-radius: 20px; margin-bottom: 40px; }
+        .value-comp-title { font-size: clamp(16px, 2.2vw, 24px); font-weight: 900; color: #1B2A4A; margin-bottom: 25px; text-align: center; }
+        .value-items { display: flex; flex-direction: column; gap: 15px; }
+        .value-item { font-size: clamp(14px, 1.8vw, 20px); color: #333; padding: 15px 20px; background: white; border-radius: 12px; border-left: 5px solid #1B2A4A; }
+        .value-item strong { color: #1B2A4A; font-weight: 900; }
+        .value-cta { font-size: clamp(16px, 2.2vw, 24px); color: #1B2A4A; text-align: center; font-weight: 900; line-height: 1.6; }
+
+        /* 프로세스 */
+        .process { margin-bottom: 80px; }
+        .process-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-top: 40px; }
+        
+        @media (max-width: 900px) {
+            .process-steps { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 600px) {
+            .process-steps { grid-template-columns: 1fr; }
+        }
+        .step { background: linear-gradient(135deg, #1B2A4A, #3d5a80); padding: 40px 25px; border-radius: 20px; text-align: center; color: white; }
+        .step-number { font-size: clamp(40px, 6.5vw, 70px); margin-bottom: 15px; line-height: 1; }
+        .step-title { font-size: clamp(16px, 2vw, 22px); font-weight: 900; margin-bottom: 10px; }
+        .step-desc { font-size: clamp(13px, 1.5vw, 16px); opacity: 0.9; line-height: 1.5; }
+
+        /* 하단 CTA (푸터 스타일) */
+        .footer-cta {
+            background: linear-gradient(135deg, #1B2A4A 0%, #3d5a80 100%);
+            padding: 60px 40px 50px;
+            text-align: center;
+            color: white;
+            margin: 0;
+        }
+        
+        @media (min-width: 1080px) {
+            .footer-cta {
+                margin: 0 -80px;
+                padding: 60px 80px 50px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .footer-cta {
+                margin: 0 -20px;
+                padding: 40px 20px 35px;
+            }
+        }
+        
+        .footer-cta-title {
+            font-size: clamp(22px, 3.3vw, 36px);
+            font-weight: 900;
+            color: white;
+            margin-bottom: 50px;
+        }
+        
+        .footer-cta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto 50px;
+        }
+        
+        .footer-box {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 35px 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            color: white;
+        }
+        
+        .footer-box:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .footer-box.primary-box {
+            background: rgba(255,107,53,0.9);
+            border-color: #ff6b35;
+        }
+        
+        .footer-box.primary-box:hover {
+            background: #ff6b35;
+        }
+        
+        .footer-box.info-box .box-icon {
+            color: #ffc107;
+            filter: drop-shadow(0 0 8px rgba(255,193,7,0.6));
+            font-size: 44px;
+        }
+        
+        .footer-box .contact-icon {
+            color: #4fc3f7;
+            filter: drop-shadow(0 0 6px rgba(79,195,247,0.5));
+            font-size: 44px;
+        }
+        
+        .box-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+        
+        .box-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .box-value {
+            font-size: 16px;
+            opacity: 0.9;
+            word-break: break-all;
+        }
+        
+        .contact-footer {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* FAQ 섹션 */
+        .faq-section {
+            background: rgba(255,255,255,0.95);
+            padding: 50px 60px;
+            margin: 50px 0 0;
+            border-top: 3px solid rgba(255,193,7,0.8);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .faq-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #1B2A4A;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+        
+        .faq-section-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1B2A4A;
+            margin: 40px 0 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #ffc107;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .faq-section-title:first-of-type {
+            margin-top: 20px;
+        }
+        
+        .faq-items {
+            max-width: 900px;
+            margin: 0 auto 30px;
+        }
+        
+        .faq-item {
+            background: white;
+            padding: 25px 30px;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #ffc107;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .faq-question {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1B2A4A;
+            margin-bottom: 12px;
+        }
+        
+        .faq-answer {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .faq-section { padding: 40px 30px; }
+            .faq-title { font-size: 26px; }
+        }
+        
+        @media (max-width: 900px) {
+            .footer-cta-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .footer-cta-grid { 
+                grid-template-columns: 1fr; 
+            }
+        }
+        
+        /* Touch-friendly targets */
+        .pricing-header,
+        .early-adopter-header,
+        .lang-btn,
+        .footer-box,
+        .cta-primary-large,
+        .cta-secondary-large {
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .pricing-header { padding: 20px 25px; }
+            .pricing-header-title { font-size: 20px; }
+            .early-adopter-header { padding: 20px 25px; }
+            .early-adopter-title { font-size: 20px; }
+            .early-adopter-content { padding: 0 25px 30px; }
+            .benefit-item { font-size: 15px; }
+            .cta-buttons-large { gap: 15px; }
+            .cta-primary-large, .cta-secondary-large { padding: 20px 25px; font-size: 17px; min-height: 60px; }
+            .footer-box { padding: 25px 15px; }
+            .box-icon { font-size: 32px; }
+            .box-title { font-size: 15px; }
+            .box-value { font-size: 13px; }
+            .faq-section { padding: 30px 20px; }
+            .faq-title { font-size: 22px; }
+            .faq-section-title { font-size: 18px; }
+            .faq-question { font-size: 15px; }
+            .faq-answer { font-size: 14px; }
+            .faq-item { padding: 18px 20px; }
+            .additional-purchase-integrated { padding: 25px 15px; }
+            .sh-value-item { padding: 20px 15px; }
+            .sh-value-title { font-size: 17px; }
+            .sh-value-desc { font-size: 13px; }
+            .value-item { font-size: 16px; padding: 12px 15px; }
+            .value-cta { font-size: 18px; }
+            .contact-footer { font-size: 12px; }
+        }
+    </style>
+    <style>
+        /* Sticky Navigation — 100px Bold */
+        .sticky-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, #1B2A4A 0%, #2a3f6a 100%);
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 40px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+        }
+        .nav-inner {
+            max-width: 1080px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+        .nav-logo svg { width: 62px; height: 62px; }
+        .nav-brand-group { display: flex; flex-direction: column; }
+        .nav-brand {
+            font-size: 30px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+        .nav-brand span { font-weight: 300; opacity: 0.6; }
+        .nav-sub {
+            font-size: 10px;
+            color: #ff6b35;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin-top: 4px;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
+        .nav-lang-toggle {
+            display: flex;
+            gap: 2px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 7px;
+            padding: 3px;
+            margin: 0 4px;
+        }
+        .nav-lang-btn {
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+            touch-action: manipulation;
+        }
+        .nav-lang-btn.active {
+            background: rgba(255,255,255,0.18);
+            color: white;
+        }
+        .nav-divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.12);
+            margin: 0 6px;
+        }
+        .btn-auth {
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.2s;
+            min-width: 100px;
+            text-align: center;
+        }
+        .btn-login {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.9);
+        }
+        .btn-login:hover { border-color: white; color: white; }
+        .btn-signup {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border: 1.5px solid transparent;
+            color: white;
+            box-shadow: 0 2px 8px rgba(255,107,53,0.25);
+        }
+        .btn-signup:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,107,53,0.45); }
+
+        @media (max-width: 768px) {
+            .sticky-nav { padding: 0 16px; height: 70px; }
+            .nav-logo svg { width: 40px; height: 40px; }
+            .nav-logo { gap: 10px; }
+            .nav-brand { font-size: 20px; letter-spacing: 1px; }
+            .nav-sub { font-size: 8px; letter-spacing: 2px; }
+            .nav-link { display: none !important; }
+            .nav-right { gap: 6px; }
+            .nav-lang-toggle { margin: 0 2px; }
+            .nav-lang-btn { font-size: 10px; padding: 4px 7px; }
+            .nav-divider { display: none; }
+            .btn-login { display: none; }
+            .btn-auth { padding: 8px 14px; font-size: 11px; min-width: auto; }
+            body { padding-top: 70px; }
+        }
+        
+        @media (max-width: 480px) {
+            .sticky-nav { height: 60px; }
+            .nav-logo svg { width: 32px; height: 32px; }
+            .nav-brand { font-size: 17px; }
+            .nav-sub { display: none; }
+            .nav-lang-btn { font-size: 9px; padding: 3px 6px; }
+            .btn-auth { padding: 7px 12px; font-size: 10px; }
+            body { padding-top: 60px; }
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1B2A4A 0%, #2a3f6a 40%, #3d5a80 70%, #2a3f6a 100%);
+            padding: 70px 40px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            width: 100vw;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 15% 40%, rgba(255,107,53,0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(61,90,128,0.2) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(255,107,53,0.05) 0%, transparent 30%);
+            z-index: 1;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 1;
+        }
+        .hero-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2;
+            display: block;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .hero-logo {
+            margin-bottom: 28px;
+        }
+        .hero-logo svg {
+            width: clamp(90px, 14vw, 140px);
+            height: clamp(90px, 14vw, 140px);
+            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.15));
+        }
+        .hero-tagline {
+            font-size: clamp(28px, 4.5vw, 46px);
+            font-weight: 900;
+            color: white;
+            line-height: 1.25;
+            margin-bottom: 32px;
+        }
+        .hero-tagline em {
+            font-style: normal;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub {
+            font-size: clamp(14px, 2vw, 18px);
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 40px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        .trust-bar {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .trust-item {
+            color: rgba(255,255,255,0.9);
+            font-size: clamp(12px, 1.5vw, 15px);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .btn-hero-learn {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 14px 36px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.2s;
+            display: inline-block;
+            margin: 0 auto;
+        }
+        .btn-hero-learn:hover { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.05); }
+        
+        @media (max-width: 768px) {
+            .hero { padding: 50px 20px 70px; }
+            .trust-bar { gap: 16px; }
+            .btn-hero-learn { padding: 12px 28px; font-size: 14px; }
+        }
+
+        /* FAQ Show More */
+        .faq-show-more {
+            display: block;
+            margin: 20px auto 0;
+            background: transparent;
+            border: 2px solid #1B2A4A;
+            color: #1B2A4A;
+            padding: 10px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.2s;
+        }
+        .faq-show-more:hover { background: #1B2A4A; color: white; }
+
+        /* Pricing Subtitle */
+        .pricing-subtitle {
+            text-align: center;
+            font-size: clamp(14px, 1.6vw, 17px);
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        /* SH Values Clean (grid, no borders) */
+        .sh-values-clean {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .sh-values-clean { grid-template-columns: 1fr; gap: 15px; }
+        }
+        .sh-val-card {
+            text-align: center;
+            padding: 15px 15px;
+        }
+        .sh-val-icon { font-size: 36px; margin-bottom: 12px; }
+        .sh-val-title { font-size: clamp(16px, 1.8vw, 20px); font-weight: 900; color: #1B2A4A; margin-bottom: 10px; }
+        .sh-val-desc { font-size: clamp(13px, 1.4vw, 15px); color: #555; line-height: 1.6; }
+        .sh-footnote-line {
+            text-align: center;
+            font-size: clamp(12px, 1.3vw, 14px);
+            color: #666;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Value Comparison Table */
+        .value-msg-sub {
+            text-align: center;
+            font-size: clamp(16px, 2.6vw, 26px);
+            font-weight: 700;
+            color: #1B2A4A;
+            line-height: 1.5;
+            margin-bottom: 40px;
+        }
+        .value-compare {
+            margin-bottom: 60px;
+        }
+        .compare-table {
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .compare-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            border-bottom: 1px solid #eee;
+        }
+        .compare-row:last-child { border-bottom: none; }
+        .compare-header {
+            background: #1B2A4A;
+        }
+        .compare-header .compare-cell {
+            color: white;
+            font-weight: 700;
+            font-size: clamp(13px, 1.5vw, 15px);
+        }
+        .compare-header .compare-diy {
+            background: #1B2A4A;
+            color: white;
+        }
+        .compare-header .compare-hp {
+            background: #1B2A4A;
+            color: white;
+        }
+        .compare-header .compare-label { 
+            background: #1B2A4A;
+            color: rgba(255,255,255,0.7); 
+        }
+        .compare-cell {
+            padding: 14px 18px;
+            font-size: clamp(12px, 1.4vw, 14px);
+            color: #333;
+        }
+        .compare-label {
+            font-weight: 600;
+            color: #1B2A4A;
+            background: #f8f9fa;
+        }
+        .compare-diy {
+            text-align: center;
+            color: #c0392b;
+            background: #fef5f4;
+        }
+        .compare-hp {
+            text-align: center;
+            color: #27ae60;
+            background: #f0faf4;
+            font-weight: 600;
+        }
+        .compare-total {
+            border-top: 2px solid #1B2A4A;
+        }
+        .compare-total .compare-label { font-weight: 800; font-size: clamp(13px, 1.5vw, 15px); }
+        .compare-total .compare-diy { font-weight: 800; font-size: clamp(14px, 1.6vw, 16px); color: #c0392b; }
+        .compare-total .compare-hp { font-weight: 900; font-size: clamp(14px, 1.6vw, 16px); color: #1B2A4A; background: #e8f5e9; }
+        @media (max-width: 600px) {
+            .compare-cell { padding: 10px 10px; }
+            .compare-row { grid-template-columns: 1fr 0.8fr 0.8fr; }
+        }
+
+        /* Value Message Clean */
+        .value-message-clean {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px 20px;
+        }
+        .value-msg-headline {
+            font-size: clamp(18px, 2.8vw, 28px);
+            font-weight: 700;
+            color: #1B2A4A;
+            line-height: 1.5;
+        }
+        .value-msg-accent {
+            color: #ff6b35;
+            font-weight: 900;
+        }
+        @media (max-width: 768px) {
+            .value-message-clean { padding: 20px 15px; margin-bottom: 40px; }
+        }
+
+        /* Launch Offer Banner */
+        .launch-banner {
+            background: linear-gradient(135deg, #1B2A4A, #3d5a80);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 80px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+        }
+        .launch-badge {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 7px 14px;
+            border-radius: 20px;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+        .launch-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .launch-text {
+            color: rgba(255,255,255,0.9);
+            font-size: clamp(12px, 1.3vw, 14px);
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        .launch-cta {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .launch-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,107,53,0.4); }
+        @media (max-width: 768px) {
+            .launch-banner { padding: 16px 20px; flex-wrap: wrap; justify-content: center; gap: 12px; }
+            .launch-text { white-space: normal; text-align: center; font-size: 13px; }
+        }
+
+        /* Body offset for fixed nav */
+        body { padding-top: 100px; }
+
+        /* Auth Modal */
+        .auth-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-overlay.active { display: flex; }
+        .auth-modal {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 36px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .auth-close {
+            position: absolute;
+            top: 16px; right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .auth-close:hover { background: #f0f0f0; color: #333; }
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .auth-logo-text {
+            font-size: 24px;
+            font-weight: 900;
+            color: #1B2A4A;
+            letter-spacing: 1px;
+        }
+        .auth-logo-text span { font-weight: 300; opacity: 0.5; }
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 28px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            padding: 4px;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .auth-tab.active {
+            background: white;
+            color: #1B2A4A;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-field {
+            margin-bottom: 16px;
+        }
+        .auth-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .auth-field input, .auth-field select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: border-color 0.2s;
+            outline: none;
+            background: white;
+        }
+        .auth-field input:focus, .auth-field select:focus {
+            border-color: #1B2A4A;
+        }
+        .auth-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1B2A4A, #3d5a80);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+            margin-top: 8px;
+        }
+        .auth-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(27,42,74,0.3); }
+        .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .auth-error {
+            background: #fee;
+            color: #c00;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .auth-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .auth-divider {
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            margin: 20px 0;
+        }
+        .auth-forgot {
+            text-align: right;
+            margin-top: -8px;
+            margin-bottom: 16px;
+        }
+        .auth-forgot a {
+            font-size: 12px;
+            color: #666;
+            text-decoration: none;
+        }
+        .auth-forgot a:hover { color: #1B2A4A; }
+        .password-hint {
+            font-size: 12px;
+            color: #ff6b35;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+        .password-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrap input {
+            flex: 1;
+            padding-right: 42px;
+        }
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0.35;
+            padding: 4px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            color: #333;
+        }
+        .pw-toggle:hover { opacity: 0.6; }
+        .pw-toggle.active { opacity: 0.7; }
+
+        /* Consent checkboxes */
+        .auth-consent { margin: 16px 0 8px; }
+        .consent-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .consent-row input[type="checkbox"] {
+            margin-top: 3px;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            accent-color: #ff6b35;
+        }
+        .consent-text { color: #666; }
+        .consent-text a { color: #1B2A4A; font-weight: 600; text-decoration: underline; }
+        .consent-text a:hover { color: #ff6b35; }
+        .consent-required { color: #ff6b35; font-weight: 700; }
+        .consent-optional { color: #999; font-weight: 600; }
+
+        /* Legal Modal */
+        .legal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+        .legal-overlay.active { display: flex; }
+        .legal-modal {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .legal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+        .legal-title { font-size: 18px; font-weight: 700; color: #1B2A4A; }
+        .legal-close {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #999; padding: 0 4px;
+        }
+        .legal-close:hover { color: #333; }
+        .legal-body {
+            padding: 24px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #444;
+        }
+        .legal-body h3 { font-size: 15px; font-weight: 700; color: #1B2A4A; margin: 20px 0 8px; }
+        .legal-body h3:first-child { margin-top: 0; }
+        .legal-body p { margin-bottom: 12px; }
+        .legal-body ul { padding-left: 20px; margin-bottom: 12px; }
+        .legal-body li { margin-bottom: 6px; }
+        .legal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        .legal-footer button {
+            background: #1B2A4A;
+            color: white;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        /* Dashboard bar (shown when logged in) */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .user-name {
+            color: rgba(255,255,255,0.85);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .user-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .nav-btn-small {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .nav-btn-small:hover { background: rgba(255,255,255,0.2); color: white; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+    <!-- Sticky Navigation -->
+    <nav class="sticky-nav" id="stickyNav">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"></polygon>
+                    <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="rgba(255,255,255,0.95)"></path>
+                    <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"></rect>
+                    <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"></rect>
+                </svg>
+                <div class="nav-brand-group">
+                    <div class="nav-brand">HAVEN<span>PLUS</span></div>
+                    <div class="nav-sub">PROPERTY CARE</div>
+                </div>
+            </a>
+            <div class="nav-right">
+                <a href="#pricing-section" class="nav-link lang-nav-en">Plans</a>
+                <a href="#sh-guide-section" class="nav-link lang-nav-en">Service Hours</a>
+                <a href="#process-section" class="nav-link lang-nav-en">How It Works</a>
+                <a href="#pricing-section" class="nav-link lang-nav-ko" style="display:none;">요금제</a>
+                <a href="#sh-guide-section" class="nav-link lang-nav-ko" style="display:none;">Service Hours</a>
+                <a href="#process-section" class="nav-link lang-nav-ko" style="display:none;">이용방법</a>
+                <div class="nav-lang-toggle">
+                    <span class="nav-lang-btn active" id="lang-en" onclick="toggleLanguage('en')">EN</span>
+                    <span class="nav-lang-btn" id="lang-ko" onclick="toggleLanguage('ko')">KOR</span>
+                </div>
+                <div class="nav-divider"></div>
+                <!-- Auth buttons (logged out) -->
+                <div id="authButtons" style="display:flex; gap:6px;">
+                    <button class="btn-auth btn-login" onclick="openAuth('login')">Login</button>
+                    <button class="btn-auth btn-signup" onclick="openAuth('signup')">Sign Up</button>
+                </div>
+                <!-- User menu (logged in) -->
+                <div id="userMenu" style="display:none;" class="user-menu">
+                    <div class="user-avatar" id="userAvatar"></div>
+                    <span class="user-name" id="userName"></span>
+                    <button class="nav-btn-small" onclick="openDashboard()">
+                        <span class="lang-nav-en">Dashboard</span>
+                        <span class="lang-nav-ko" style="display:none;">대시보드</span>
+                    </button>
+                    <button class="nav-btn-small" onclick="handleLogout()">
+                        <span class="lang-nav-en">Logout</span>
+                        <span class="lang-nav-ko" style="display:none;">로그아웃</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Auth Modal -->
+    <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuth()">
+        <div class="auth-modal">
+            <button class="auth-close" onclick="closeAuth()">&times;</button>
+            <div class="auth-logo">
+                <div class="auth-logo-text">HAVEN<span>PLUS</span></div>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">
+                    <span class="lang-auth-en">Login</span>
+                    <span class="lang-auth-ko" style="display:none;">로그인</span>
+                </button>
+                <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">
+                    <span class="lang-auth-en">Sign Up</span>
+                    <span class="lang-auth-ko" style="display:none;">회원가입</span>
+                </button>
+            </div>
+
+            <div class="auth-error" id="authError"></div>
+            <div class="auth-success" id="authSuccess"></div>
+
+            <!-- Login Form -->
+            <div class="auth-form active" id="formLogin">
+                <div class="auth-field">
+                    <label>
+                        <span class="lang-auth-en">Email</span>
+                        <span class="lang-auth-ko" style="display:none;">이메일</span>
+                    </label>
+                    <input type="email" id="loginEmail" placeholder="email@example.com">
+                </div>
+                <div class="auth-field password-field">
+                    <label>
+                        <span class="lang-auth-en">Password</span>
+                        <span class="lang-auth-ko" style="display:none;">비밀번호</span>
+                    </label>
+                    <div class="password-wrap">
+                        <input type="password" id="loginPassword" placeholder="••••••••">
+                        <button type="button" class="pw-toggle" onclick="togglePW('loginPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                </div>
+                <div class="auth-forgot">
+                    <a href="#" onclick="handleForgotPassword(); return false;">
+                        <span class="lang-auth-en">Forgot password?</span>
+                        <span class="lang-auth-ko" style="display:none;">비밀번호 찾기</span>
+                    </a>
+                </div>
+                <button class="auth-submit" onclick="handleLogin()" id="btnLogin">
+                    <span class="lang-auth-en">Login</span>
+                    <span class="lang-auth-ko" style="display:none;">로그인</span>
+                </button>
+            </div>
+
+            <!-- Signup Form -->
+            <div class="auth-form" id="formSignup">
+                <div class="auth-field">
+                    <label>
+                        <span class="lang-auth-en">Full Name</span>
+                        <span class="lang-auth-ko" style="display:none;">이름</span>
+                    </label>
+                    <input type="text" id="signupName" placeholder="John Kim">
+                </div>
+                <div class="auth-field">
+                    <label>
+                        <span class="lang-auth-en">Email</span>
+                        <span class="lang-auth-ko" style="display:none;">이메일</span>
+                    </label>
+                    <input type="email" id="signupEmail" placeholder="email@example.com">
+                </div>
+                <div class="auth-field">
+                    <label>
+                        <span class="lang-auth-en">Phone</span>
+                        <span class="lang-auth-ko" style="display:none;">전화번호</span>
+                    </label>
+                    <input type="tel" id="signupPhone" placeholder="04XX XXX XXX" oninput="this.value=this.value.replace(/[^\d\s+]/g,'')" onblur="if(this.value.trim())this.value=formatAUPhone(this.value)">
+                </div>
+                <div class="auth-field password-field">
+                    <label>
+                        <span class="lang-auth-en">Password (min 8, letters + numbers)</span>
+                        <span class="lang-auth-ko" style="display:none;">비밀번호 (8자 이상, 영문+숫자)</span>
+                    </label>
+                    <div class="password-wrap">
+                        <input type="password" id="signupPassword" placeholder="••••••••">
+                        <button type="button" class="pw-toggle" onclick="togglePW('signupPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                    <div class="password-hint" id="passwordHint" style="display:none;">
+                        <span class="lang-auth-en">Password must be at least 8 characters with letters and numbers.</span>
+                        <span class="lang-auth-ko" style="display:none;">비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.</span>
+                    </div>
+                </div>
+                <div class="auth-field">
+                    <label>
+                        <span class="lang-auth-en">Preferred Language</span>
+                        <span class="lang-auth-ko" style="display:none;">선호 언어</span>
+                    </label>
+                    <select id="signupLanguage">
+                        <option value="ko">한국어</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <!-- Consent checkboxes -->
+                <div class="auth-consent">
+                    <label class="consent-row">
+                        <input type="checkbox" id="consentTerms">
+                        <span class="consent-text">
+                            <span class="lang-auth-en"><span class="consent-required">[Required]</span> I agree to the <a href="#" onclick="openLegalModal('terms'); return false;">Terms of Service</a> and <a href="#" onclick="openLegalModal('privacy'); return false;">Privacy Policy</a></span>
+                            <span class="lang-auth-ko" style="display:none;"><span class="consent-required">[필수]</span> <a href="#" onclick="openLegalModal('terms'); return false;">이용약관</a> 및 <a href="#" onclick="openLegalModal('privacy'); return false;">개인정보처리방침</a>에 동의합니다</span>
+                        </span>
+                    </label>
+                    <label class="consent-row">
+                        <input type="checkbox" id="consentMarketing">
+                        <span class="consent-text">
+                            <span class="lang-auth-en"><span class="consent-optional">[Optional]</span> I agree to receive promotions and newsletters</span>
+                            <span class="lang-auth-ko" style="display:none;"><span class="consent-optional">[선택]</span> 프로모션 및 뉴스레터 수신에 동의합니다</span>
+                        </span>
+                    </label>
+                </div>
+                <button class="auth-submit" onclick="handleSignup()" id="btnSignup">
+                    <span class="lang-auth-en">Create Account</span>
+                    <span class="lang-auth-ko" style="display:none;">계정 만들기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legal Document Modal -->
+    <div class="legal-overlay" id="legalOverlay" onclick="if(event.target===this)closeLegalModal()">
+        <div class="legal-modal">
+            <div class="legal-header">
+                <div class="legal-title" id="legalTitle"></div>
+                <button class="legal-close" onclick="closeLegalModal()">&times;</button>
+            </div>
+            <div class="legal-body" id="legalBody"></div>
+            <div class="legal-footer">
+                <button onclick="closeLegalModal()">
+                    <span class="lang-en">Close</span>
+                    <span class="lang-ko" style="display:none;">닫기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HERO SECTION (outside container for full width) -->
+    <section class="hero" id="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-tagline">
+                Every home, every value —<br><em>always cared for</em>
+            </h1>
+            <p class="hero-sub lang-en">
+                Total property care — total peace of mind<br>
+                Regular cleaning & checkups, plus seamless maintenance & repairs
+            </p>
+            <p class="hero-sub lang-ko" style="display:none;">
+                부동산 관리의 모든 것 — 걱정 없이, 한 번에<br>
+                정기 청소 · 점검은 기본, 유지보수 · 수리까지 한 번에
+            </p>
+            <div class="trust-bar">
+                <div class="trust-item">🛡️ Your asset protected</div>
+                <div class="trust-item">💰 Your costs optimized</div>
+                <div class="trust-item">✨ Your life simplified</div>
+            </div>
+        </div>
+        <svg class="hero-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" style="height:35px;">
+            <path d="M0,30 C360,55 720,5 1080,30 C1260,42 1380,38 1440,30 L1440,60 L0,60 Z" fill="white"/>
+        </svg>
+    </section>
+
+    <div class="container" style="padding-top: 15px;">
+        <!-- 문제점 -->
+        <div class="problems">
+            <div class="section-title lang-ko" style="display: none;">이런 고민 있으신가요?</div>
+            <div class="section-title lang-en" style="display: block;">Sounds familiar?</div>
+            <div class="problem-grid lang-ko" style="display: none;">
+                <div class="problem-item">
+                    <div class="problem-icon">💸</div>
+                    <div class="problem-content">
+                        <div class="problem-title">예측 불가능한 비용</div>
+                        <div class="problem-desc">소액 수리도 출장비 $100+<br>누적되면 연간 수백~수천 달러 지출</div>
+                    </div>
+                </div>
+                <div class="problem-item">
+                    <div class="problem-icon">⏰</div>
+                    <div class="problem-content">
+                        <div class="problem-title">끝없는 스트레스</div>
+                        <div class="problem-desc">업체 찾기 2~5일 대기<br>바쁜 일정 속 반복되는 업체 연락</div>
+                    </div>
+                </div>
+                <div class="problem-item">
+                    <div class="problem-icon">📉</div>
+                    <div class="problem-content">
+                        <div class="problem-title">악화되는 문제들</div>
+                        <div class="problem-desc">작은 누수 방치 → $3,000+ 수리비로 폭증<br>간단한 도어락 이슈 → 락스미스 $400+ 지출<br>누군가 봐주면 좋은데 마땅한 사람이 없어요</div>
+                    </div>
+                </div>
+            </div>
+            <div class="problem-grid lang-en" style="display: grid;">
+                <div class="problem-item">
+                    <div class="problem-icon">💸</div>
+                    <div class="problem-content">
+                        <div class="problem-title">Unpredictable Costs</div>
+                        <div class="problem-desc">$100+ call-out for even the smallest job<br>Adding up to hundreds or thousands each year</div>
+                    </div>
+                </div>
+                <div class="problem-item">
+                    <div class="problem-icon">⏰</div>
+                    <div class="problem-content">
+                        <div class="problem-title">Constant Hassle</div>
+                        <div class="problem-desc">2-5 day wait just to find someone<br>Endless calls and follow-ups while you're already busy</div>
+                    </div>
+                </div>
+                <div class="problem-item">
+                    <div class="problem-icon">📉</div>
+                    <div class="problem-content">
+                        <div class="problem-title">Small Issues, Big Bills</div>
+                        <div class="problem-desc">Ignored leak → $3,000+ repair<br>Loose lock → $400+ locksmith bill<br>Know something needs checking, but who's got time?</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 솔루션 -->
+        <div class="solutions">
+            <div class="section-title lang-ko" style="display: none;">Haven Plus가 해결합니다</div>
+            <div class="section-title lang-en" style="display: block;">Here's how Haven Plus helps</div>
+            <div class="solution-grid lang-ko" style="display: none;">
+                <div class="solution-item"><div class="solution-icon">🎯</div><div class="solution-title">정기 청소 & 점검 포함</div><div class="solution-desc">구독만으로 정기 청소와 점검 자동 관리<br>예상치 못한 청구서 걱정 완화</div></div>
+                <div class="solution-item"><div class="solution-icon">⚡</div><div class="solution-title">원스톱 채널</div><div class="solution-desc">24~48시간 내 테크니션 배정<br>하나의 창구로 모든 것 해결</div></div>
+                <div class="solution-item"><div class="solution-icon">🛡️</div><div class="solution-title">안심되는 자산 관리</div><div class="solution-desc">정기 점검으로 문제 조기 발견<br>큰 수리비 발생 전 예방</div></div>
+                <div class="solution-item"><div class="solution-icon">📊</div><div class="solution-title">유연한 Service Hours</div><div class="solution-desc">1, 4, 8 SH 필요할 때 구매<br>출장비 $0, 낭비 없는 수리</div></div>
+            </div>
+            <div class="solution-grid lang-en" style="display: grid;">
+                <div class="solution-item"><div class="solution-icon">🎯</div><div class="solution-title">Regular Cleaning & Checkups Included</div><div class="solution-desc">Your subscription covers routine care automatically<br>No surprise bills in the mail</div></div>
+                <div class="solution-item"><div class="solution-icon">⚡</div><div class="solution-title">One Call Does It All</div><div class="solution-desc">Technician booked within 24-48 hours<br>No more ringing around for quotes</div></div>
+                <div class="solution-item"><div class="solution-icon">🛡️</div><div class="solution-title">Problems Caught Early</div><div class="solution-desc">Regular check-ups spot issues before they escalate<br>Saving you thousands in emergency repairs</div></div>
+                <div class="solution-item"><div class="solution-icon">📊</div><div class="solution-title">Flexible Service Hours On Demand</div><div class="solution-desc">Buy 1, 4, or 8 SH when you need repairs<br>No call-out fees. No waste.</div></div>
+            </div>
+        </div>
+
+        <!-- 가격 플랜 -->
+        <div class="pricing-collapsible" id="pricing-section">
+            <!-- Model one-liner -->
+            <div class="pricing-subtitle lang-ko" style="display: none;">정기 청소 · 점검 구독 + Service Hours 바우처 포함</div>
+            <div class="pricing-subtitle lang-en" style="display: block;">Regular cleaning & checkups + Service Hour vouchers included</div>
+            <div class="pricing-content-always">
+                <div class="pricing">
+            <div class="section-title yellow lang-ko" style="display: none;">구독 플랜</div>
+            <div class="section-title yellow lang-en" style="display: block;">Subscription Plans</div>
+            <!-- 한국어 가격 그리드 -->
+            <div class="price-grid lang-ko" style="display: none;">
+                <div class="price-card">
+                    <div class="plan-name">Essential Care</div>
+                    <div class="plan-target">바쁜 전문직 · 타주 투자자</div>
+                    <div class="price">$55</div>
+                    <div class="price-label">월 구독료 (GST 포함)</div>
+                    <div class="price-annual">(연간 $660)</div>
+                    <div class="hours-badge">2시간 전문 청소 · 분기별 연 4회</div>
+                    <div class="benefits-title">포함 서비스:</div>
+                    <div class="features">
+                        <div class="feature">수리 점검 (방문 시마다)</div>
+                        <div class="feature">스모크 알람 점검<br>(연 1~2회, 필요 시)</div>
+                        <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 Service Hour 바우처 연 2회<br>($198 상당)</div>
+                    </div>
+                </div>
+                <div class="price-card featured">
+                    <div class="badge">추천 ⭐</div>
+                    <div class="plan-name">Smart Care</div>
+                    <div class="plan-target">바쁜 전문직 · 타주 투자자 · 고수익 임대 투자자</div>
+                    <div class="price">$75</div>
+                    <div class="price-label">월 구독료 (GST 포함)</div>
+                    <div class="price-annual">(연간 $900)</div>
+                    <div class="hours-badge">2시간 전문 청소 · 격월 연 6회</div>
+                    <div class="benefits-title">포함 서비스:</div>
+                    <div class="features">
+                        <div class="feature">수리 점검 (방문 시마다)</div>
+                        <div class="feature">스모크 알람 점검<br>(연 1~2회, 필요 시)</div>
+                        <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 Service Hour 바우처 연 3회<br>($297 상당)</div>
+                    </div>
+                </div>
+                <div class="price-card">
+                    <div class="plan-name">Premium Care</div>
+                    <div class="plan-target">바쁜 전문직 · 타주 투자자 · 다주택자 / 코리빙 등 투자자 · 부동산 관리사</div>
+                    <div class="price">$150</div>
+                    <div class="price-label">월 구독료 (GST 포함)</div>
+                    <div class="price-annual">(연간 $1,800)</div>
+                    <div class="hours-badge">2시간 전문 청소 · 매월 연 12회</div>
+                    <div class="benefits-title">포함 서비스:</div>
+                    <div class="features">
+                        <div class="feature">수리 점검 (방문 시마다)</div>
+                        <div class="feature">스모크 알람 점검<br>(연 1~2회, 필요 시)</div>
+                        <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 Service Hour 바우처 연 6회<br>($594 상당)</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 영어 가격 그리드 -->
+            <div class="price-grid lang-en" style="display: grid;">
+                <div class="price-card">
+                    <div class="plan-name">Essential Care</div>
+                    <div class="plan-target">Busy professionals · Interstate investors</div>
+                    <div class="price">$55</div>
+                    <div class="price-label">per month (GST incl.)</div>
+                    <div class="price-annual">(Annual $660)</div>
+                    <div class="hours-badge">2-hour professional clean · Quarterly, 4× per year</div>
+                    <div class="benefits-title">What's included:</div>
+                    <div class="features">
+                        <div class="feature">Repair checkup (every visit)</div>
+                        <div class="feature">Smoke alarm inspection<br>(annually / 6-monthly as needed)</div>
+                        <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 2 Service Hour vouchers/year<br>($198 value)</div>
+                    </div>
+                </div>
+                <div class="price-card featured">
+                    <div class="badge">POPULAR ⭐</div>
+                    <div class="plan-name">Smart Care</div>
+                    <div class="plan-target">Busy professionals · Interstate investors · High-yield rental investors</div>
+                    <div class="price">$75</div>
+                    <div class="price-label">per month (GST incl.)</div>
+                    <div class="price-annual">(Annual $900)</div>
+                    <div class="hours-badge">2-hour professional clean · Every 2 months, 6× per year</div>
+                    <div class="benefits-title">What's included:</div>
+                    <div class="features">
+                        <div class="feature">Repair checkup (every visit)</div>
+                        <div class="feature">Smoke alarm inspection<br>(annually / 6-monthly as needed)</div>
+                        <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 3 Service Hour vouchers/year<br>($297 value)</div>
+                    </div>
+                </div>
+                <div class="price-card">
+                    <div class="plan-name">Premium Care</div>
+                    <div class="plan-target">Busy professionals · Interstate investors · Multi-property owners · Property managers</div>
+                    <div class="price">$150</div>
+                    <div class="price-label">per month (GST incl.)</div>
+                    <div class="price-annual">(Annual $1,800)</div>
+                    <div class="hours-badge">2-hour professional clean · Monthly, 12× per year</div>
+                    <div class="benefits-title">What's included:</div>
+                    <div class="features">
+                        <div class="feature">Repair checkup (every visit)</div>
+                        <div class="feature">Smoke alarm inspection<br>(annually / 6-monthly as needed)</div>
+                        <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 6 Service Hour vouchers/year<br>($594 value)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="pricing-footnote lang-ko" style="display: none;">* 모든 가격은 GST 포함 금액이며, 12개월 구독 기준입니다.</div>
+            <div class="pricing-footnote lang-en" style="display: block;">* All prices include GST. 12-month subscription commitment.</div>
+            
+            <!-- Service Hours (구독 플랜 내부로 통합) -->
+            <div style="text-align: center; margin: 30px 0; font-size: 16px; color: #555;">
+                <span class="lang-ko" style="display: none;">정기 청소가 필요 없으신가요? 걱정 마세요, 회원 가입만으로 Service Hours를 바로 구매할 수 있습니다.</span>
+                <span class="lang-en" style="display: block;">Don't need regular cleaning? No worries, just purchase Service Hours with Sign Up.</span>
+            </div>
+
+            <div class="additional-purchase-integrated" style="margin-top: 50px;">
+                <div class="section-title yellow lang-ko" style="display: none; font-size: 32px;">Service Hours — 유지보수 &amp; 수리 서비스</div>
+                <div class="section-title yellow lang-en" style="display: block; font-size: 32px;">Service Hours — Maintenance &amp; Repairs</div>
+                
+                <div style="text-align: center; font-size: 17px; color: #555; margin-top: -20px; margin-bottom: 30px;">
+                    <span class="lang-ko" style="display: none;">구독으로 정기 관리는 해결. Service Hours로 수리는 필요할 때만.</span>
+                    <span class="lang-en" style="display: block;">Your subscription handles the routine. Service Hours handle everything else.</span>
+                </div>
+                
+                <div class="price-grid lang-ko" style="display: none;">
+                    <div class="price-card">
+                        <div class="plan-name">1 Service Hour</div>
+                        <div class="plan-target">단건 수리</div>
+                        <div class="price">$99</div>
+                        <div class="price-label">1 SH (GST 포함)</div>
+                        <div class="price-annual">&nbsp;</div>
+                        <div class="hours-badge">1시간 단위 구매</div>
+                    </div>
+                    <div class="price-card featured">
+                        <div class="badge">추천 ⭐</div>
+                        <div class="plan-name">4 SH 번들</div>
+                        <div class="plan-target">$56 절감</div>
+                        <div class="price">$85</div>
+                        <div class="price-label">SH당 (GST 포함)</div>
+                        <div class="price-annual">(합계 $340)</div>
+                        <div class="hours-badge">4시간 묶음 할인</div>
+                    </div>
+                    <div class="price-card">
+                        <div class="plan-name">8 SH 번들</div>
+                        <div class="plan-target">$152 절감</div>
+                        <div class="price">$80</div>
+                        <div class="price-label">SH당 (GST 포함)</div>
+                        <div class="price-annual">(합계 $640)</div>
+                        <div class="hours-badge">8시간 최대 할인</div>
+                    </div>
+                </div>
+                <div class="price-grid lang-en" style="display: grid;">
+                    <div class="price-card">
+                        <div class="plan-name">1 Service Hour</div>
+                        <div class="plan-target">Pay-as-you-go</div>
+                        <div class="price">$99</div>
+                        <div class="price-label">per SH (GST incl.)</div>
+                        <div class="price-annual">&nbsp;</div>
+                        <div class="hours-badge">Buy one hour when needed</div>
+                    </div>
+                    <div class="price-card featured">
+                        <div class="badge">POPULAR ⭐</div>
+                        <div class="plan-name">4 SH Bundle</div>
+                        <div class="plan-target">Save $56</div>
+                        <div class="price">$85</div>
+                        <div class="price-label">per SH (GST incl.)</div>
+                        <div class="price-annual">(Total $340)</div>
+                        <div class="hours-badge">4-hour discounted pack</div>
+                    </div>
+                    <div class="price-card">
+                        <div class="plan-name">8 SH Bundle</div>
+                        <div class="plan-target">Save $152</div>
+                        <div class="price">$80</div>
+                        <div class="price-label">per SH (GST incl.)</div>
+                        <div class="price-annual">(Total $640)</div>
+                        <div class="hours-badge">8-hour best value pack</div>
+                    </div>
+                </div>
+                
+                <div class="pricing-footnote lang-ko" style="display: none;">출장비 $0 · 12개월 내 사용 권장 · 회원 가입 후 구매 가능</div>
+                <div class="pricing-footnote lang-en" style="display: block;">$0 call-out fee · recommended use within 12 months · Available after sign-up, no subscription required</div>
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <!-- Service Hours 가이드 -->
+        <div class="service-hours" id="sh-guide-section">
+            <div class="section-title lang-ko" style="display: none;">Service Hours로 할 수 있는 것들</div>
+            <div class="section-title lang-en" style="display: block;">What You Can Do with Service Hours</div>
+            
+            <div style="text-align: center; font-size: 20px; color: #555; margin-top: -20px; margin-bottom: 30px;">
+                <span class="lang-ko" style="display: none;">구독으로 정기 관리는 해결. Service Hours로 그 외 모든 것을.</span>
+                <span class="lang-en" style="display: block;">Your subscription handles the routine. Service Hours handle everything else.</span>
+            </div>
+            
+            <!-- 한글 SH 그리드 -->
+            <div class="sh-grid lang-ko" style="display: none;">
+                <div class="sh-item"><div class="sh-icon">🍂</div><div class="sh-title">계절 관리</div><div class="sh-desc">• 거터 청소<br>• 낙엽 제거<br>• 외벽 청소</div></div>
+                <div class="sh-item"><div class="sh-icon">🔧</div><div class="sh-title">소규모 수리</div><div class="sh-desc">• 탭 교체<br>• 문손잡이 수리<br>• 경첩 조정</div></div>
+                <div class="sh-item"><div class="sh-icon">🎨</div><div class="sh-title">간단한 보수</div><div class="sh-desc">• 페인트 터치업<br>• 실리콘 보수<br>• 벽 구멍 메우기</div></div>
+                <div class="sh-item"><div class="sh-icon">💡</div><div class="sh-title">전기 작업</div><div class="sh-desc">• 조명 교체<br>• 스위치 수리<br>• 전구 교체</div></div>
+                <div class="sh-item"><div class="sh-icon">🚿</div><div class="sh-title">배관 작업</div><div class="sh-desc">• 막힌 배수구<br>• 샤워헤드 교체<br>• 탭 누수 수리</div></div>
+                <div class="sh-item"><div class="sh-icon">🏡</div><div class="sh-title">유지보수</div><div class="sh-desc">• 선반/커튼 레일 설치<br>• 창문 수리<br>• 잠금장치 교체</div></div>
+            </div>
+            
+            <!-- 영문 SH 그리드 -->
+            <div class="sh-grid lang-en" style="display: grid;">
+                <div class="sh-item"><div class="sh-icon">🍂</div><div class="sh-title">Seasonal Care</div><div class="sh-desc">• Gutter cleaning<br>• Leaf removal<br>• Exterior cleaning</div></div>
+                <div class="sh-item"><div class="sh-icon">🔧</div><div class="sh-title">Minor Repairs</div><div class="sh-desc">• Tap replacement<br>• Door handle repair<br>• Hinge adjustment</div></div>
+                <div class="sh-item"><div class="sh-icon">🎨</div><div class="sh-title">Simple Maintenance</div><div class="sh-desc">• Paint touch-ups<br>• Silicone repairs<br>• Wall hole filling</div></div>
+                <div class="sh-item"><div class="sh-icon">💡</div><div class="sh-title">Electrical Work</div><div class="sh-desc">• Light replacement<br>• Switch repair<br>• Bulb replacement</div></div>
+                <div class="sh-item"><div class="sh-icon">🚿</div><div class="sh-title">Plumbing Work</div><div class="sh-desc">• Blocked drains<br>• Showerhead replacement<br>• Tap leak repair</div></div>
+                <div class="sh-item"><div class="sh-icon">🏡</div><div class="sh-title">Property Upkeep</div><div class="sh-desc">• Shelf/curtain rail installation<br>• Window repair<br>• Lock replacement</div></div>
+            </div>
+
+            <!-- SH 핵심 포인트 (그리드, 박스라인 없음) -->
+            <div class="sh-values-clean lang-ko" style="display: none;">
+                <div class="sh-val-card"><div class="sh-val-icon">✅</div><div class="sh-val-title">투명한 차감</div><div class="sh-val-desc">작업 전/후 명확한 확인<br>15분 버퍼 제공</div></div>
+                <div class="sh-val-card"><div class="sh-val-icon">✅</div><div class="sh-val-title">번들 할인</div><div class="sh-val-desc">4 SH 번들: $56 절감<br>8 SH 번들: $152 절감</div></div>
+                <div class="sh-val-card"><div class="sh-val-icon">✅</div><div class="sh-val-title">출장비 $0</div><div class="sh-val-desc">일반 업체 출장비 $100+<br>Haven Plus는 항상 $0</div></div>
+            </div>
+            <div class="sh-values-clean lang-en" style="display: grid;">
+                <div class="sh-val-card"><div class="sh-val-icon">✅</div><div class="sh-val-title">Transparent Deduction</div><div class="sh-val-desc">Clear confirmation before/after<br>15-minute buffer provided</div></div>
+                <div class="sh-val-card"><div class="sh-val-icon">✅</div><div class="sh-val-title">Bundle Savings</div><div class="sh-val-desc">4 SH Bundle: Save $56<br>8 SH Bundle: Save $152</div></div>
+                <div class="sh-val-card"><div class="sh-val-icon">✅</div><div class="sh-val-title">$0 Call-Out Fee</div><div class="sh-val-desc">Typical tradie: $100+ just to show up<br>Haven Plus: Always $0</div></div>
+            </div>
+        </div>
+
+        <!-- 얼리 어답터 특전 (Collapsible) — now AFTER Service Hours -->
+        <!-- Launch Offer Banner -->
+        <div class="launch-banner">
+            <div class="launch-badge">🎉 LAUNCH OFFER</div>
+            <div class="launch-content">
+                <div class="launch-text lang-ko" style="display: none;">
+                    <strong>런칭 특별 혜택</strong> — 첫 SH $85 (14% 할인) · 첫 4 SH 번들 $80/SH · 우선 예약
+                </div>
+                <div class="launch-text lang-en" style="display: block;">
+                    <strong>Early Adopter Benefits</strong> — 1st SH $85 (save 14%) · 4 SH Bundle $80/SH · Priority booking
+                </div>
+                <button class="launch-cta" onclick="openAuth('signup')">
+                    <span class="lang-en" style="display:inline;">Sign Up Now</span>
+                    <span class="lang-ko" style="display:none;">지금 가입하기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 가치 비교 -->
+        <div class="value-compare" id="value-compare-section">
+            <div class="section-title lang-ko" style="display: none;">Haven Plus Values</div>
+            <div class="section-title lang-en" style="display: block;">Haven Plus Values</div>
+
+            <div class="value-msg-sub lang-ko" style="display: none;">
+                예측 가능한 정기 관리 + 필요할 때만 유연한 수리<br>
+                <span class="value-msg-accent">걱정 없는 자산 관리, Haven 그 이상의 Plus 가치.</span>
+            </div>
+            <div class="value-msg-sub lang-en" style="display: block;">
+                Predictable routine care + flexible repairs when you need them<br>
+                <span class="value-msg-accent">Worry-free property management — that's Haven, Plus.</span>
+            </div>
+
+            <div class="compare-table lang-ko" style="display: none;">
+                <div class="compare-row compare-header">
+                    <div class="compare-cell compare-label">항목</div>
+                    <div class="compare-cell compare-diy">일반 관리</div>
+                    <div class="compare-cell compare-hp">Haven Plus Smart</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">청소 (2시간 연 6회)</div>
+                    <div class="compare-cell compare-diy">$600+</div>
+                    <div class="compare-cell compare-hp">✅ 포함</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">수리 점검</div>
+                    <div class="compare-cell compare-diy">별도 요청</div>
+                    <div class="compare-cell compare-hp">✅ 매 방문 시</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">스모크 알람</div>
+                    <div class="compare-cell compare-diy">$100~139+</div>
+                    <div class="compare-cell compare-hp">✅ 포함</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">수리 출장비</div>
+                    <div class="compare-cell compare-diy">$100+/회</div>
+                    <div class="compare-cell compare-hp">✅ $0</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">수리 (연 3회 기준)</div>
+                    <div class="compare-cell compare-diy">$300~600+</div>
+                    <div class="compare-cell compare-hp">✅ 3 SH 바우처 포함</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">일관성 · 편의성</div>
+                    <div class="compare-cell compare-diy">낮음</div>
+                    <div class="compare-cell compare-hp">✅ 원스톱 관리</div>
+                </div>
+                <div class="compare-row compare-total">
+                    <div class="compare-cell compare-label">연간 예상 비용</div>
+                    <div class="compare-cell compare-diy">$1,200~1,600+</div>
+                    <div class="compare-cell compare-hp">$75/월 ($900/년)</div>
+                </div>
+            </div>
+
+            <div class="compare-table lang-en" style="display: block;">
+                <div class="compare-row compare-header">
+                    <div class="compare-cell compare-label">Category</div>
+                    <div class="compare-cell compare-diy">Typical</div>
+                    <div class="compare-cell compare-hp">Haven Plus Smart</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">Cleaning (2HR 6×/yr)</div>
+                    <div class="compare-cell compare-diy">$600+</div>
+                    <div class="compare-cell compare-hp">✅ Included</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">Repair checkup</div>
+                    <div class="compare-cell compare-diy">By request</div>
+                    <div class="compare-cell compare-hp">✅ Every visit</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">Smoke alarm</div>
+                    <div class="compare-cell compare-diy">$100~139+</div>
+                    <div class="compare-cell compare-hp">✅ Included</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">Repair call-out fee</div>
+                    <div class="compare-cell compare-diy">$100+/visit</div>
+                    <div class="compare-cell compare-hp">✅ $0</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">Repairs (3×/yr est.)</div>
+                    <div class="compare-cell compare-diy">$300~600+</div>
+                    <div class="compare-cell compare-hp">✅ 3 SH vouchers included</div>
+                </div>
+                <div class="compare-row">
+                    <div class="compare-cell compare-label">Consistency · Convenience</div>
+                    <div class="compare-cell compare-diy">Low</div>
+                    <div class="compare-cell compare-hp">✅ One-stop care</div>
+                </div>
+                <div class="compare-row compare-total">
+                    <div class="compare-cell compare-label">Estimated annual cost</div>
+                    <div class="compare-cell compare-diy">$1,200~1,600+</div>
+                    <div class="compare-cell compare-hp">$75/mo ($900/yr)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 프로세스 -->
+        <div class="process" id="process-section">
+            <div class="section-title lang-ko" style="display: none;">간편한 이용 방법</div>
+            <div class="section-title lang-en" style="display: block;">Simple Usage Process</div>
+            
+            <!-- 한글 프로세스 -->
+            <div class="process-steps lang-ko" style="display: none;">
+                <div class="step"><div class="step-number">1️⃣</div><div class="step-title">가입하기</div><div class="step-desc">온라인/전화로<br>간편 가입</div></div>
+                <div class="step"><div class="step-number">2️⃣</div><div class="step-title">플랜 선택</div><div class="step-desc">정기 청소 & 점검 구독,<br>SH 구매, 또는 둘 다</div></div>
+                <div class="step"><div class="step-number">3️⃣</div><div class="step-title">작업 예약</div><div class="step-desc">앱/문자/전화로<br>24~48시간 내 배정</div></div>
+                <div class="step"><div class="step-number">4️⃣</div><div class="step-title">완료 리포트</div><div class="step-desc">전/후 사진 &amp;<br>투명한 소통</div></div>
+            </div>
+            
+            <!-- 영문 프로세스 -->
+            <div class="process-steps lang-en" style="display: grid;">
+                <div class="step"><div class="step-number">1️⃣</div><div class="step-title">Sign Up</div><div class="step-desc">Online or by phone<br>Takes 5 minutes</div></div>
+                <div class="step"><div class="step-number">2️⃣</div><div class="step-title">Choose Your Plan</div><div class="step-desc">Subscribe to cleaning &amp;<br>checkup, buy SH, or both</div></div>
+                <div class="step"><div class="step-number">3️⃣</div><div class="step-title">Book a Job</div><div class="step-desc">App, text, or call<br>We're there in 24-48 hours</div></div>
+                <div class="step"><div class="step-number">4️⃣</div><div class="step-title">Job Done Right</div><div class="step-desc">Photos and updates<br>Every step of the way</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 CTA (푸터 스타일) -->
+    <div class="footer-cta" id="faq-anchor">
+        <div class="footer-cta-title lang-ko" style="display: none;">Haven Plus와 함께 시작하세요</div>
+        <div class="footer-cta-title lang-en" style="display: block;">Ready to get started?</div>
+        
+        <!-- 한글 푸터 그리드 -->
+        <div class="footer-cta-grid lang-ko" style="display: none;">
+            <a href="javascript:void(0)" class="footer-box info-box">
+                <div class="box-icon">ℹ️</div>
+                <div class="box-title">FAQ</div>
+                <div class="box-value">자주 묻는 질문</div>
+            </a>
+            <a href="tel:0426778771" class="footer-box">
+                <div class="box-icon contact-icon">📞</div>
+                <div class="box-title">문의하기</div>
+                <div class="box-value">0426 778 771<br>info@havenplus.com.au</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
+                <div class="box-icon">🚀</div>
+                <div class="box-title">지금 가입하기</div>
+                <div class="box-value">회원 가입 후 구독 · SH 구매</div>
+            </a>
+        </div>
+        
+        <!-- 영문 푸터 그리드 -->
+        <div class="footer-cta-grid lang-en" style="display: grid;">
+            <a href="javascript:void(0)" class="footer-box info-box">
+                <div class="box-icon">ℹ️</div>
+                <div class="box-title">FAQ</div>
+                <div class="box-value">Common Questions</div>
+            </a>
+            <a href="tel:0426778771" class="footer-box">
+                <div class="box-icon contact-icon">📞</div>
+                <div class="box-title">Contact Us</div>
+                <div class="box-value">0426 778 771<br>info@havenplus.com.au</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
+                <div class="box-icon">🚀</div>
+                <div class="box-title">Sign Up Now</div>
+                <div class="box-value">Subscribe or purchase SH after sign-up</div>
+            </a>
+        </div>
+        
+        <!-- FAQ 섹션 (숨김 - 별도 페이지로 이동 예정) -->
+        <div class="faq-section" id="faqSection" style="display: none;">
+            <div class="faq-content lang-ko">
+                <h3 class="faq-title">Haven Plus 실전 사용 가이드 (FAQ)</h3>
+                <div class="faq-section-title">1. 서비스 이용 및 SH(Service Hour) 안내</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q1. 출장비가 0원이라는데, 정말 기사님이 방문만 해도 무료인가요?</div>
+                        <div class="faq-answer">네, 맞습니다! 일반 기술자는 방문만 해도 $100 이상의 출장비(Call-out fee)를 요구하지만, Haven Plus 회원은 별도의 현금 지출 없이 보유한 Service Hour(SH)에서만 차감됩니다. (단, 거점 30km 이상 원거리 지역은 이동 거리에 따라 소량의 SH가 추가 차감될 수 있습니다.)</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q2. 'Service Hour(SH)'는 어떻게 차감되나요? 30분 만에 끝나면 아까울 것 같아요.</div>
+                        <div class="faq-answer">1 SH는 전문 기술자의 '1시간 작업'을 의미하며, 방문 시 이동과 준비 시간을 포함해 기본 1 SH가 차감되는 것이 원칙입니다. 하지만 고객님을 위해 15분의 여유 시간(Buffer)을 더 드려요! 작업이 1시간 15분까지 길어져도 추가 차감 없이 1 SH만 사용됩니다. 만약 수리가 30분 만에 끝났다면, 남은 시간 동안 전구 교체나 문 경첩 조이기 등 소소한 추가 점검을 요청해 1시간을 알뜰하게 채워 쓰실 수 있습니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q3. 바우처 SH를 안 쓰면 사라지나요?</div>
+                        <div class="faq-answer">구독에 포함된 SH 바우처는 구독 기간 내 사용 가능합니다. 별도 구매한 SH 번들은 구매 후 12개월 내 사용을 권장합니다. 당장 수리할 곳이 없다면 모아두셨다가 필요할 때 유연하게 사용하세요.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q4. 바우처 SH를 다 사용했는데 추가 수리가 필요하면요?</div>
+                        <div class="faq-answer">구독 바우처를 모두 사용하셨다면 Service Hours를 별도 구매하시면 됩니다. 1 SH($99), 4 SH 번들($85/SH), 8 SH 번들($80/SH)로 필요한 만큼 유연하게 추가 구매 가능합니다.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-more" id="faqMoreKo" style="display:none;">
+                <div class="faq-section-title">2. 서비스 범위 및 비대면 관리</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q5. 배관이 터지거나 전기가 나가는 큰 공사도 가능한가요?</div>
+                        <div class="faq-answer">네, 당연히 가능합니다! 전문 면허(Licensed)가 필요한 공사는 저희가 검증된 파트너 전문가를 매칭하고 전 과정을 감독해 드립니다. 고객님은 골치 아픈 업체 수배나 견적 비교를 하실 필요가 없습니다. 비용은 협의 후 보유하신 SH로 결제하거나 별도 견적으로 진행하실 수 있어 합리적입니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q6. 한밤중이나 주말에도 급하게 부를 수 있나요?</div>
+                        <div class="faq-answer">네, 누수처럼 긴급한 상황이라면 언제든 연락 주세요! 다만, 24시간 대응을 위한 효율적인 운영을 위해 할증 제도가 적용됩니다. 평일 업무 시간(9am-8pm) 당일 긴급 출동은 SH 1.5배, 그 외 야간 및 주말 작업은 SH 2배가 차감됩니다. 급한 불은 저희가 바로 끄고, 급하지 않은 작업은 평일에 예약하여 SH를 아끼시는 것을 추천해 드립니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q7. 세입자가 살고 있는 집인데, 제가 현장에 갈 수 없을 때는 어떻게 하나요?</div>
+                        <div class="faq-answer">전혀 문제없습니다! 세입자와의 일정 조율부터 방문, 수리 완료 확인까지 저희가 전담해서 처리해 드립니다. 모든 작업은 전/후 사진이 포함된 상세 리포트를 보내드리므로, 현장에 가지 않아도 직접 보신 것처럼 투명하고 꼼꼼하게 확인하실 수 있습니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8. 구독에 포함된 청소와 점검은 SH에서 차감되나요?</div>
+                        <div class="faq-answer">아니요, 차감되지 않습니다! 구독 플랜에 포함된 정기 청소, 수리 점검, 스모크 알람 점검은 구독 혜택으로 무료 제공됩니다. SH 바우처와 별도 구매 SH는 수리, 유지보수 등 추가 작업에만 사용됩니다.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-section-title">3. 비용 및 플랜 관리</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-1. 구독 없이 Service Hours만 구매할 수 있나요?</div>
+                        <div class="faq-answer">네, 가능합니다! 회원 가입만 하시면 구독 없이도 1 SH($99), 4 SH 번들($85/SH), 8 SH 번들($80/SH)을 바로 구매하여 필요할 때만 수리 서비스를 이용하실 수 있습니다. 자가 거주자, 에어비앤비 호스트 등에게 적합합니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-2. Premium Care로 여러 채 관리가 가능한가요?</div>
+                        <div class="faq-answer">네! Premium Care 구독은 최대 2~3채까지 청소 및 점검 일정을 유연하게 나눠서 관리 가능합니다. 또한 8 SH 번들은 여러 부동산에 걸쳐 자유롭게 사용할 수 있어, 다주택 투자자와 부동산 관리사에게 특히 효율적입니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q9. 수전이나 도어락 같은 '부품 값'도 구독료에 포함되나요?</div>
+                        <div class="faq-answer">SH 서비스 비용에는 기술자의 공임과 수리에 필요한 간단한 소모품(나사, 테이프 등)이 포함되어 있습니다. 하지만 수전, 도어락 같은 교체용 부품은 별도입니다. 부품은 직접 준비해 주셔도 되고 저희에게 맡기셔도 됩니다. 저희가 대신 구매해 드리는 경우 '자재 구매 서비스(Bunnings run, 0.5 SH 차감)'와 함께 [자재 실비 + 10~15% 수수료]로 투명하게 청구됩니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q10. 이용 중에 더 높은 단계의 플랜으로 업그레이드하고 싶으면 어떻게 하나요?</div>
+                        <div class="faq-answer">언제든 환영입니다! 월 구독은 즉시 전환되며, 연간 구독 중 업그레이드 시에는 [새 플랜 연간 금액 - 기존 플랜 잔여 기간 기납부 금액]만큼의 차액만 결제하시면 됩니다. 업그레이드 시점부터 새로운 12개월 계약이 적용되어 혜택을 이어가실 수 있습니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q11. 일단 써보고 싶은데, 해지 위약금이나 부동산 매각 시 처리가 궁금해요.</div>
+                        <div class="faq-answer">Haven Plus는 언제든 해지가 가능하니 부담 없이 시작하실 수 있습니다. 가입 후 90일 이내라면 위약금 없이 해지하실 수 있습니다. 다만, 멤버십 할인이 적용된 상태이므로 이미 사용하신 서비스 시간에 대해서는 표준 단가 기준으로 실비 정산이 이루어집니다. 부동산 매각 시에는 구독권을 매수자에게 그대로 승계하실 수 있으며, 이 경우 승계에 의한 구독 유지이므로 위약금과 정산 절차는 필요치 않습니다.</div>
+                    </div>
+                </div>
+                </div>
+                <button class="faq-show-more" onclick="document.getElementById('faqMoreKo').style.display='block'; this.style.display='none';">더 보기</button>
+            </div>
+            <div class="faq-content lang-en">
+                <h3 class="faq-title">Haven Plus Service Guide (FAQ)</h3>
+                <div class="faq-section-title">1. Service Hours (SH) & Usage</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q1. You mentioned a $0 call-out fee. Is it really free just for a technician to visit?</div>
+                        <div class="faq-answer">Absolutely! While a typical tradie might charge a $100+ call-out fee just to show up, Haven Plus members pay nothing out of pocket—the visit is covered by your Service Hours (SH). (Note: For remote areas over 30km from our hubs, a small SH adjustment may apply based on travel distance.)</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q2. How are Service Hours (SH) deducted? What if a job only takes 30 minutes?</div>
+                        <div class="faq-answer">1 SH represents one hour of a professional technician's time. To give you the best value, we provide a 15-minute buffer, meaning a job lasting up to 1 hour and 15 minutes still only costs 1 SH. If a repair finishes in 30 minutes, feel free to ask for other small tasks (like changing light bulbs or tightening hinges) to make the most of your full hour.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q3. If I don't use my voucher SH, will they expire?</div>
+                        <div class="faq-answer">Voucher SH included with your subscription are valid for your subscription period. Separately purchased SH bundles are valid for 12 months from purchase. If you don't need repairs right now, save them up and use them when you do.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q4. What if I've used all my voucher SH and need more repairs?</div>
+                        <div class="faq-answer">Simply purchase additional Service Hours. Choose from 1 SH ($99), 4 SH bundle ($85/SH), or 8 SH bundle ($80/SH) — flexible and available anytime.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-more" id="faqMoreEn" style="display:none;">
+                <div class="faq-section-title">2. Service Scope & Remote Management</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q5. Can you handle major works like burst pipes or electrical failures?</div>
+                        <div class="faq-answer">Yes, we certainly can. For works requiring specific licenses, we match you with vetted partner specialists and oversee the entire process. You won't have to worry about finding tradies or comparing quotes. Depending on the scale, you can pay using your SH or receive a separate transparent quote.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q6. Can I call you for emergencies late at night or on weekends?</div>
+                        <div class="faq-answer">Yes, we are available 24/7 for urgent issues like major leaks. To maintain this availability, surcharges apply: 1.5x SH for same-day emergency calls during business hours (9am-8pm) and 2x SH for nights and weekends. We'll handle the crisis immediately, but we recommend scheduling non-urgent repairs for weekdays to save your SH.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q7. What if my property is tenanted and I can't be there in person?</div>
+                        <div class="faq-answer">No problem at all! We handle everything from coordinating schedules with your tenants to the final inspection. You'll receive a detailed report with before-and-after photos, giving you complete transparency and peace of mind as if you were there yourself.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8. Do the included cleaning and checkups reduce my SH?</div>
+                        <div class="faq-answer">No, they don't! Regular cleaning, repair checkups, and smoke alarm inspections are subscription benefits provided at no additional cost. Your SH vouchers and purchased SH are only used for repairs, maintenance, and other on-demand work.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-section-title">3. Costs & Plan Management</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-1. Can I purchase Service Hours without a subscription?</div>
+                        <div class="faq-answer">Yes! Simply sign up as a member and you can purchase SH right away — 1 SH ($99), 4 SH bundle ($85/SH), or 8 SH bundle ($80/SH). No subscription required. Perfect for owner-occupiers, Airbnb hosts, and anyone who needs repairs on demand.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-2. Can I use Premium Care across multiple properties?</div>
+                        <div class="faq-answer">Yes! Premium Care subscriptions can flexibly schedule cleaning and checkups across up to 2-3 properties. Additionally, 8 SH bundles can be used across any of your properties, making it particularly efficient for multi-property investors and property managers.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q9. Are replacement parts, like taps or door locks, included in the subscription?</div>
+                        <div class="faq-answer">SH covers the technician's labor and minor workshop consumables (screws, tape, etc.). For larger parts like taps or locks, you can provide them yourself or ask us to source them. If we source them, we charge a 'Material Sourcing Fee' (Bunnings run, 0.5 SH) plus the [Actual Material Cost + 10-15% service fee].</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q10. How do I upgrade to a higher plan if my needs change?</div>
+                        <div class="faq-answer">You can upgrade at any time! For monthly plans, the change is instant. For annual plans, you simply pay the difference: [New Plan Annual Price - Amount already paid for the remaining term]. A new 12-month period starts from the upgrade date, ensuring you get all increased benefits immediately.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q11. I'd like to try it out—what about cancellation fees or selling my property?</div>
+                        <div class="faq-answer">Feel free to start without any pressure—you can cancel at any time! Within the first 90 days, the early termination fee is waived. However, as the plan provides discounted membership rates, you'll need to settle the cost of services already used at the standard rate. If you're selling your property, you can transfer your subscription to the new owner, and in this case no cancellation fees or settlement procedures apply as the subscription continues through transfer.</div>
+                    </div>
+                </div>
+                </div>
+                <button class="faq-show-more" onclick="document.getElementById('faqMoreEn').style.display='block'; this.style.display='none';">Show More</button>
+            </div>
+        </div>
+        
+        <div class="contact-footer">Haven Plus Property Care | Perth, WA | ABN: 83 695 213 499</div>
+    </div>
+
+    <script>
+    // ============================================
+    // SUPABASE INIT
+    // ============================================
+    const SUPABASE_URL = 'https://rtkgnlcgepromqtoelre.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
+    
+    let sb = null;
+    let currentUser = null;
+    let currentLang = 'en';
+
+    function initSupabase() {
+        try {
+            if (window.supabase && window.supabase.createClient) {
+                sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase connected');
+            } else {
+                console.warn('Supabase JS not loaded yet');
+            }
+        } catch(e) {
+            console.warn('Supabase init error:', e);
+        }
+    }
+
+    // ============================================
+    // AUTH FUNCTIONS
+    // ============================================
+    function openAuth(tab) {
+        document.getElementById('authOverlay').classList.add('active');
+        document.getElementById('authError').style.display = 'none';
+        document.getElementById('authSuccess').style.display = 'none';
+        switchTab(tab || 'login');
+    }
+
+    function closeAuth() {
+        document.getElementById('authOverlay').classList.remove('active');
+        document.getElementById('authError').style.display = 'none';
+        document.getElementById('authSuccess').style.display = 'none';
+    }
+
+    function switchTab(tab) {
+        document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+        document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+        document.getElementById('formLogin').classList.toggle('active', tab === 'login');
+        document.getElementById('formSignup').classList.toggle('active', tab === 'signup');
+        document.getElementById('authError').style.display = 'none';
+        document.getElementById('authSuccess').style.display = 'none';
+        document.getElementById('passwordHint').style.display = 'none';
+        pwAttempts = 0;
+    }
+
+    function showAuthError(msg) {
+        const el = document.getElementById('authError');
+        el.textContent = msg;
+        el.style.display = 'block';
+        document.getElementById('authSuccess').style.display = 'none';
+    }
+
+    function showAuthSuccess(msg) {
+        const el = document.getElementById('authSuccess');
+        el.textContent = msg;
+        el.style.display = 'block';
+        document.getElementById('authError').style.display = 'none';
+    }
+
+    // ============================================
+    // LEGAL MODAL
+    // ============================================
+    const legalContent = {
+        terms: {
+            title_en: 'Terms of Service',
+            title_ko: '이용약관',
+            body_en: `
+                <h3>1. Service Overview</h3>
+                <p>Haven Plus Pty Ltd (ABN 83 695 213 499) provides property care services including regular cleaning & checkup subscriptions and on-demand Service Hours (SH) for maintenance and repairs.</p>
+                
+                <h3>2. Account & Eligibility</h3>
+                <p>You must be 18+ and provide accurate information. You are responsible for maintaining the confidentiality of your account credentials. One account per person.</p>
+                
+                <h3>3. Services Provided</h3>
+                <ul>
+                    <li><strong>Subscription Plans:</strong> Regular cleaning (2hr), repair checkup, smoke alarm inspection on a 12-month commitment.</li>
+                    <li><strong>Service Hours (SH):</strong> Prepaid hours for maintenance, repairs, seasonal care. Available to all members with or without subscription.</li>
+                    <li><strong>Professional Works Management:</strong> Licensed trade coordination for electrical, plumbing, gas works.</li>
+                </ul>
+                
+                <h3>4. Payments</h3>
+                <p>Subscription fees are charged monthly via Stripe. SH bundles are prepaid. All prices include GST. By creating an account, you acknowledge that purchases will be processed through our designated payment system.</p>
+                
+                <h3>5. Cancellation & Refunds</h3>
+                <ul>
+                    <li>30-day cooling-off period with full refund (exceeds ACL minimum of 10 days).</li>
+                    <li>Staged cancellation fees apply after cooling-off period.</li>
+                    <li>Unused prepaid SH are refundable based on usage calculation.</li>
+                    <li>Full details provided at the time of purchase.</li>
+                </ul>
+                
+                <h3>6. Property Access</h3>
+                <p>You authorise Haven Plus workers to access your property for scheduled and requested services. Access information (keys, codes) is securely stored and used only for service purposes.</p>
+                
+                <h3>7. Limitation of Liability</h3>
+                <p>Haven Plus carries appropriate insurance. Liability is limited to the value of services paid. We are not liable for pre-existing property conditions or issues beyond our scope of service.</p>
+                
+                <h3>8. Governing Law</h3>
+                <p>This agreement is governed by the laws of Western Australia and the Commonwealth of Australia, including the Competition and Consumer Act 2010 and the Fair Trading Act 2010 (WA).</p>
+                
+                <h3>9. Changes to Terms</h3>
+                <p>We may update these terms with 30 days' notice via email. Continued use after notice constitutes acceptance.</p>
+                
+                <p style="margin-top:24px;color:#999;font-size:12px;">Haven Plus Pty Ltd | ABN 83 695 213 499 | Perth, WA<br>Last updated: March 2026</p>
+            `,
+            body_ko: `
+                <h3>1. 서비스 개요</h3>
+                <p>Haven Plus Pty Ltd (ABN 83 695 213 499)는 정기 청소 · 점검 구독 서비스와 유지보수 · 수리를 위한 Service Hours (SH)를 제공합니다.</p>
+                
+                <h3>2. 계정 및 자격</h3>
+                <p>만 18세 이상이어야 하며, 정확한 정보를 제공해야 합니다. 계정 자격 증명의 기밀을 유지할 책임이 있습니다. 1인 1계정 원칙입니다.</p>
+                
+                <h3>3. 제공 서비스</h3>
+                <ul>
+                    <li><strong>구독 플랜:</strong> 정기 청소(2시간), 수리 점검, 스모크 알람 점검 — 12개월 약정.</li>
+                    <li><strong>Service Hours (SH):</strong> 유지보수, 수리, 계절 관리를 위한 선불 시간. 구독 없이 회원 가입만으로 구매 가능.</li>
+                    <li><strong>전문 공사 매니지먼트:</strong> 전기, 배관, 가스 등 전문 라이센스 공사 조율.</li>
+                </ul>
+                
+                <h3>4. 결제</h3>
+                <p>구독료는 Stripe를 통해 매월 자동 결제됩니다. SH 번들은 선불입니다. 모든 가격은 GST 포함입니다. 계정 생성 시 지정 결제 시스템을 통한 구매 처리에 동의합니다.</p>
+                
+                <h3>5. 해지 및 환불</h3>
+                <ul>
+                    <li>30일 쿨링오프 기간 — 전액 환불 (호주 소비자법 최소 10일 초과 제공).</li>
+                    <li>쿨링오프 이후 단계별 위약금 적용.</li>
+                    <li>미사용 선불 SH는 사용량 기준 환불.</li>
+                    <li>상세 조건은 구매 시 별도 안내.</li>
+                </ul>
+                
+                <h3>6. 부동산 출입</h3>
+                <p>예약 및 요청 서비스를 위해 Haven Plus 작업자의 부동산 출입을 허가합니다. 출입 정보(열쇠, 코드)는 안전하게 보관되며 서비스 목적으로만 사용됩니다.</p>
+                
+                <h3>7. 책임 제한</h3>
+                <p>Haven Plus는 적절한 보험을 보유합니다. 책임은 지불된 서비스 가치로 제한됩니다. 기존 부동산 상태 또는 서비스 범위 외 문제에 대해서는 책임지지 않습니다.</p>
+                
+                <h3>8. 준거법</h3>
+                <p>본 약관은 서호주법 및 호주 연방법에 따르며, Competition and Consumer Act 2010 및 Fair Trading Act 2010 (WA)을 준수합니다.</p>
+                
+                <h3>9. 약관 변경</h3>
+                <p>이메일로 30일 전 고지 후 약관을 변경할 수 있습니다. 고지 후 계속 이용 시 변경에 동의한 것으로 간주됩니다.</p>
+                
+                <p style="margin-top:24px;color:#999;font-size:12px;">Haven Plus Pty Ltd | ABN 83 695 213 499 | Perth, WA<br>최종 수정: 2026년 3월</p>
+            `
+        },
+        privacy: {
+            title_en: 'Privacy Policy',
+            title_ko: '개인정보처리방침',
+            body_en: `
+                <h3>1. Information We Collect</h3>
+                <p>We collect your name, contact details, email, property address, access information (codes/key location), and payment information for the purpose of providing our services.</p>
+                
+                <h3>2. How We Use Your Information</h3>
+                <ul>
+                    <li>Service booking and scheduling</li>
+                    <li>Payment processing (via Stripe)</li>
+                    <li>Service reports and communication</li>
+                    <li>Emergency contact</li>
+                    <li>Customer support</li>
+                </ul>
+                
+                <h3>3. Third-Party Sharing</h3>
+                <p>We share the minimum necessary information only with essential service partners including Stripe for payment processing and other platforms for job management and business operations. We never sell or share your information with any other third parties.</p>
+                
+                <h3>4. Data Security</h3>
+                <p>All personal information is stored securely on encrypted servers in compliance with the Privacy Act 1988 (Cth) and the Australian Privacy Principles (APPs).</p>
+                
+                <h3>5. Access & Correction</h3>
+                <p>You may request to view, correct, or delete your personal information at any time by contacting us at info@havenplus.com.au.</p>
+                
+                <h3>6. Cookies & Analytics</h3>
+                <p>Our website may use cookies and analytics tools to improve user experience. You can disable cookies in your browser settings.</p>
+                
+                <h3>7. Data Retention</h3>
+                <p>We retain your data for the duration of your membership and for up to 7 years after account closure for legal and tax compliance purposes.</p>
+                
+                <h3>8. Contact</h3>
+                <p>For privacy inquiries: info@havenplus.com.au<br>Haven Plus Pty Ltd | ABN 83 695 213 499 | Perth, WA</p>
+                
+                <p style="margin-top:24px;color:#999;font-size:12px;">Last updated: March 2026</p>
+            `,
+            body_ko: `
+                <h3>1. 수집하는 정보</h3>
+                <p>서비스 제공을 위해 이름, 연락처, 이메일, 부동산 주소, 출입 정보(코드/키 위치) 및 결제 정보를 수집합니다.</p>
+                
+                <h3>2. 정보 사용 목적</h3>
+                <ul>
+                    <li>서비스 예약 및 일정 관리</li>
+                    <li>결제 처리 (Stripe 연동)</li>
+                    <li>서비스 리포트 발송 및 커뮤니케이션</li>
+                    <li>긴급 연락</li>
+                    <li>고객 문의 대응</li>
+                </ul>
+                
+                <h3>3. 제3자 제공</h3>
+                <p>서비스 운영에 필수적인 Stripe(결제 처리) 및 작업 관리, 사업 운영에 필수적인 외부 플랫폼에 한하여 필요한 최소한의 정보를 제공합니다. 그 외 제3자에게 판매하거나 공유하지 않습니다.</p>
+                
+                <h3>4. 데이터 보안</h3>
+                <p>모든 개인정보는 Privacy Act 1988 및 호주 개인정보 보호 원칙(APPs)을 준수하여 암호화된 서버에 안전하게 보관됩니다.</p>
+                
+                <h3>5. 열람 및 수정</h3>
+                <p>언제든 info@havenplus.com.au로 연락하여 개인정보 열람, 수정 또는 삭제를 요청할 수 있습니다.</p>
+                
+                <h3>6. 쿠키 및 분석</h3>
+                <p>사용자 경험 개선을 위해 쿠키 및 분석 도구를 사용할 수 있습니다. 브라우저 설정에서 쿠키를 비활성화할 수 있습니다.</p>
+                
+                <h3>7. 데이터 보관</h3>
+                <p>회원 기간 중 및 계정 종료 후 법적/세무 목적으로 최대 7년간 데이터를 보관합니다.</p>
+                
+                <h3>8. 문의</h3>
+                <p>개인정보 관련 문의: info@havenplus.com.au<br>Haven Plus Pty Ltd | ABN 83 695 213 499 | Perth, WA</p>
+                
+                <p style="margin-top:24px;color:#999;font-size:12px;">최종 수정: 2026년 3월</p>
+            `
+        }
+    };
+
+    function openLegalModal(type) {
+        const doc = legalContent[type];
+        if (!doc) return;
+        document.getElementById('legalTitle').textContent = currentLang === 'ko' ? doc.title_ko : doc.title_en;
+        document.getElementById('legalBody').innerHTML = currentLang === 'ko' ? doc.body_ko : doc.body_en;
+        document.getElementById('legalOverlay').classList.add('active');
+    }
+
+    function closeLegalModal() {
+        document.getElementById('legalOverlay').classList.remove('active');
+    }
+
+    // ============================================
+    // PASSWORD TOGGLE
+    // ============================================
+    function togglePW(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.classList.add('active');
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        } else {
+            input.type = 'password';
+            btn.classList.remove('active');
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        }
+    }
+
+    // ============================================
+    // AU PHONE VALIDATION
+    // ============================================
+    function formatAUPhone(input) {
+        let digits = input.replace(/\D/g, '');
+        // Convert +61 to 0
+        if (digits.startsWith('61') && digits.length >= 11) digits = '0' + digits.slice(2);
+        // Format: 04XX XXX XXX or 0X XXXX XXXX
+        if (digits.startsWith('04') && digits.length === 10) {
+            return digits.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+        }
+        if (digits.startsWith('0') && digits.length === 10) {
+            return digits.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3');
+        }
+        return input;
+    }
+
+    function validateAUPhone(input) {
+        let digits = input.replace(/\D/g, '');
+        if (digits.startsWith('61')) digits = '0' + digits.slice(2);
+        return /^04\d{8}$/.test(digits) || /^0[2378]\d{8}$/.test(digits);
+    }
+
+    function toE164(input) {
+        let digits = input.replace(/\D/g, '');
+        if (digits.startsWith('61')) digits = '0' + digits.slice(2);
+        if (digits.startsWith('0')) digits = '61' + digits.slice(1);
+        return '+' + digits;
+    }
+
+    let pwAttempts = 0;
+
+    async function handleSignup() {
+        if (!sb) { initSupabase(); if (!sb) { showAuthError('Service loading... please try again in a moment.'); return; } }
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const phone = document.getElementById('signupPhone').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const language = document.getElementById('signupLanguage').value;
+
+        if (!name || !email || !password) {
+            showAuthError(currentLang === 'ko' ? '이름, 이메일, 비밀번호를 입력해 주세요.' : 'Please fill in name, email, and password.');
+            return;
+        }
+        if (!document.getElementById('consentTerms').checked) {
+            showAuthError(currentLang === 'ko' ? '이용약관 및 개인정보처리방침에 동의해 주세요.' : 'Please agree to the Terms of Service and Privacy Policy.');
+            return;
+        }
+        if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
+            pwAttempts++;
+            if (pwAttempts >= 2) {
+                document.getElementById('passwordHint').style.display = 'block';
+            }
+            showAuthError(currentLang === 'ko' ? '비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.' : 'Password must be at least 8 characters with letters and numbers.');
+            return;
+        }
+        if (phone && !validateAUPhone(phone)) {
+            showAuthError(currentLang === 'ko' ? '올바른 호주 전화번호를 입력해 주세요. (예: 04XX XXX XXX)' : 'Please enter a valid Australian phone number (e.g. 04XX XXX XXX)');
+            return;
+        }
+        const phoneE164 = phone ? toE164(phone) : '';
+
+        const btn = document.getElementById('btnSignup');
+        btn.disabled = true;
+        btn.textContent = '...';
+
+        const { data, error } = await sb.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    full_name: name,
+                    phone: phoneE164,
+                    preferred_language: language,
+                    terms_agreed_at: new Date().toISOString(),
+                    marketing_consent: document.getElementById('consentMarketing').checked
+                }
+            }
+        });
+
+        btn.disabled = false;
+        btn.innerHTML = '<span class="lang-auth-en">Create Account</span><span class="lang-auth-ko" style="display:none;">계정 만들기</span>';
+        updateAuthLang();
+
+        if (error) {
+            showAuthError(error.message.includes('rate limit') ? (currentLang === 'ko' ? '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' : 'Too many requests. Please wait a moment and try again.') : error.message);
+        } else {
+            showAuthSuccess(currentLang === 'ko' 
+                ? '회원가입 완료! 이메일 인증 링크를 확인해 주세요.' 
+                : 'Account created! Please check your email to verify.');
+            // Clear form
+            document.getElementById('signupName').value = '';
+            document.getElementById('signupEmail').value = '';
+            document.getElementById('signupPhone').value = '';
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('passwordHint').style.display = 'none';
+            pwAttempts = 0;
+            document.getElementById('consentTerms').checked = false;
+            document.getElementById('consentMarketing').checked = false;
+        }
+    }
+
+    async function handleLogin() {
+        if (!sb) { initSupabase(); if (!sb) { showAuthError('Service loading... please try again in a moment.'); return; } }
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!email || !password) {
+            showAuthError(currentLang === 'ko' ? '이메일과 비밀번호를 입력해 주세요.' : 'Please enter email and password.');
+            return;
+        }
+
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true;
+        btn.textContent = '...';
+
+        const { data, error } = await sb.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        btn.disabled = false;
+        btn.innerHTML = '<span class="lang-auth-en">Login</span><span class="lang-auth-ko" style="display:none;">로그인</span>';
+        updateAuthLang();
+
+        if (error) {
+            showAuthError(currentLang === 'ko' ? '이메일 또는 비밀번호가 올바르지 않습니다.' : 'Invalid email or password.');
+        } else {
+            closeAuth();
+            window.location.href = '/dashboard.html';
+        }
+    }
+
+    async function handleForgotPassword() {
+        if (!sb) { showAuthError('Service unavailable.'); return; }
+        const email = document.getElementById('loginEmail').value.trim();
+        if (!email) {
+            showAuthError(currentLang === 'ko' ? '이메일을 먼저 입력해 주세요.' : 'Please enter your email first.');
+            return;
+        }
+        const { error } = await sb.auth.resetPasswordForEmail(email);
+        if (error) {
+            showAuthError(error.message.includes('rate limit') ? (currentLang === 'ko' ? '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' : 'Too many requests. Please wait a moment and try again.') : error.message);
+        } else {
+            showAuthSuccess(currentLang === 'ko' 
+                ? '비밀번호 재설정 링크를 이메일로 보냈습니다.' 
+                : 'Password reset link sent to your email.');
+        }
+    }
+
+    async function handleLogout() {
+        if (sb) await sb.auth.signOut();
+        currentUser = null;
+        document.getElementById('authButtons').style.display = 'flex';
+        document.getElementById('userMenu').style.display = 'none';
+    }
+
+    function updateUIForUser(user) {
+        currentUser = user;
+        const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+        const initial = name.charAt(0).toUpperCase();
+        
+        document.getElementById('authButtons').style.display = 'none';
+        document.getElementById('userMenu').style.display = 'flex';
+        document.getElementById('userAvatar').textContent = initial;
+        document.getElementById('userName').textContent = name;
+    }
+
+    function openDashboard() {
+        // Placeholder — will redirect to dashboard page in Stage 4
+        alert(currentLang === 'ko' 
+            ? '대시보드는 준비 중입니다. 곧 오픈 예정!' 
+            : 'Dashboard is coming soon!');
+    }
+
+    // ============================================
+    // LANGUAGE TOGGLE (extended for nav + auth)
+    // ============================================
+    function toggleLanguage(lang) {
+        currentLang = lang;
+        
+        // 모든 한글 요소 표시/숨김
+        document.querySelectorAll('.lang-ko').forEach(el => {
+            el.style.display = lang === 'ko' ? 'block' : 'none';
+        });
+        
+        // 모든 영어 요소 표시/숨김
+        document.querySelectorAll('.lang-en').forEach(el => {
+            el.style.display = lang === 'en' ? 'block' : 'none';
+        });
+        
+        // Nav links
+        document.querySelectorAll('.lang-nav-ko').forEach(el => {
+            el.style.display = lang === 'ko' ? 'inline' : 'none';
+        });
+        document.querySelectorAll('.lang-nav-en').forEach(el => {
+            el.style.display = lang === 'en' ? 'inline' : 'none';
+        });
+        
+        // Auth modal
+        updateAuthLang();
+        
+        // 토글 버튼 활성화 상태 변경
+        document.querySelectorAll('.lang-btn, .nav-lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById('lang-' + lang).classList.add('active');
+        
+        // 그리드 요소는 display: grid로 강제 변경
+        const gridClasses = [
+            '.problem-grid', 
+            '.solution-grid', 
+            '.core-values-grid', 
+            '.price-grid', 
+            '.sh-grid', 
+            '.sh-values',
+            '.sh-values-clean',
+            '.process-steps',
+            '.footer-cta-grid'
+        ];
+
+        gridClasses.forEach(cls => {
+            if (lang === 'en') {
+                document.querySelectorAll('.lang-en' + cls).forEach(el => el.style.display = 'grid');
+            } else {
+                document.querySelectorAll('.lang-ko' + cls).forEach(el => el.style.display = 'grid');
+            }
+        });
+        
+        // Flex 요소
+        if (lang === 'en') {
+            document.querySelectorAll('.lang-en.cta-buttons-large').forEach(el => el.style.display = 'grid');
+            document.querySelectorAll('.lang-en.value-items').forEach(el => el.style.display = 'flex');
+        } else {
+            document.querySelectorAll('.lang-ko.cta-buttons-large').forEach(el => el.style.display = 'grid');
+            document.querySelectorAll('.lang-ko.value-items').forEach(el => el.style.display = 'flex');
+        }
+        // Align price cards after language switch
+        setTimeout(alignPriceCards, 50);
+    }
+    
+    function updateAuthLang() {
+        document.querySelectorAll('.lang-auth-ko').forEach(el => {
+            el.style.display = currentLang === 'ko' ? 'inline' : 'none';
+        });
+        document.querySelectorAll('.lang-auth-en').forEach(el => {
+            el.style.display = currentLang === 'en' ? 'inline' : 'none';
+        });
+    }
+
+    // ============================================
+    // EXISTING TOGGLE FUNCTIONS
+    // ============================================
+    function toggleEarlyAdopter() {
+        const content = document.getElementById('earlyAdopterContent');
+        const icon = document.getElementById('toggleIcon');
+        
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            icon.classList.remove('open');
+            icon.textContent = '▼';
+        } else {
+            content.classList.add('open');
+            icon.classList.add('open');
+            icon.textContent = '▲';
+        }
+    }
+    
+    function togglePricing() {
+        const content = document.getElementById('pricingContent');
+        const icon = document.getElementById('pricingToggleIcon');
+        
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            icon.textContent = '▼';
+        } else {
+            content.classList.add('open');
+            icon.textContent = '▲';
+            setTimeout(() => {
+                content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    }
+    
+    function toggleFAQ() {
+        const faqSection = document.getElementById('faqSection');
+        
+        if (faqSection.style.display === 'none' || faqSection.style.display === '') {
+            faqSection.style.display = 'block';
+            setTimeout(function() {
+                faqSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        } else {
+            faqSection.style.display = 'none';
+        }
+    }
+
+    // ============================================
+    // SMOOTH SCROLL FOR NAV LINKS
+    // ============================================
+    document.querySelectorAll('.nav-link[href^="#"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const offset = 120; // nav height + padding
+                const pos = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({ top: pos, behavior: 'smooth' });
+            }
+        });
+    });
+
+    // ============================================
+    // PRICE CARD ROW ALIGNMENT
+    // ============================================
+    function alignPriceCards() {
+        document.querySelectorAll('.price-grid').forEach(grid => {
+            if (grid.offsetParent === null) return; // skip hidden grids
+            const cards = grid.querySelectorAll('.price-card');
+            if (cards.length < 2) return;
+            
+            const rows = ['plan-name', 'plan-target', 'price', 'price-label', 'price-annual', 'hours-badge'];
+            
+            rows.forEach(cls => {
+                // Reset heights first
+                cards.forEach(card => {
+                    const el = card.querySelector('.' + cls);
+                    if (el) el.style.minHeight = '';
+                });
+                // Find max height
+                let maxH = 0;
+                cards.forEach(card => {
+                    const el = card.querySelector('.' + cls);
+                    if (el) maxH = Math.max(maxH, el.offsetHeight);
+                });
+                // Apply max height
+                cards.forEach(card => {
+                    const el = card.querySelector('.' + cls);
+                    if (el) el.style.minHeight = maxH + 'px';
+                });
+            });
+        });
+    }
+
+    // ============================================
+    // INIT
+    // ============================================: Check session + set language
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        initSupabase();
+        toggleLanguage('en');
+        setTimeout(alignPriceCards, 100);
+        // Retry Supabase init after a delay if CDN was slow
+        if (!sb) setTimeout(initSupabase, 1000);
+        window.addEventListener('resize', alignPriceCards);
+        
+        if (!sb) return;
+        
+        // Check existing session
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user) {
+            updateUIForUser(session.user);
+        }
+        
+        // Listen for auth changes
+        sb.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+                // Redirect to dashboard
+                window.location.href = '/dashboard.html';
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                document.getElementById('authButtons').style.display = 'flex';
+                document.getElementById('userMenu').style.display = 'none';
+            }
+        });
+
+        // Check if already logged in → redirect
+        const { data: { session: existingSession } } = await sb.auth.getSession();
+        if (existingSession?.user) {
+            window.location.href = '/dashboard.html';
+        }
+    });
+    </script>
+
+</body>
+</html>
