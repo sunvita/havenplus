@@ -9,7 +9,6 @@
         html { overflow-x: hidden; }
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
-            max-width: 1080px;
             width: 100%;
             margin: 0 auto;
             background: white; 
@@ -936,9 +935,7 @@
             position: relative;
             overflow: hidden;
             margin: 0;
-            width: 100vw;
-            left: 50%;
-            transform: translateX(-50%);
+            width: 100%;
         }
         .hero::before {
             content: '';
@@ -2220,7 +2217,7 @@
             <a href="tel:0426778771" class="footer-box">
                 <div class="box-icon contact-icon">📞</div>
                 <div class="box-title">문의하기</div>
-                <div class="box-value">0426 778 771<br>info@havenplus.com.au</div>
+                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="d9b0b7bfb699b1b8afbcb7a9b5acaaf7bab6b4f7b8ac">[email&#160;protected]</span></div>
             </a>
             <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
                 <div class="box-icon">🚀</div>
@@ -2239,7 +2236,7 @@
             <a href="tel:0426778771" class="footer-box">
                 <div class="box-icon contact-icon">📞</div>
                 <div class="box-title">Contact Us</div>
-                <div class="box-value">0426 778 771<br>info@havenplus.com.au</div>
+                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="2940474f466941485f4c4759455c5a074a464407485c">[email&#160;protected]</span></div>
             </a>
             <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
                 <div class="box-icon">🚀</div>
@@ -2393,7 +2390,7 @@
         <div class="contact-footer">Haven Plus Property Care | Perth, WA | ABN: 83 695 213 499</div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     // ============================================
     // SUPABASE INIT
     // ============================================
@@ -3017,16 +3014,4 @@
                 currentUser = null;
                 document.getElementById('authButtons').style.display = 'flex';
                 document.getElementById('userMenu').style.display = 'none';
-            }
-        });
-
-        // Check if already logged in → redirect
-        const { data: { session: existingSession } } = await sb.auth.getSession();
-        if (existingSession?.user) {
-            window.location.href = '/dashboard.html';
-        }
-    });
-    </script>
-
-</body>
-</html>
+   
