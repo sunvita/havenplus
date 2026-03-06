@@ -968,7 +968,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* Handle Stripe return */
   const p = new URLSearchParams(window.location.search);
-  if (p.get('payment') === 'success') {
+  if (p.get('success') === 'true' || p.get('payment') === 'success') {
     const pSH = sessionStorage.getItem('hp_pending_sh');
     if (pSH) {
       sessionStorage.removeItem('hp_pending_sh');
@@ -977,14 +977,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       await triggerCheckout(pSH);
       return;
     }
+    // 결제 완료 → 대시보드로 리다이렉트
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
     document.getElementById('successBanner').classList.add('show');
     window.history.replaceState({}, '', 'plans.html');
   }
-  if (p.get('payment') === 'sh_success') {
+  if (p.get('sh_success') === 'true' || p.get('payment') === 'sh_success') {
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
     document.getElementById('successBanner').classList.add('show');
     window.history.replaceState({}, '', 'plans.html');
   }
-  if (p.get('payment') === 'cancelled') {
+  if (p.get('cancelled') === 'true' || p.get('payment') === 'cancelled') {
     sessionStorage.removeItem('hp_pending_sh');
     showToast('Payment was cancelled. No charge was made.');
     window.history.replaceState({}, '', 'plans.html');
