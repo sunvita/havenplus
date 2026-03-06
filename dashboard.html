@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Haven Plus — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjvd2oEOZvYfoVddUXFOZeJHPAQc01_bE&libraries=places&callback=initPlaces" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC03KO68dQ459iJ1RCXn2Loe8tJJ-thKYk&libraries=places&callback=initPlaces" async defer></script>
 <style>
 :root {
   --navy: #1B2A4A;
@@ -259,7 +259,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       </div>
       <div class="action-card disabled" id="cardPlan" onclick="handleChoosePlan()">
         <div class="action-icon">📋</div>
-        <div class="action-title">Select a Plan</div>
+        <div class="action-title">Choose a Plan</div>
         <div class="action-desc">Select a subscription or purchase Service Hours</div>
         <div class="action-badge badge-locked" id="badgePlan">Register property first</div>
       </div>
@@ -509,16 +509,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentUser = session.user;
 
   const meta = currentUser.user_metadata || {};
-  const name = meta.full_name || meta.name || (currentUser.email ? currentUser.email.split('@')[0] : 'Account');
+  const name = meta.full_name || currentUser.email.split('@')[0];
   document.getElementById('dashUserName').textContent = name;
   document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
 
-  // Fetch role BEFORE loadDashboard so isAdmin is set when renderPropertyList runs
-  const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
-  isAdmin = profile?.role === 'admin';
-
   await loadDashboard();
 
+  // Fetch role from profiles table
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+  isAdmin = profile?.role === 'admin';
   document.getElementById('loadingScreen').classList.add('hide');
   document.getElementById('dashContent').style.display = 'block';
 });
