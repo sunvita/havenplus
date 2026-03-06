@@ -9,6 +9,7 @@
         html { overflow-x: hidden; }
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
+            max-width: 1080px;
             width: 100%;
             margin: 0 auto;
             background: white; 
@@ -343,18 +344,18 @@
         @media (max-width: 768px) {
             .pricing { padding: 40px 30px; }
         }
-        .price-card { background: white; padding: 40px 30px 30px; border-radius: 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 3px solid #e0e0e0; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .price-card { background: white; padding: 40px 28px 32px; border-radius: 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 3px solid #e0e0e0; position: relative; display: flex; flex-direction: column; align-items: center; }
         .price-card.featured { border-color: #ff6b35; }
         .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 900; white-space: nowrap; }
-        .plan-name { font-size: clamp(18px, 2.2vw, 24px); font-weight: 900; color: #1a1a1a; margin-bottom: 8px; }
+        .plan-name { font-size: clamp(18px, 2.2vw, 24px); font-weight: 900; color: #1a1a1a; margin-bottom: 8px; min-height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; }
         .sh-short { display: none; }
         .sh-full  { display: inline; }
         @media (max-width: 900px) { .sh-short { display: inline; } .sh-full { display: none; } }
-        .plan-target { font-size: clamp(10px, 1.1vw, 12px); color: #888; margin-bottom: 24px; line-height: 1.4; min-height: 36px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .plan-target { font-size: clamp(10px, 1.1vw, 12px); color: #888; margin-bottom: 18px; line-height: 1.4; min-height: 32px; display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; }
         .price { font-size: clamp(42px, 5.8vw, 62px); font-weight: 900; color: #1B2A4A; margin-bottom: 4px; line-height: 1; }
         .price-label { font-size: clamp(13px, 1.5vw, 15px); color: #555; margin-bottom: 4px; font-weight: 600; }
-        .price-annual { font-size: clamp(12px, 1.3vw, 13px); color: #aaa; margin-bottom: 20px; min-height: 18px; }
-        .hours-badge { background: rgba(27,42,74,0.07); padding: 10px 14px; border-radius: 10px; font-size: clamp(12px, 1.4vw, 14px); font-weight: 700; color: #1B2A4A; margin-bottom: 24px; width: 100%; }
+        .price-annual { font-size: clamp(12px, 1.3vw, 13px); color: #aaa; margin-bottom: 18px; min-height: 18px; }
+        .hours-badge { background: rgba(27,42,74,0.07); padding: 10px 14px; border-radius: 10px; font-size: clamp(12px, 1.3vw, 14px); font-weight: 700; color: #1B2A4A; margin-bottom: 22px; width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: center; }
         .benefits-title { font-size: 14px; font-weight: 700; color: #1B2A4A; margin-bottom: 12px; text-align: left; width: 100%; }
         .features { text-align: left; width: 100%; flex: 1; }
         .feature { font-size: clamp(13px, 1.4vw, 15px); color: #333; margin-bottom: 10px; padding-left: 22px; position: relative; line-height: 1.5; }
@@ -1642,6 +1643,10 @@
                     <span class="lang-auth-en">Login</span>
                     <span class="lang-auth-ko" style="display:none;">로그인</span>
                 </button>
+                <div style="text-align:center; margin-top:16px; font-size:13px; color:#999;">
+                    <span class="lang-auth-en">Don't have an account? <a href="#" onclick="switchTab('signup'); return false;" style="color:#1B2A4A; font-weight:700;">Sign Up</a></span>
+                    <span class="lang-auth-ko" style="display:none;">계정이 없으신가요? <a href="#" onclick="switchTab('signup'); return false;" style="color:#1B2A4A; font-weight:700;">회원가입</a></span>
+                </div>
             </div>
 
             <!-- Signup Form -->
@@ -1712,6 +1717,10 @@
                     <span class="lang-auth-en">Create Account</span>
                     <span class="lang-auth-ko" style="display:none;">계정 만들기</span>
                 </button>
+                <div style="text-align:center; margin-top:16px; font-size:13px; color:#999;">
+                    <span class="lang-auth-en">Already have an account? <a href="#" onclick="switchTab('login'); return false;" style="color:#1B2A4A; font-weight:700;">Login</a></span>
+                    <span class="lang-auth-ko" style="display:none;">이미 계정이 있으신가요? <a href="#" onclick="switchTab('login'); return false;" style="color:#1B2A4A; font-weight:700;">로그인</a></span>
+                </div>
             </div>
         </div>
     </div>
@@ -2210,7 +2219,7 @@
             <a href="tel:0426778771" class="footer-box">
                 <div class="box-icon contact-icon">📞</div>
                 <div class="box-title">문의하기</div>
-                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="cba2a5ada48ba3aabdaea5bba7beb8e5a8a4a6e5aabe">[email&#160;protected]</span></div>
+                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="9cf5f2faf3dcf4fdeaf9f2ecf0e9efb2fff3f1b2fde9">[email&#160;protected]</span></div>
             </a>
             <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
                 <div class="box-icon">🚀</div>
@@ -2229,7 +2238,7 @@
             <a href="tel:0426778771" class="footer-box">
                 <div class="box-icon contact-icon">📞</div>
                 <div class="box-title">Contact Us</div>
-                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="fd94939b92bd959c8b98938d91888ed39e9290d39c88">[email&#160;protected]</span></div>
+                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="3b52555d547b535a4d5e554b574e4815585456155a4e">[email&#160;protected]</span></div>
             </a>
             <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
                 <div class="box-icon">🚀</div>
@@ -2676,8 +2685,6 @@
             const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
             el.style.display = lang === 'ko' ? (isInline ? 'inline' : 'block') : 'none';
         });
-        
-        // 모든 영어 요소 표시/숨김
         document.querySelectorAll('.lang-en').forEach(el => {
             const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
             el.style.display = lang === 'en' ? (isInline ? 'inline' : 'block') : 'none';
@@ -2776,27 +2783,18 @@
         }
     }
     
-    function openFAQPage() {
-        const page = document.getElementById('faqPage');
-        page.style.display = 'block';
-        page.scrollTop = 0;
-        document.body.style.overflow = 'hidden';
-        page.querySelectorAll('.lang-ko').forEach(el => {
-            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
-            el.style.display = currentLang === 'ko' ? (isInline ? 'inline' : 'block') : 'none';
-        });
-        page.querySelectorAll('.lang-en').forEach(el => {
-            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
-            el.style.display = currentLang === 'en' ? (isInline ? 'inline' : 'block') : 'none';
-        });
+    function toggleFAQ() {
+        const faqSection = document.getElementById('faqSection');
+        
+        if (faqSection.style.display === 'none' || faqSection.style.display === '') {
+            faqSection.style.display = 'block';
+            setTimeout(function() {
+                faqSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        } else {
+            faqSection.style.display = 'none';
+        }
     }
-
-    function closeFAQPage() {
-        document.getElementById('faqPage').style.display = 'none';
-        document.body.style.overflow = '';
-    }
-
-    function toggleFAQ() { openFAQPage(); }
 
     // ============================================
     // SMOOTH SCROLL FOR NAV LINKS
@@ -2847,65 +2845,79 @@
 
     // ============================================
     // INIT
-    // ============================================: Check session + set language
     // ============================================
+
+    function openFAQPage() {
+        const page = document.getElementById('faqPage');
+        page.style.display = 'block';
+        page.scrollTop = 0;
+        document.body.style.overflow = 'hidden';
+        page.querySelectorAll('.lang-ko').forEach(el => {
+            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
+            el.style.display = currentLang === 'ko' ? (isInline ? 'inline' : 'block') : 'none';
+        });
+        page.querySelectorAll('.lang-en').forEach(el => {
+            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
+            el.style.display = currentLang === 'en' ? (isInline ? 'inline' : 'block') : 'none';
+        });
+    }
+
+    function closeFAQPage() {
+        document.getElementById('faqPage').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    // ── window assignments ──
+    window.toggleLanguage   = toggleLanguage;
+    window.openAuth         = openAuth;
+    window.closeAuth        = closeAuth;
+    window.switchTab        = switchTab;
+    window.handleLogin      = handleLogin;
+    window.handleSignup     = handleSignup;
+    window.handleForgotPassword = handleForgotPassword;
+    window.handleLogout     = handleLogout;
+    window.openDashboard    = openDashboard;
+    window.openLegalModal   = openLegalModal;
+    window.closeLegalModal  = closeLegalModal;
+    window.togglePW         = togglePW;
+    window.togglePricing    = togglePricing;
+    window.toggleFAQ        = openFAQPage;
+    window.openFAQPage      = openFAQPage;
+    window.closeFAQPage     = closeFAQPage;
+
+    // ── DOMContentLoaded ──
     document.addEventListener('DOMContentLoaded', async function() {
         initSupabase();
         toggleLanguage('en');
         setTimeout(alignPriceCards, 100);
-        // Retry Supabase init after a delay if CDN was slow
         if (!sb) setTimeout(initSupabase, 1000);
         window.addEventListener('resize', alignPriceCards);
-        
+
         if (!sb) return;
-        
-        // Check existing session
+
         const { data: { session } } = await sb.auth.getSession();
-        if (session?.user) {
-            updateUIForUser(session.user);
-        }
-        
-        // Listen for auth changes
+        if (session?.user) updateUIForUser(session.user);
+
         sb.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session?.user) {
-                // Redirect to dashboard
                 window.location.href = '/dashboard.html';
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
                 document.getElementById('authButtons').style.display = 'flex';
                 document.getElementById('userMenu').style.display = 'none';
-
+            }
         });
-    }
-
-    // Expose all onclick functions to window scope
-    window.toggleLanguage = toggleLanguage;
-    window.openAuth = openAuth;
-    window.closeAuth = closeAuth;
-    window.switchTab = switchTab;
-    window.handleLogin = handleLogin;
-    window.handleSignup = handleSignup;
-    window.handleForgotPassword = handleForgotPassword;
-    window.handleLogout = handleLogout;
-    window.openDashboard = openDashboard;
-    window.openLegalModal = openLegalModal;
-    window.closeLegalModal = closeLegalModal;
-    window.togglePW = togglePW;
-    window.togglePricing = togglePricing;
-    window.toggleFAQ = toggleFAQ;
-    window.openFAQPage = openFAQPage;
-    window.closeFAQPage = closeFAQPage;
-    window.openFAQPage = openFAQPage;
-    window.closeFAQPage = closeFAQPage;
-
-    document.addEventListener('DOMContentLoaded', init);
+    });
     </script>
+
     <!-- FAQ PAGE PANEL -->
-    <div id="faqPage" style="display:none; position:fixed; top:100px; left:0; right:0; bottom:0; background:white; z-index:500; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+    <div id="faqPage" style="display:none; position:fixed; top:100px; left:0; right:0; bottom:0; background:#fff; z-index:500; overflow-y:auto; -webkit-overflow-scrolling:touch;">
         <div style="max-width:860px; margin:0 auto; padding:40px 40px 80px;">
-            <button onclick="closeFAQPage()" style="display:flex; align-items:center; gap:8px; background:none; border:none; color:#1B2A4A; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:32px; padding:0;">
+            <div style="position:sticky; top:0; background:#fff; padding:16px 0 12px; margin-bottom:20px; z-index:10;">
+            <button onclick="closeFAQPage()" style="display:flex; align-items:center; gap:8px; background:none; border:none; color:#1B2A4A; font-size:15px; font-weight:700; cursor:pointer; padding:0;">
                 &#8592; <span class="lang-en" style="display:inline;">Back</span><span class="lang-ko" style="display:none;">뒤로</span>
             </button>
+            </div>
             <div class="faq-content lang-ko">
                 <h3 class="faq-title">Haven Plus 실전 사용 가이드 (FAQ)</h3>
                 <div class="faq-section-title">1. 서비스 이용 및 SH(Service Hour) 안내</div>
@@ -3047,5 +3059,6 @@
         </div>
         </div>
     </div>
+
 </body>
 </html>
