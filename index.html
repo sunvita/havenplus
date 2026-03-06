@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Haven Plus Property Care</title>
@@ -19,7 +19,8 @@
         .container { 
             width: 100%;
             max-width: 1080px;
-            padding: 60px 80px; 
+            padding: 60px 80px;
+            margin: 0 auto;
         }
         
         @media (max-width: 1080px) {
@@ -154,13 +155,10 @@
         }
         
         /* 언어별 표시/숨김 */
-        .lang-en {
-            display: none;
-        }
-        
-        .lang-ko {
-            display: block;
-        }
+        .lang-en { display: block; }
+        .lang-ko { display: none; }
+        .lang-nav-en { display: inline; }
+        .lang-nav-ko { display: none; }
 
         /* 섹션 제목 */
         .section-title { 
@@ -335,7 +333,7 @@
         
         .pricing { background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%); padding: 60px; border-radius: 30px; margin-bottom: 0; }
         .section-title.yellow { color: #d97706; }
-        .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 40px; margin-bottom: 30px; align-items: start; }
+        .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 40px; margin-bottom: 30px; align-items: stretch; }
         
         @media (max-width: 900px) {
             .price-grid { grid-template-columns: 1fr; }
@@ -348,26 +346,21 @@
         .price-card { background: white; padding: 40px 30px 30px; border-radius: 20px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.1); border: 3px solid #e0e0e0; position: relative; display: flex; flex-direction: column; align-items: center; }
         .price-card.featured { border-color: #ff6b35; }
         .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 900; white-space: nowrap; }
-        .plan-name { font-size: clamp(20px, 2.4vw, 26px); font-weight: 900; color: #1a1a1a; margin-bottom: 10px; }
-        .plan-target { font-size: clamp(12px, 1.4vw, 15px); color: #666; margin-bottom: 25px; }
-        .price { font-size: clamp(38px, 5.4vw, 58px); font-weight: 900; color: #1B2A4A; margin-bottom: 8px; }
-        .price-label { font-size: clamp(14px, 1.7vw, 18px); color: #333; margin-bottom: 5px; font-weight: 600; }
-        .price-annual { font-size: clamp(12px, 1.3vw, 14px); color: #999; margin-bottom: 20px; min-height: 20px; }
-        .hours-badge { background: rgba(27,42,74,0.1); padding: 12px; border-radius: 12px; font-size: clamp(13px, 1.5vw, 16px); font-weight: 700; color: #1B2A4A; margin-bottom: 25px; }
-        .benefits-title { font-size: 16px; font-weight: 700; color: #1B2A4A; margin-bottom: 15px; text-align: left; }
-        .features { text-align: left; }
-        .feature { font-size: 15px; color: #333; margin-bottom: 12px; padding-left: 25px; position: relative; line-height: 1.5; }
-        .feature::before { content: '✓'; position: absolute; left: 0; color: #4caf50; font-weight: 900; font-size: 18px; }
-        .pricing-footnote { text-align: center; font-size: 14px; color: #666; margin-top: 20px; }
+        .plan-name { font-size: clamp(18px, 2.2vw, 24px); font-weight: 900; color: #1a1a1a; margin-bottom: 8px; }
+        .sh-short { display: none; }
+        .sh-full  { display: inline; }
+        @media (max-width: 900px) { .sh-short { display: inline; } .sh-full { display: none; } }
+        .plan-target { font-size: clamp(10px, 1.1vw, 12px); color: #888; margin-bottom: 24px; line-height: 1.4; min-height: 36px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .price { font-size: clamp(42px, 5.8vw, 62px); font-weight: 900; color: #1B2A4A; margin-bottom: 4px; line-height: 1; }
+        .price-label { font-size: clamp(13px, 1.5vw, 15px); color: #555; margin-bottom: 4px; font-weight: 600; }
+        .price-annual { font-size: clamp(12px, 1.3vw, 13px); color: #aaa; margin-bottom: 20px; min-height: 18px; }
+        .hours-badge { background: rgba(27,42,74,0.07); padding: 10px 14px; border-radius: 10px; font-size: clamp(12px, 1.4vw, 14px); font-weight: 700; color: #1B2A4A; margin-bottom: 24px; width: 100%; }
+        .benefits-title { font-size: 14px; font-weight: 700; color: #1B2A4A; margin-bottom: 12px; text-align: left; width: 100%; }
+        .features { text-align: left; width: 100%; flex: 1; }
+        .feature { font-size: clamp(13px, 1.4vw, 15px); color: #333; margin-bottom: 10px; padding-left: 22px; position: relative; line-height: 1.5; }
+        .feature::before { content: '✓'; position: absolute; left: 0; color: #4caf50; font-weight: 900; font-size: 16px; }
+        .pricing-footnote { text-align: center; font-size: 13px; color: #888; margin-top: 20px; }
 
-        /* 가격 카드 내부 텍스트 크기 조정 */
-        .price-card .plan-target,
-        .price-card .feature,
-        .price-card .pricing-footnote {
-            font-size: 1em;
-            line-height: 1.4;
-            opacity: 1;
-        }
 
         /* 얼리 어답터 (Collapsible) */
         .early-adopter {
@@ -930,7 +923,7 @@
         /* Hero Section */
         .hero {
             background: linear-gradient(135deg, #1B2A4A 0%, #2a3f6a 40%, #3d5a80 70%, #2a3f6a 100%);
-            padding: 70px 40px 60px;
+            padding: 110px 40px 100px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -995,7 +988,7 @@
         }
         .hero-sub {
             font-size: clamp(14px, 2vw, 18px);
-            color: rgba(255,255,255,0.55);
+            color: rgba(255,255,255,0.75);
             margin-bottom: 40px;
             font-weight: 400;
             line-height: 1.6;
@@ -1143,12 +1136,12 @@
             background: #f8f9fa;
         }
         .compare-diy {
-            text-align: center;
+            text-align: left;
             color: #c0392b;
             background: #fef5f4;
         }
         .compare-hp {
-            text-align: center;
+            text-align: left;
             color: #27ae60;
             background: #f0faf4;
             font-weight: 600;
@@ -1852,12 +1845,12 @@
                     <div class="plan-target">바쁜 전문직 · 타주 투자자</div>
                     <div class="price">$55</div>
                     <div class="price-label">월 구독료 (GST 포함)</div>
-                    <div class="price-annual">(연간 $660)</div>
-                    <div class="hours-badge">2시간 전문 청소 · 분기별 연 4회</div>
+                    <div class="price-annual">연간 $660</div>
+                    <div class="hours-badge">2시간 청소 · 연 4회 = 연간 8시간</div>
                     <div class="benefits-title">포함 서비스:</div>
                     <div class="features">
                         <div class="feature">수리 점검 (방문 시마다)</div>
-                        <div class="feature">스모크 알람 점검<br>(연 1~2회, 필요 시)</div>
+                        <div class="feature">스모크 알람 점검 (연 1회)</div>
                         <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 Service Hour 바우처 연 2회<br>($198 상당)</div>
                     </div>
                 </div>
@@ -1867,26 +1860,26 @@
                     <div class="plan-target">바쁜 전문직 · 타주 투자자 · 고수익 임대 투자자</div>
                     <div class="price">$75</div>
                     <div class="price-label">월 구독료 (GST 포함)</div>
-                    <div class="price-annual">(연간 $900)</div>
-                    <div class="hours-badge">2시간 전문 청소 · 격월 연 6회</div>
+                    <div class="price-annual">연간 $900</div>
+                    <div class="hours-badge">2시간 청소 · 연 6회 = 연간 12시간</div>
                     <div class="benefits-title">포함 서비스:</div>
                     <div class="features">
                         <div class="feature">수리 점검 (방문 시마다)</div>
-                        <div class="feature">스모크 알람 점검<br>(연 1~2회, 필요 시)</div>
+                        <div class="feature">스모크 알람 점검 (연 1회)</div>
                         <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 Service Hour 바우처 연 3회<br>($297 상당)</div>
                     </div>
                 </div>
                 <div class="price-card">
                     <div class="plan-name">Premium Care</div>
-                    <div class="plan-target">바쁜 전문직 · 타주 투자자 · 다주택자 / 코리빙 등 투자자 · 부동산 관리사</div>
+                    <div class="plan-target">다주택자 · 부동산 관리사</div>
                     <div class="price">$150</div>
                     <div class="price-label">월 구독료 (GST 포함)</div>
-                    <div class="price-annual">(연간 $1,800)</div>
-                    <div class="hours-badge">2시간 전문 청소 · 매월 연 12회</div>
+                    <div class="price-annual">연간 $1,800</div>
+                    <div class="hours-badge">2시간 청소 · 연 12회 = 연간 24시간</div>
                     <div class="benefits-title">포함 서비스:</div>
                     <div class="features">
                         <div class="feature">수리 점검 (방문 시마다)</div>
-                        <div class="feature">스모크 알람 점검<br>(연 1~2회, 필요 시)</div>
+                        <div class="feature">스모크 알람 점검 (연 1회)</div>
                         <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 Service Hour 바우처 연 6회<br>($594 상당)</div>
                     </div>
                 </div>
@@ -1895,44 +1888,44 @@
             <div class="price-grid lang-en" style="display: grid;">
                 <div class="price-card">
                     <div class="plan-name">Essential Care</div>
-                    <div class="plan-target">Busy professionals · Interstate investors</div>
+                    <div class="plan-target">Busy professional · Interstate investor</div>
                     <div class="price">$55</div>
                     <div class="price-label">per month (GST incl.)</div>
-                    <div class="price-annual">(Annual $660)</div>
-                    <div class="hours-badge">2-hour professional clean · Quarterly, 4× per year</div>
+                    <div class="price-annual">Annual $660</div>
+                    <div class="hours-badge">2-hr clean · 4× per year = 8-hr clean</div>
                     <div class="benefits-title">What's included:</div>
                     <div class="features">
                         <div class="feature">Repair checkup (every visit)</div>
-                        <div class="feature">Smoke alarm inspection<br>(annually / 6-monthly as needed)</div>
+                        <div class="feature">Smoke alarm inspection (annually)</div>
                         <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 2 Service Hour vouchers/year<br>($198 value)</div>
                     </div>
                 </div>
                 <div class="price-card featured">
                     <div class="badge">POPULAR ⭐</div>
                     <div class="plan-name">Smart Care</div>
-                    <div class="plan-target">Busy professionals · Interstate investors · High-yield rental investors</div>
+                    <div class="plan-target">Busy professional · Interstate investor · High-yield rental investor</div>
                     <div class="price">$75</div>
                     <div class="price-label">per month (GST incl.)</div>
-                    <div class="price-annual">(Annual $900)</div>
-                    <div class="hours-badge">2-hour professional clean · Every 2 months, 6× per year</div>
+                    <div class="price-annual">Annual $900</div>
+                    <div class="hours-badge">2-hr clean · 6× per year = 12-hr clean</div>
                     <div class="benefits-title">What's included:</div>
                     <div class="features">
                         <div class="feature">Repair checkup (every visit)</div>
-                        <div class="feature">Smoke alarm inspection<br>(annually / 6-monthly as needed)</div>
+                        <div class="feature">Smoke alarm inspection (annually)</div>
                         <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 3 Service Hour vouchers/year<br>($297 value)</div>
                     </div>
                 </div>
                 <div class="price-card">
                     <div class="plan-name">Premium Care</div>
-                    <div class="plan-target">Busy professionals · Interstate investors · Multi-property owners · Property managers</div>
+                    <div class="plan-target">Multi-property owner · Property manager</div>
                     <div class="price">$150</div>
                     <div class="price-label">per month (GST incl.)</div>
-                    <div class="price-annual">(Annual $1,800)</div>
-                    <div class="hours-badge">2-hour professional clean · Monthly, 12× per year</div>
+                    <div class="price-annual">Annual $1,800</div>
+                    <div class="hours-badge">2-hr clean · 12× per year = 24-hr clean</div>
                     <div class="benefits-title">What's included:</div>
                     <div class="features">
                         <div class="feature">Repair checkup (every visit)</div>
-                        <div class="feature">Smoke alarm inspection<br>(annually / 6-monthly as needed)</div>
+                        <div class="feature">Smoke alarm inspection (annually)</div>
                         <div class="feature" style="color: #1B2A4A; font-weight: 700;">🎁 6 Service Hour vouchers/year<br>($594 value)</div>
                     </div>
                 </div>
@@ -2195,8 +2188,8 @@
             <!-- 영문 프로세스 -->
             <div class="process-steps lang-en" style="display: grid;">
                 <div class="step"><div class="step-number">1️⃣</div><div class="step-title">Sign Up</div><div class="step-desc">Online or by phone<br>Takes 5 minutes</div></div>
-                <div class="step"><div class="step-number">2️⃣</div><div class="step-title">Choose Your Plan</div><div class="step-desc">Subscribe to cleaning &amp;<br>checkup, buy SH, or both</div></div>
-                <div class="step"><div class="step-number">3️⃣</div><div class="step-title">Book a Job</div><div class="step-desc">App, text, or call<br>We're there in 24-48 hours</div></div>
+                <div class="step"><div class="step-number">2️⃣</div><div class="step-title">Select a Plan</div><div class="step-desc">Subscribe to cleaning &amp;<br>checkup, buy SH, or both</div></div>
+                <div class="step"><div class="step-number">3️⃣</div><div class="step-title">Book a Job</div><div class="step-desc">App, text, or call<br>We allocate the job in 24-48 hours</div></div>
                 <div class="step"><div class="step-number">4️⃣</div><div class="step-title">Job Done Right</div><div class="step-desc">Photos and updates<br>Every step of the way</div></div>
             </div>
         </div>
@@ -2209,7 +2202,7 @@
         
         <!-- 한글 푸터 그리드 -->
         <div class="footer-cta-grid lang-ko" style="display: none;">
-            <a href="javascript:void(0)" class="footer-box info-box">
+            <a href="javascript:void(0)" onclick="openFAQPage()" class="footer-box info-box">
                 <div class="box-icon">ℹ️</div>
                 <div class="box-title">FAQ</div>
                 <div class="box-value">자주 묻는 질문</div>
@@ -2217,7 +2210,7 @@
             <a href="tel:0426778771" class="footer-box">
                 <div class="box-icon contact-icon">📞</div>
                 <div class="box-title">문의하기</div>
-                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="d9b0b7bfb699b1b8afbcb7a9b5acaaf7bab6b4f7b8ac">[email&#160;protected]</span></div>
+                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="cba2a5ada48ba3aabdaea5bba7beb8e5a8a4a6e5aabe">[email&#160;protected]</span></div>
             </a>
             <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
                 <div class="box-icon">🚀</div>
@@ -2228,7 +2221,7 @@
         
         <!-- 영문 푸터 그리드 -->
         <div class="footer-cta-grid lang-en" style="display: grid;">
-            <a href="javascript:void(0)" class="footer-box info-box">
+            <a href="javascript:void(0)" onclick="openFAQPage()" class="footer-box info-box">
                 <div class="box-icon">ℹ️</div>
                 <div class="box-title">FAQ</div>
                 <div class="box-value">Common Questions</div>
@@ -2236,7 +2229,7 @@
             <a href="tel:0426778771" class="footer-box">
                 <div class="box-icon contact-icon">📞</div>
                 <div class="box-title">Contact Us</div>
-                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="2940474f466941485f4c4759455c5a074a464407485c">[email&#160;protected]</span></div>
+                <div class="box-value">0426 778 771<br><span class="__cf_email__" data-cfemail="fd94939b92bd959c8b98938d91888ed39e9290d39c88">[email&#160;protected]</span></div>
             </a>
             <a href="javascript:void(0)" onclick="openAuth('signup')" class="footer-box primary-box">
                 <div class="box-icon">🚀</div>
@@ -2245,148 +2238,7 @@
             </a>
         </div>
         
-        <!-- FAQ 섹션 (숨김 - 별도 페이지로 이동 예정) -->
-        <div class="faq-section" id="faqSection" style="display: none;">
-            <div class="faq-content lang-ko">
-                <h3 class="faq-title">Haven Plus 실전 사용 가이드 (FAQ)</h3>
-                <div class="faq-section-title">1. 서비스 이용 및 SH(Service Hour) 안내</div>
-                <div class="faq-items">
-                    <div class="faq-item">
-                        <div class="faq-question">Q1. 출장비가 0원이라는데, 정말 기사님이 방문만 해도 무료인가요?</div>
-                        <div class="faq-answer">네, 맞습니다! 일반 기술자는 방문만 해도 $100 이상의 출장비(Call-out fee)를 요구하지만, Haven Plus 회원은 별도의 현금 지출 없이 보유한 Service Hour(SH)에서만 차감됩니다. (단, 거점 30km 이상 원거리 지역은 이동 거리에 따라 소량의 SH가 추가 차감될 수 있습니다.)</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q2. 'Service Hour(SH)'는 어떻게 차감되나요? 30분 만에 끝나면 아까울 것 같아요.</div>
-                        <div class="faq-answer">1 SH는 전문 기술자의 '1시간 작업'을 의미하며, 방문 시 이동과 준비 시간을 포함해 기본 1 SH가 차감되는 것이 원칙입니다. 하지만 고객님을 위해 15분의 여유 시간(Buffer)을 더 드려요! 작업이 1시간 15분까지 길어져도 추가 차감 없이 1 SH만 사용됩니다. 만약 수리가 30분 만에 끝났다면, 남은 시간 동안 전구 교체나 문 경첩 조이기 등 소소한 추가 점검을 요청해 1시간을 알뜰하게 채워 쓰실 수 있습니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q3. 바우처 SH를 안 쓰면 사라지나요?</div>
-                        <div class="faq-answer">구독에 포함된 SH 바우처는 구독 기간 내 사용 가능합니다. 별도 구매한 SH 번들은 구매 후 12개월 내 사용을 권장합니다. 당장 수리할 곳이 없다면 모아두셨다가 필요할 때 유연하게 사용하세요.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q4. 바우처 SH를 다 사용했는데 추가 수리가 필요하면요?</div>
-                        <div class="faq-answer">구독 바우처를 모두 사용하셨다면 Service Hours를 별도 구매하시면 됩니다. 1 SH($99), 4 SH 번들($85/SH), 8 SH 번들($80/SH)로 필요한 만큼 유연하게 추가 구매 가능합니다.</div>
-                    </div>
-                </div>
-                
-                <div class="faq-more" id="faqMoreKo" style="display:none;">
-                <div class="faq-section-title">2. 서비스 범위 및 비대면 관리</div>
-                <div class="faq-items">
-                    <div class="faq-item">
-                        <div class="faq-question">Q5. 배관이 터지거나 전기가 나가는 큰 공사도 가능한가요?</div>
-                        <div class="faq-answer">네, 당연히 가능합니다! 전문 면허(Licensed)가 필요한 공사는 저희가 검증된 파트너 전문가를 매칭하고 전 과정을 감독해 드립니다. 고객님은 골치 아픈 업체 수배나 견적 비교를 하실 필요가 없습니다. 비용은 협의 후 보유하신 SH로 결제하거나 별도 견적으로 진행하실 수 있어 합리적입니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q6. 한밤중이나 주말에도 급하게 부를 수 있나요?</div>
-                        <div class="faq-answer">네, 누수처럼 긴급한 상황이라면 언제든 연락 주세요! 다만, 24시간 대응을 위한 효율적인 운영을 위해 할증 제도가 적용됩니다. 평일 업무 시간(9am-8pm) 당일 긴급 출동은 SH 1.5배, 그 외 야간 및 주말 작업은 SH 2배가 차감됩니다. 급한 불은 저희가 바로 끄고, 급하지 않은 작업은 평일에 예약하여 SH를 아끼시는 것을 추천해 드립니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q7. 세입자가 살고 있는 집인데, 제가 현장에 갈 수 없을 때는 어떻게 하나요?</div>
-                        <div class="faq-answer">전혀 문제없습니다! 세입자와의 일정 조율부터 방문, 수리 완료 확인까지 저희가 전담해서 처리해 드립니다. 모든 작업은 전/후 사진이 포함된 상세 리포트를 보내드리므로, 현장에 가지 않아도 직접 보신 것처럼 투명하고 꼼꼼하게 확인하실 수 있습니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q8. 구독에 포함된 청소와 점검은 SH에서 차감되나요?</div>
-                        <div class="faq-answer">아니요, 차감되지 않습니다! 구독 플랜에 포함된 정기 청소, 수리 점검, 스모크 알람 점검은 구독 혜택으로 무료 제공됩니다. SH 바우처와 별도 구매 SH는 수리, 유지보수 등 추가 작업에만 사용됩니다.</div>
-                    </div>
-                </div>
-                
-                <div class="faq-section-title">3. 비용 및 플랜 관리</div>
-                <div class="faq-items">
-                    <div class="faq-item">
-                        <div class="faq-question">Q8-1. 구독 없이 Service Hours만 구매할 수 있나요?</div>
-                        <div class="faq-answer">네, 가능합니다! 회원 가입만 하시면 구독 없이도 1 SH($99), 4 SH 번들($85/SH), 8 SH 번들($80/SH)을 바로 구매하여 필요할 때만 수리 서비스를 이용하실 수 있습니다. 자가 거주자, 에어비앤비 호스트 등에게 적합합니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q8-2. Premium Care로 여러 채 관리가 가능한가요?</div>
-                        <div class="faq-answer">네! Premium Care 구독은 최대 2~3채까지 청소 및 점검 일정을 유연하게 나눠서 관리 가능합니다. 또한 8 SH 번들은 여러 부동산에 걸쳐 자유롭게 사용할 수 있어, 다주택 투자자와 부동산 관리사에게 특히 효율적입니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q9. 수전이나 도어락 같은 '부품 값'도 구독료에 포함되나요?</div>
-                        <div class="faq-answer">SH 서비스 비용에는 기술자의 공임과 수리에 필요한 간단한 소모품(나사, 테이프 등)이 포함되어 있습니다. 하지만 수전, 도어락 같은 교체용 부품은 별도입니다. 부품은 직접 준비해 주셔도 되고 저희에게 맡기셔도 됩니다. 저희가 대신 구매해 드리는 경우 '자재 구매 서비스(Bunnings run, 0.5 SH 차감)'와 함께 [자재 실비 + 10~15% 수수료]로 투명하게 청구됩니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q10. 이용 중에 더 높은 단계의 플랜으로 업그레이드하고 싶으면 어떻게 하나요?</div>
-                        <div class="faq-answer">언제든 환영입니다! 월 구독은 즉시 전환되며, 연간 구독 중 업그레이드 시에는 [새 플랜 연간 금액 - 기존 플랜 잔여 기간 기납부 금액]만큼의 차액만 결제하시면 됩니다. 업그레이드 시점부터 새로운 12개월 계약이 적용되어 혜택을 이어가실 수 있습니다.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q11. 일단 써보고 싶은데, 해지 위약금이나 부동산 매각 시 처리가 궁금해요.</div>
-                        <div class="faq-answer">Haven Plus는 언제든 해지가 가능하니 부담 없이 시작하실 수 있습니다. 가입 후 90일 이내라면 위약금 없이 해지하실 수 있습니다. 다만, 멤버십 할인이 적용된 상태이므로 이미 사용하신 서비스 시간에 대해서는 표준 단가 기준으로 실비 정산이 이루어집니다. 부동산 매각 시에는 구독권을 매수자에게 그대로 승계하실 수 있으며, 이 경우 승계에 의한 구독 유지이므로 위약금과 정산 절차는 필요치 않습니다.</div>
-                    </div>
-                </div>
-                </div>
-                <button class="faq-show-more" onclick="document.getElementById('faqMoreKo').style.display='block'; this.style.display='none';">더 보기</button>
-            </div>
-            <div class="faq-content lang-en">
-                <h3 class="faq-title">Haven Plus Service Guide (FAQ)</h3>
-                <div class="faq-section-title">1. Service Hours (SH) & Usage</div>
-                <div class="faq-items">
-                    <div class="faq-item">
-                        <div class="faq-question">Q1. You mentioned a $0 call-out fee. Is it really free just for a technician to visit?</div>
-                        <div class="faq-answer">Absolutely! While a typical tradie might charge a $100+ call-out fee just to show up, Haven Plus members pay nothing out of pocket—the visit is covered by your Service Hours (SH). (Note: For remote areas over 30km from our hubs, a small SH adjustment may apply based on travel distance.)</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q2. How are Service Hours (SH) deducted? What if a job only takes 30 minutes?</div>
-                        <div class="faq-answer">1 SH represents one hour of a professional technician's time. To give you the best value, we provide a 15-minute buffer, meaning a job lasting up to 1 hour and 15 minutes still only costs 1 SH. If a repair finishes in 30 minutes, feel free to ask for other small tasks (like changing light bulbs or tightening hinges) to make the most of your full hour.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q3. If I don't use my voucher SH, will they expire?</div>
-                        <div class="faq-answer">Voucher SH included with your subscription are valid for your subscription period. Separately purchased SH bundles are valid for 12 months from purchase. If you don't need repairs right now, save them up and use them when you do.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q4. What if I've used all my voucher SH and need more repairs?</div>
-                        <div class="faq-answer">Simply purchase additional Service Hours. Choose from 1 SH ($99), 4 SH bundle ($85/SH), or 8 SH bundle ($80/SH) — flexible and available anytime.</div>
-                    </div>
-                </div>
-                
-                <div class="faq-more" id="faqMoreEn" style="display:none;">
-                <div class="faq-section-title">2. Service Scope & Remote Management</div>
-                <div class="faq-items">
-                    <div class="faq-item">
-                        <div class="faq-question">Q5. Can you handle major works like burst pipes or electrical failures?</div>
-                        <div class="faq-answer">Yes, we certainly can. For works requiring specific licenses, we match you with vetted partner specialists and oversee the entire process. You won't have to worry about finding tradies or comparing quotes. Depending on the scale, you can pay using your SH or receive a separate transparent quote.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q6. Can I call you for emergencies late at night or on weekends?</div>
-                        <div class="faq-answer">Yes, we are available 24/7 for urgent issues like major leaks. To maintain this availability, surcharges apply: 1.5x SH for same-day emergency calls during business hours (9am-8pm) and 2x SH for nights and weekends. We'll handle the crisis immediately, but we recommend scheduling non-urgent repairs for weekdays to save your SH.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q7. What if my property is tenanted and I can't be there in person?</div>
-                        <div class="faq-answer">No problem at all! We handle everything from coordinating schedules with your tenants to the final inspection. You'll receive a detailed report with before-and-after photos, giving you complete transparency and peace of mind as if you were there yourself.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q8. Do the included cleaning and checkups reduce my SH?</div>
-                        <div class="faq-answer">No, they don't! Regular cleaning, repair checkups, and smoke alarm inspections are subscription benefits provided at no additional cost. Your SH vouchers and purchased SH are only used for repairs, maintenance, and other on-demand work.</div>
-                    </div>
-                </div>
-                
-                <div class="faq-section-title">3. Costs & Plan Management</div>
-                <div class="faq-items">
-                    <div class="faq-item">
-                        <div class="faq-question">Q8-1. Can I purchase Service Hours without a subscription?</div>
-                        <div class="faq-answer">Yes! Simply sign up as a member and you can purchase SH right away — 1 SH ($99), 4 SH bundle ($85/SH), or 8 SH bundle ($80/SH). No subscription required. Perfect for owner-occupiers, Airbnb hosts, and anyone who needs repairs on demand.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q8-2. Can I use Premium Care across multiple properties?</div>
-                        <div class="faq-answer">Yes! Premium Care subscriptions can flexibly schedule cleaning and checkups across up to 2-3 properties. Additionally, 8 SH bundles can be used across any of your properties, making it particularly efficient for multi-property investors and property managers.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q9. Are replacement parts, like taps or door locks, included in the subscription?</div>
-                        <div class="faq-answer">SH covers the technician's labor and minor workshop consumables (screws, tape, etc.). For larger parts like taps or locks, you can provide them yourself or ask us to source them. If we source them, we charge a 'Material Sourcing Fee' (Bunnings run, 0.5 SH) plus the [Actual Material Cost + 10-15% service fee].</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q10. How do I upgrade to a higher plan if my needs change?</div>
-                        <div class="faq-answer">You can upgrade at any time! For monthly plans, the change is instant. For annual plans, you simply pay the difference: [New Plan Annual Price - Amount already paid for the remaining term]. A new 12-month period starts from the upgrade date, ensuring you get all increased benefits immediately.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Q11. I'd like to try it out—what about cancellation fees or selling my property?</div>
-                        <div class="faq-answer">Feel free to start without any pressure—you can cancel at any time! Within the first 90 days, the early termination fee is waived. However, as the plan provides discounted membership rates, you'll need to settle the cost of services already used at the standard rate. If you're selling your property, you can transfer your subscription to the new owner, and in this case no cancellation fees or settlement procedures apply as the subscription continues through transfer.</div>
-                    </div>
-                </div>
-                </div>
-                <button class="faq-show-more" onclick="document.getElementById('faqMoreEn').style.display='block'; this.style.display='none';">Show More</button>
-            </div>
-        </div>
-        
+
         <div class="contact-footer">Haven Plus Property Care | Perth, WA | ABN: 83 695 213 499</div>
     </div>
 
@@ -2810,10 +2662,7 @@
     }
 
     function openDashboard() {
-        // Placeholder — will redirect to dashboard page in Stage 4
-        alert(currentLang === 'ko' 
-            ? '대시보드는 준비 중입니다. 곧 오픈 예정!' 
-            : 'Dashboard is coming soon!');
+        window.location.href = '/dashboard.html';
     }
 
     // ============================================
@@ -2824,12 +2673,14 @@
         
         // 모든 한글 요소 표시/숨김
         document.querySelectorAll('.lang-ko').forEach(el => {
-            el.style.display = lang === 'ko' ? 'block' : 'none';
+            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
+            el.style.display = lang === 'ko' ? (isInline ? 'inline' : 'block') : 'none';
         });
         
         // 모든 영어 요소 표시/숨김
         document.querySelectorAll('.lang-en').forEach(el => {
-            el.style.display = lang === 'en' ? 'block' : 'none';
+            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
+            el.style.display = lang === 'en' ? (isInline ? 'inline' : 'block') : 'none';
         });
         
         // Nav links
@@ -2925,18 +2776,27 @@
         }
     }
     
-    function toggleFAQ() {
-        const faqSection = document.getElementById('faqSection');
-        
-        if (faqSection.style.display === 'none' || faqSection.style.display === '') {
-            faqSection.style.display = 'block';
-            setTimeout(function() {
-                faqSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
-        } else {
-            faqSection.style.display = 'none';
-        }
+    function openFAQPage() {
+        const page = document.getElementById('faqPage');
+        page.style.display = 'block';
+        page.scrollTop = 0;
+        document.body.style.overflow = 'hidden';
+        page.querySelectorAll('.lang-ko').forEach(el => {
+            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
+            el.style.display = currentLang === 'ko' ? (isInline ? 'inline' : 'block') : 'none';
+        });
+        page.querySelectorAll('.lang-en').forEach(el => {
+            const isInline = el.tagName === 'SPAN' || el.tagName === 'A';
+            el.style.display = currentLang === 'en' ? (isInline ? 'inline' : 'block') : 'none';
+        });
     }
+
+    function closeFAQPage() {
+        document.getElementById('faqPage').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function toggleFAQ() { openFAQPage(); }
 
     // ============================================
     // SMOOTH SCROLL FOR NAV LINKS
@@ -3014,4 +2874,178 @@
                 currentUser = null;
                 document.getElementById('authButtons').style.display = 'flex';
                 document.getElementById('userMenu').style.display = 'none';
-   
+
+        });
+    }
+
+    // Expose all onclick functions to window scope
+    window.toggleLanguage = toggleLanguage;
+    window.openAuth = openAuth;
+    window.closeAuth = closeAuth;
+    window.switchTab = switchTab;
+    window.handleLogin = handleLogin;
+    window.handleSignup = handleSignup;
+    window.handleForgotPassword = handleForgotPassword;
+    window.handleLogout = handleLogout;
+    window.openDashboard = openDashboard;
+    window.openLegalModal = openLegalModal;
+    window.closeLegalModal = closeLegalModal;
+    window.togglePW = togglePW;
+    window.togglePricing = togglePricing;
+    window.toggleFAQ = toggleFAQ;
+    window.openFAQPage = openFAQPage;
+    window.closeFAQPage = closeFAQPage;
+    window.openFAQPage = openFAQPage;
+    window.closeFAQPage = closeFAQPage;
+
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
+    <!-- FAQ PAGE PANEL -->
+    <div id="faqPage" style="display:none; position:fixed; top:100px; left:0; right:0; bottom:0; background:white; z-index:500; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+        <div style="max-width:860px; margin:0 auto; padding:40px 40px 80px;">
+            <button onclick="closeFAQPage()" style="display:flex; align-items:center; gap:8px; background:none; border:none; color:#1B2A4A; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:32px; padding:0;">
+                &#8592; <span class="lang-en" style="display:inline;">Back</span><span class="lang-ko" style="display:none;">뒤로</span>
+            </button>
+            <div class="faq-content lang-ko">
+                <h3 class="faq-title">Haven Plus 실전 사용 가이드 (FAQ)</h3>
+                <div class="faq-section-title">1. 서비스 이용 및 SH(Service Hour) 안내</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q1. 출장비가 0원이라는데, 정말 기사님이 방문만 해도 무료인가요?</div>
+                        <div class="faq-answer">네, 맞습니다! 일반 기술자는 방문만 해도 $100 이상의 출장비(Call-out fee)를 요구하지만, Haven Plus 회원은 별도의 현금 지출 없이 보유한 Service Hour(SH)에서만 차감됩니다. (단, 거점 30km 이상 원거리 지역은 이동 거리에 따라 소량의 SH가 추가 차감될 수 있습니다.)</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q2. 'Service Hour(SH)'는 어떻게 차감되나요? 30분 만에 끝나면 아까울 것 같아요.</div>
+                        <div class="faq-answer">1 SH는 전문 기술자의 '1시간 작업'을 의미하며, 방문 시 이동과 준비 시간을 포함해 기본 1 SH가 차감되는 것이 원칙입니다. 하지만 고객님을 위해 15분의 여유 시간(Buffer)을 더 드려요! 작업이 1시간 15분까지 길어져도 추가 차감 없이 1 SH만 사용됩니다. 만약 수리가 30분 만에 끝났다면, 남은 시간 동안 전구 교체나 문 경첩 조이기 등 소소한 추가 점검을 요청해 1시간을 알뜰하게 채워 쓰실 수 있습니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q3. 바우처 SH를 안 쓰면 사라지나요?</div>
+                        <div class="faq-answer">구독에 포함된 SH 바우처는 구독 기간 내 사용 가능합니다. 별도 구매한 SH 번들은 구매 후 12개월 내 사용을 권장합니다. 당장 수리할 곳이 없다면 모아두셨다가 필요할 때 유연하게 사용하세요.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q4. 바우처 SH를 다 사용했는데 추가 수리가 필요하면요?</div>
+                        <div class="faq-answer">구독 바우처를 모두 사용하셨다면 Service Hours를 별도 구매하시면 됩니다. 1 SH($99), 4 SH 번들($85/SH), 8 SH 번들($80/SH)로 필요한 만큼 유연하게 추가 구매 가능합니다.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-more" id="faqMoreKo" style="display:none;">
+                <div class="faq-section-title">2. 서비스 범위 및 비대면 관리</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q5. 배관이 터지거나 전기가 나가는 큰 공사도 가능한가요?</div>
+                        <div class="faq-answer">네, 당연히 가능합니다! 전문 면허(Licensed)가 필요한 공사는 저희가 검증된 파트너 전문가를 매칭하고 전 과정을 감독해 드립니다. 고객님은 골치 아픈 업체 수배나 견적 비교를 하실 필요가 없습니다. 비용은 협의 후 보유하신 SH로 결제하거나 별도 견적으로 진행하실 수 있어 합리적입니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q6. 한밤중이나 주말에도 급하게 부를 수 있나요?</div>
+                        <div class="faq-answer">네, 누수처럼 긴급한 상황이라면 언제든 연락 주세요! 다만, 24시간 대응을 위한 효율적인 운영을 위해 할증 제도가 적용됩니다. 평일 업무 시간(9am-8pm) 당일 긴급 출동은 SH 1.5배, 그 외 야간 및 주말 작업은 SH 2배가 차감됩니다. 급한 불은 저희가 바로 끄고, 급하지 않은 작업은 평일에 예약하여 SH를 아끼시는 것을 추천해 드립니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q7. 세입자가 살고 있는 집인데, 제가 현장에 갈 수 없을 때는 어떻게 하나요?</div>
+                        <div class="faq-answer">전혀 문제없습니다! 세입자와의 일정 조율부터 방문, 수리 완료 확인까지 저희가 전담해서 처리해 드립니다. 모든 작업은 전/후 사진이 포함된 상세 리포트를 보내드리므로, 현장에 가지 않아도 직접 보신 것처럼 투명하고 꼼꼼하게 확인하실 수 있습니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8. 구독에 포함된 청소와 점검은 SH에서 차감되나요?</div>
+                        <div class="faq-answer">아니요, 차감되지 않습니다! 구독 플랜에 포함된 정기 청소, 수리 점검, 스모크 알람 점검은 구독 혜택으로 무료 제공됩니다. SH 바우처와 별도 구매 SH는 수리, 유지보수 등 추가 작업에만 사용됩니다.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-section-title">3. 비용 및 플랜 관리</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-1. 구독 없이 Service Hours만 구매할 수 있나요?</div>
+                        <div class="faq-answer">네, 가능합니다! 회원 가입만 하시면 구독 없이도 1 SH($99), 4 SH 번들($85/SH), 8 SH 번들($80/SH)을 바로 구매하여 필요할 때만 수리 서비스를 이용하실 수 있습니다. 자가 거주자, 에어비앤비 호스트 등에게 적합합니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-2. Premium Care로 여러 채 관리가 가능한가요?</div>
+                        <div class="faq-answer">네! Premium Care 구독은 최대 2~3채까지 청소 및 점검 일정을 유연하게 나눠서 관리 가능합니다. 또한 8 SH 번들은 여러 부동산에 걸쳐 자유롭게 사용할 수 있어, 다주택 투자자와 부동산 관리사에게 특히 효율적입니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q9. 수전이나 도어락 같은 '부품 값'도 구독료에 포함되나요?</div>
+                        <div class="faq-answer">SH 서비스 비용에는 기술자의 공임과 수리에 필요한 간단한 소모품(나사, 테이프 등)이 포함되어 있습니다. 하지만 수전, 도어락 같은 교체용 부품은 별도입니다. 부품은 직접 준비해 주셔도 되고 저희에게 맡기셔도 됩니다. 저희가 대신 구매해 드리는 경우 '자재 구매 서비스(Bunnings run, 0.5 SH 차감)'와 함께 [자재 실비 + 10~15% 수수료]로 투명하게 청구됩니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q10. 이용 중에 더 높은 단계의 플랜으로 업그레이드하고 싶으면 어떻게 하나요?</div>
+                        <div class="faq-answer">언제든 환영입니다! 월 구독은 즉시 전환되며, 연간 구독 중 업그레이드 시에는 [새 플랜 연간 금액 - 기존 플랜 잔여 기간 기납부 금액]만큼의 차액만 결제하시면 됩니다. 업그레이드 시점부터 새로운 12개월 계약이 적용되어 혜택을 이어가실 수 있습니다.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q11. 일단 써보고 싶은데, 해지 위약금이나 부동산 매각 시 처리가 궁금해요.</div>
+                        <div class="faq-answer">Haven Plus는 언제든 해지가 가능하니 부담 없이 시작하실 수 있습니다. 가입 후 90일 이내라면 위약금 없이 해지하실 수 있습니다. 다만, 멤버십 할인이 적용된 상태이므로 이미 사용하신 서비스 시간에 대해서는 표준 단가 기준으로 실비 정산이 이루어집니다. 부동산 매각 시에는 구독권을 매수자에게 그대로 승계하실 수 있으며, 이 경우 승계에 의한 구독 유지이므로 위약금과 정산 절차는 필요치 않습니다.</div>
+                    </div>
+                </div>
+                </div>
+                <button class="faq-show-more" onclick="document.getElementById('faqMoreKo').style.display='block'; this.style.display='none';">더 보기</button>
+            </div>
+            <div class="faq-content lang-en">
+                <h3 class="faq-title">Haven Plus Service Guide (FAQ)</h3>
+                <div class="faq-section-title">1. Service Hours (SH) & Usage</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q1. You mentioned a $0 call-out fee. Is it really free just for a technician to visit?</div>
+                        <div class="faq-answer">Absolutely! While a typical tradie might charge a $100+ call-out fee just to show up, Haven Plus members pay nothing out of pocket—the visit is covered by your Service Hours (SH). (Note: For remote areas over 30km from our hubs, a small SH adjustment may apply based on travel distance.)</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q2. How are Service Hours (SH) deducted? What if a job only takes 30 minutes?</div>
+                        <div class="faq-answer">1 SH represents one hour of a professional technician's time. To give you the best value, we provide a 15-minute buffer, meaning a job lasting up to 1 hour and 15 minutes still only costs 1 SH. If a repair finishes in 30 minutes, feel free to ask for other small tasks (like changing light bulbs or tightening hinges) to make the most of your full hour.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q3. If I don't use my voucher SH, will they expire?</div>
+                        <div class="faq-answer">Voucher SH included with your subscription are valid for your subscription period. Separately purchased SH bundles are valid for 12 months from purchase. If you don't need repairs right now, save them up and use them when you do.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q4. What if I've used all my voucher SH and need more repairs?</div>
+                        <div class="faq-answer">Simply purchase additional Service Hours. Choose from 1 SH ($99), 4 SH bundle ($85/SH), or 8 SH bundle ($80/SH) — flexible and available anytime.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-more" id="faqMoreEn" style="display:none;">
+                <div class="faq-section-title">2. Service Scope & Remote Management</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q5. Can you handle major works like burst pipes or electrical failures?</div>
+                        <div class="faq-answer">Yes, we certainly can. For works requiring specific licenses, we match you with vetted partner specialists and oversee the entire process. You won't have to worry about finding tradies or comparing quotes. Depending on the scale, you can pay using your SH or receive a separate transparent quote.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q6. Can I call you for emergencies late at night or on weekends?</div>
+                        <div class="faq-answer">Yes, we are available 24/7 for urgent issues like major leaks. To maintain this availability, surcharges apply: 1.5x SH for same-day emergency calls during business hours (9am-8pm) and 2x SH for nights and weekends. We'll handle the crisis immediately, but we recommend scheduling non-urgent repairs for weekdays to save your SH.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q7. What if my property is tenanted and I can't be there in person?</div>
+                        <div class="faq-answer">No problem at all! We handle everything from coordinating schedules with your tenants to the final inspection. You'll receive a detailed report with before-and-after photos, giving you complete transparency and peace of mind as if you were there yourself.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8. Do the included cleaning and checkups reduce my SH?</div>
+                        <div class="faq-answer">No, they don't! Regular cleaning, repair checkups, and smoke alarm inspections are subscription benefits provided at no additional cost. Your SH vouchers and purchased SH are only used for repairs, maintenance, and other on-demand work.</div>
+                    </div>
+                </div>
+                
+                <div class="faq-section-title">3. Costs & Plan Management</div>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-1. Can I purchase Service Hours without a subscription?</div>
+                        <div class="faq-answer">Yes! Simply sign up as a member and you can purchase SH right away — 1 SH ($99), 4 SH bundle ($85/SH), or 8 SH bundle ($80/SH). No subscription required. Perfect for owner-occupiers, Airbnb hosts, and anyone who needs repairs on demand.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q8-2. Can I use Premium Care across multiple properties?</div>
+                        <div class="faq-answer">Yes! Premium Care subscriptions can flexibly schedule cleaning and checkups across up to 2-3 properties. Additionally, 8 SH bundles can be used across any of your properties, making it particularly efficient for multi-property investors and property managers.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q9. Are replacement parts, like taps or door locks, included in the subscription?</div>
+                        <div class="faq-answer">SH covers the technician's labor and minor workshop consumables (screws, tape, etc.). For larger parts like taps or locks, you can provide them yourself or ask us to source them. If we source them, we charge a 'Material Sourcing Fee' (Bunnings run, 0.5 SH) plus the [Actual Material Cost + 10-15% service fee].</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q10. How do I upgrade to a higher plan if my needs change?</div>
+                        <div class="faq-answer">You can upgrade at any time! For monthly plans, the change is instant. For annual plans, you simply pay the difference: [New Plan Annual Price - Amount already paid for the remaining term]. A new 12-month period starts from the upgrade date, ensuring you get all increased benefits immediately.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Q11. I'd like to try it out—what about cancellation fees or selling my property?</div>
+                        <div class="faq-answer">Feel free to start without any pressure—you can cancel at any time! Within the first 90 days, the early termination fee is waived. However, as the plan provides discounted membership rates, you'll need to settle the cost of services already used at the standard rate. If you're selling your property, you can transfer your subscription to the new owner, and in this case no cancellation fees or settlement procedures apply as the subscription continues through transfer.</div>
+                    </div>
+                </div>
+                </div>
+                <button class="faq-show-more" onclick="document.getElementById('faqMoreEn').style.display='block'; this.style.display='none';">Show More</button>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>
