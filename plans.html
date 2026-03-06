@@ -1146,7 +1146,10 @@ async function triggerCheckout(planKey) {
   try {
     const res = await fetch(`${SERVER_URL}/create-checkout-session`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+      },
       body: JSON.stringify({
         planKey,
         userId:         currentUser.id,
