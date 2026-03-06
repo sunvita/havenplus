@@ -1144,7 +1144,7 @@ async function startCheckout() {
 async function triggerCheckout(planKey) {
   const isSub = ['essential','smart','premium'].includes(planKey);
   try {
-    const res = await fetch(`${SERVER_URL}/api/create-checkout-session`, {
+    const res = await fetch(`${SERVER_URL}/create-checkout-session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
