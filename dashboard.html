@@ -274,6 +274,10 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 /* No-plan property card */
 .prop-hub-noplan { padding: 16px 24px 20px; background: #fafafa; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .prop-hub-noplan-text { font-size: 13px; color: var(--text-light); }
+
+/* Week selector */
+.week-select { padding: 5px 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 12px; font-weight: 600; font-family: inherit; color: var(--navy); background: white; cursor: pointer; transition: border-color .2s; }
+.week-select:focus { border-color: var(--orange); outline: none; }
 </style>
 </head>
 <body>
@@ -795,6 +799,17 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
               ${i < dots.length - 1 ? `<div class="sched-line ${d.cls === 'done' ? 'done' : ''}"></div>` : ''}
             `).join('')}
           </div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--text-light)">Next visit (${nextVisitText}):</span>
+            <select class="week-select" onchange="event.stopPropagation();savePreferredWeek('${sub.id}',this.value)" id="weekSel_${p.id}">
+              <option value=""${!sub.preferred_week?' selected':''}>Select preferred week</option>
+              <option value="1"${sub.preferred_week==1?' selected':''}>Week 1 (1st–7th)</option>
+              <option value="2"${sub.preferred_week==2?' selected':''}>Week 2 (8th–14th)</option>
+              <option value="3"${sub.preferred_week==3?' selected':''}>Week 3 (15th–21st)</option>
+              <option value="4"${sub.preferred_week==4?' selected':''}>Week 4 (22nd–end)</option>
+            </select>
+            <span class="week-status" id="weekStatus_${p.id}" style="font-size:11px;font-weight:700;">${sub.preferred_week ? (sub.confirmed_date ? '<span style="color:var(--success)">Confirmed: '+sub.confirmed_date+'</span>' : '<span style="color:var(--warning)">Pending confirmation</span>') : ''}</span>
+          </div>
         </div>`;
       }
     } else if (hasSub && !cleaningStartMonth) {
@@ -806,9 +821,9 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
     // Summary line
     const summaryMeta = hasSub
       ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
-         <span>${ICO.clean} ${cleanR}/${cleanT}h</span>
-         <span>${ICO.sh} ${shVR} SH</span>
-         ${nextVisitText ? `<span>${ICO.cal} Next: <strong>${nextVisitText}</strong></span>` : ''}`
+         <span><strong>Cleaning:</strong> ${cleanR}/${cleanT}h</span>
+         <span><strong>Service Hour:</strong> ${shVR}/${shVT}SH</span>
+         ${nextVisitText ? `<span><strong>Next Visit:</strong> ${nextVisitText}</span>` : ''}`
       : `<span class="prop-hub-plan-pill pill-none">No plan</span>`;
 
     // PM / Key Holder info
@@ -908,6 +923,24 @@ async function selectStartMonth(subId, monthVal, btnEl) {
     showToast('Failed to save: ' + e.message, true);
     btnEl.textContent = originalText;
     btnEl.classList.remove('selected');
+  }
+}
+
+async function savePreferredWeek(subId, week) {
+  if (!week) return;
+  try {
+    const { data, error } = await sb.from('subscriptions')
+      .update({ preferred_week: parseInt(week) })
+      .eq('id', subId)
+      .eq('user_id', currentUser.id)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('Update failed — check RLS policies');
+    showToast('Preferred week saved! Pending admin confirmation.');
+    setTimeout(() => loadDashboard(), 600);
+  } catch(e) {
+    console.error('savePreferredWeek error:', e);
+    showToast('Failed to save: ' + e.message, true);
   }
 }
 
