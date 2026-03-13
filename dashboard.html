@@ -801,14 +801,11 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
           </div>
           <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <span style="font-size:12px;color:var(--text-light)">Next visit (${nextVisitText}):</span>
-            <select class="week-select" onchange="event.stopPropagation();savePreferredWeek('${sub.id}',this.value)" id="weekSel_${p.id}">
-              <option value=""${!sub.preferred_week?' selected':''}>Select preferred week</option>
-              <option value="1"${sub.preferred_week==1?' selected':''}>Week 1 (1st–7th)</option>
-              <option value="2"${sub.preferred_week==2?' selected':''}>Week 2 (8th–14th)</option>
-              <option value="3"${sub.preferred_week==3?' selected':''}>Week 3 (15th–21st)</option>
-              <option value="4"${sub.preferred_week==4?' selected':''}>Week 4 (22nd–end)</option>
-            </select>
-            <span class="week-status" id="weekStatus_${p.id}" style="font-size:11px;font-weight:700;">${sub.preferred_week ? (sub.confirmed_date ? '<span style="color:var(--success)">Confirmed: '+sub.confirmed_date+'</span>' : '<span style="color:var(--warning)">Pending confirmation</span>') : ''}</span>
+            ${sub.preferred_week
+              ? (sub.confirmed_date
+                ? `<span style="font-size:12px;font-weight:700;color:var(--success)">Confirmed: ${sub.confirmed_date}</span>`
+                : `<span style="font-size:12px;font-weight:700;color:var(--warning)">Week ${sub.preferred_week} — Pending confirmation</span>`)
+              : `<span style="font-size:12px;color:var(--text-light)">No week preference set</span>`}
           </div>
         </div>`;
       }
@@ -886,61 +883,76 @@ function togglePropHub(propId) {
 
 function buildStartMonthSelector(propertyId, subId) {
   const now = new Date();
-  let options = '';
+  let monthBtns = '';
   for (let i = 0; i <= 3; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
     const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const label = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-    options += `<button class="start-month-btn" onclick="event.stopPropagation();selectStartMonth('${subId}','${val}',this)">${label}</button>`;
+    monthBtns += `<button class="start-month-btn" data-val="${val}" onclick="event.stopPropagation();pickMonth('${subId}','${val}',this)">${label}</button>`;
   }
   return `
-    <div class="start-month-card">
+    <div class="start-month-card" id="startCard_${subId}">
       <div class="start-month-title">${ICO.cal} When would you like regular cleaning to begin?</div>
-      <div class="start-month-desc">Select your preferred start month. Your cleaning schedule will be automatically calculated based on your plan.</div>
-      <div class="start-month-options">${options}</div>
+      <div class="start-month-desc">Select your preferred start month and week.</div>
+      <div class="start-month-options">${monthBtns}</div>
+      <div id="weekPicker_${subId}" style="display:none;margin-top:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">Preferred week:</div>
+        <div class="start-month-options">
+          <button class="start-month-btn" onclick="event.stopPropagation();pickWeek('${subId}',1,this)">Week 1 (1st–7th)</button>
+          <button class="start-month-btn" onclick="event.stopPropagation();pickWeek('${subId}',2,this)">Week 2 (8th–14th)</button>
+          <button class="start-month-btn" onclick="event.stopPropagation();pickWeek('${subId}',3,this)">Week 3 (15th–21st)</button>
+          <button class="start-month-btn" onclick="event.stopPropagation();pickWeek('${subId}',4,this)">Week 4 (22nd–end)</button>
+        </div>
+      </div>
+      <button class="btn-submit" id="confirmStart_${subId}" style="display:none;margin-top:14px" onclick="event.stopPropagation();confirmStartSchedule('${subId}')">Confirm Schedule</button>
     </div>
   `;
 }
 
-async function selectStartMonth(subId, monthVal, btnEl) {
+let pendingMonth = {}, pendingWeek = {};
+
+function pickMonth(subId, val, btnEl) {
+  pendingMonth[subId] = val;
   btnEl.closest('.start-month-options').querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
   btnEl.classList.add('selected');
-  const originalText = btnEl.textContent;
-  btnEl.textContent = 'Saving…';
-
-  try {
-    const { data, error, count } = await sb.from('subscriptions')
-      .update({ cleaning_start_month: monthVal + '-01' })
-      .eq('id', subId)
-      .eq('user_id', currentUser.id)
-      .select();
-    if (error) throw error;
-    if (!data || data.length === 0) throw new Error('Update returned no rows — check RLS policies');
-    showToast('Cleaning start month saved!');
-    setTimeout(() => loadDashboard(), 600);
-  } catch(e) {
-    console.error('selectStartMonth error:', e);
-    showToast('Failed to save: ' + e.message, true);
-    btnEl.textContent = originalText;
-    btnEl.classList.remove('selected');
-  }
+  document.getElementById('weekPicker_' + subId).style.display = 'block';
+  // Reset week selection
+  pendingWeek[subId] = null;
+  document.getElementById('weekPicker_' + subId).querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('confirmStart_' + subId).style.display = 'none';
 }
 
-async function savePreferredWeek(subId, week) {
-  if (!week) return;
+function pickWeek(subId, week, btnEl) {
+  pendingWeek[subId] = week;
+  btnEl.closest('.start-month-options').querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  document.getElementById('confirmStart_' + subId).style.display = 'block';
+}
+
+async function confirmStartSchedule(subId) {
+  const month = pendingMonth[subId];
+  const week = pendingWeek[subId];
+  if (!month || !week) return;
+
+  const btn = document.getElementById('confirmStart_' + subId);
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
   try {
     const { data, error } = await sb.from('subscriptions')
-      .update({ preferred_week: parseInt(week) })
+      .update({ cleaning_start_month: month + '-01', preferred_week: week })
       .eq('id', subId)
       .eq('user_id', currentUser.id)
       .select();
     if (error) throw error;
     if (!data || data.length === 0) throw new Error('Update failed — check RLS policies');
-    showToast('Preferred week saved! Pending admin confirmation.');
+    showToast('Cleaning schedule saved! Pending admin confirmation.');
     setTimeout(() => loadDashboard(), 600);
   } catch(e) {
-    console.error('savePreferredWeek error:', e);
+    console.error('confirmStartSchedule error:', e);
     showToast('Failed to save: ' + e.message, true);
+    btn.disabled = false;
+    btn.textContent = 'Confirm Schedule';
   }
 }
 
