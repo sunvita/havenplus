@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haven Plus — Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B2A4A; --navy-light: #2a3f6a;
+    --orange: #ff6b35; --orange-light: #f7931e;
+    --bg: #f4f6f9; --surface: #ffffff;
+    --border: #e2e6ea; --text: #2d3748;
+    --text-light: #718096; --green-bg: #e8f5e9; --green-txt: #1e5c3a;
+    --red: #c0392b; --red-bg: #fff5f5;
+    --blue-bg: #e8f0fb; --blue-txt: #1B2A4A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Nav ── */
+  .nav { background: linear-gradient(135deg, var(--navy), var(--navy-light)); height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon { width: 36px; height: 36px; }
+  .nav-logo-text { color: white; font-size: 15px; font-weight: 800; letter-spacing: 1px; }
+  .nav-logo-text span { color: var(--orange); }
+  .nav-logo-sub { color: rgba(255,255,255,.5); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; display: block; margin-top: -2px; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .btn-back { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+  .btn-back:hover { background: rgba(255,255,255,.2); color: white; }
+  .nav-user { color: rgba(255,255,255,.7); font-size: 13px; }
+
+  /* ── Layout ── */
+  .page { max-width: 1000px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+
+  /* ── Sidebar ── */
+  .sidebar { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; position: sticky; top: 88px; }
+  .sidebar-profile { padding: 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--orange-light)); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+  .sidebar-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .sidebar-email { font-size: 12px; color: var(--text-light); margin-top: 2px; word-break: break-all; }
+  .sidebar-nav { padding: 8px 0; }
+  .sidebar-section { font-size: 10px; font-weight: 700; color: var(--text-light); letter-spacing: .08em; text-transform: uppercase; padding: 10px 20px 4px; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 20px; font-size: 13px; font-weight: 500; color: var(--text); background: none; border: none; cursor: pointer; font-family: inherit; transition: background .15s; }
+  .sidebar-item:hover { background: #f5f7fa; color: var(--navy); }
+  .sidebar-item.active { background: var(--blue-bg); color: var(--navy); font-weight: 700; border-right: 3px solid var(--navy); }
+  .sidebar-item.danger { color: var(--red); }
+  .sidebar-item.danger:hover { background: var(--red-bg); }
+  .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .6; }
+  .sidebar-item.active svg { opacity: 1; }
+  .sidebar-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+  /* ── Content ── */
+  .content { display: flex; flex-direction: column; gap: 0; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .section-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); padding: 28px; margin-bottom: 16px; }
+  .section-title { font-size: 18px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .section-desc { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+
+  /* ── Form ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; }
+  .form-input { padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text); transition: border-color .2s; outline: none; }
+  .form-input:focus { border-color: var(--orange); }
+  .form-input:disabled { background: #f9fafb; color: var(--text-light); cursor: not-allowed; }
+  .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .btn-save { background: var(--navy); color: white; border: none; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s; }
+  .btn-save:hover { background: var(--navy-light); }
+  .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-cancel { background: none; color: var(--text-light); border: 2px solid var(--border); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+  .btn-cancel:hover { border-color: var(--text-light); color: var(--text); }
+
+  /* ── Alerts ── */
+  .alert { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .alert-error { background: #fee; color: var(--red); }
+  .alert-success { background: var(--green-bg); color: var(--green-txt); }
+
+  /* ── Subscription card ── */
+  .sub-card { background: var(--bg); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sub-plan-name { font-size: 16px; font-weight: 800; color: var(--navy); }
+  .sub-plan-price { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .sub-badge { display: inline-block; background: var(--green-bg); color: var(--green-txt); font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; }
+  .sub-details { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .sub-detail-item { font-size: 13px; color: var(--text-light); }
+  .sub-detail-item strong { display: block; font-size: 14px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .sub-note { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+  /* ── Payment ── */
+  .payment-btn { display: flex; align-items: center; gap: 12px; background: var(--bg); border: 2px solid var(--border); border-radius: 12px; padding: 16px 20px; cursor: pointer; font-family: inherit; width: 100%; text-align: left; transition: border-color .2s; margin-bottom: 12px; }
+  .payment-btn:hover { border-color: var(--navy); }
+  .payment-btn-icon { width: 40px; height: 40px; background: var(--navy); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .payment-btn-text { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .payment-btn-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+  /* ── Security ── */
+  .security-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .security-row:last-child { border-bottom: none; }
+  .security-label { font-size: 14px; font-weight: 700; color: var(--text); }
+  .security-value { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+  .btn-change { background: none; border: 2px solid var(--border); color: var(--text); padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+  .btn-change:hover { border-color: var(--navy); color: var(--navy); }
+
+  /* ── Password form (inline) ── */
+  .pw-form { display: none; margin-top: 16px; padding: 20px; background: var(--bg); border-radius: 12px; }
+  .pw-form.open { display: block; }
+  .pw-field { position: relative; margin-bottom: 12px; }
+  .pw-field label { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 6px; }
+  .pw-wrap { position: relative; }
+  .pw-wrap input { width: 100%; padding: 10px 44px 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text); outline: none; transition: border-color .2s; }
+  .pw-wrap input:focus { border-color: var(--orange); }
+  .pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 0; color: var(--text-light); }
+
+  /* ── Delete ── */
+  .delete-warning { background: var(--red-bg); border: 1px solid #f5c6cb; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
+  .delete-warning p { font-size: 13px; color: #721c24; line-height: 1.6; }
+  .delete-warning p + p { margin-top: 8px; }
+  .btn-delete { background: var(--red); color: white; border: none; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block; }
+  .btn-delete:hover { background: #a93226; }
+
+  /* ── Admin ── */
+  .admin-badge { display: inline-block; background: #e8f0fb; color: var(--navy); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; background: var(--bg); color: var(--text-light); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid var(--border); }
+  td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge-active { background: var(--green-bg); color: var(--green-txt); }
+  .badge-inactive { background: #f0f0f0; color: #888; }
+  .badge-essential { background: #e8f0fb; color: #1B2A4A; }
+  .badge-smart { background: #fff3e0; color: #e65100; }
+  .badge-premium { background: #f3e5f5; color: #6a1b9a; }
+  .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 14px; }
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-input { padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color .2s; }
+  .filter-input:focus { border-color: var(--orange); }
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-mini { background: var(--bg); border-radius: 10px; padding: 14px 16px; }
+  .stat-mini-label { font-size: 11px; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .stat-mini-value { font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--navy); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform .3s; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .page { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .form-grid { grid-template-columns: 1fr; }
+    .sub-details { grid-template-columns: 1fr 1fr; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen" style="position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s;">
+  <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite;"></div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="dashboard.html" class="nav-logo">
+    <svg class="nav-logo-icon" viewBox="0 0 36 36" fill="none">
+      <polygon points="18,3 33,12 33,24 18,33 3,24 3,12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <polygon points="18,7 29,13.5 29,22.5 18,29 7,22.5 7,13.5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+      <path d="M12 20 L16 16 L18 18 L22 14" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <div>
+      <div class="nav-logo-text">HAVEN<span>PLUS</span></div>
+      <span class="nav-logo-sub">Property Care</span>
+    </div>
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="navUserName"></span>
+    <a href="dashboard.html" class="btn-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Dashboard
+    </a>
+  </div>
+</nav>
+
+<!-- Page -->
+<div class="page">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-profile">
+      <div class="sidebar-avatar" id="sidebarAvatar"></div>
+      <div class="sidebar-name" id="sidebarName"></div>
+      <div class="sidebar-email" id="sidebarEmail"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Account</div>
+      <button class="sidebar-item active" data-section="personal" onclick="switchSection('personal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Personal Info
+      </button>
+      <button class="sidebar-item" data-section="subscription" onclick="switchSection('subscription')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="14" x2="10" y2="14"/></svg>
+        Subscription
+      </button>
+      <button class="sidebar-item" data-section="payment" onclick="switchSection('payment')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Payment
+      </button>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">Security</div>
+      <button class="sidebar-item" data-section="security" onclick="switchSection('security')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        Security
+      </button>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-item danger" data-section="delete" onclick="switchSection('delete')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Delete Account
+      </button>
+      <!-- Admin sections (hidden by default) -->
+      <div id="adminNav" style="display:none;">
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">Admin <span class="admin-badge">Admin</span></div>
+        <button class="sidebar-item" data-section="subscribers" onclick="switchSection('subscribers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Subscribers
+        </button>
+        <button class="sidebar-item" data-section="schedules" onclick="switchSection('schedules')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Service Schedules
+        </button>
+        <button class="sidebar-item" data-section="hourslog" onclick="switchSection('hourslog')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Hours Log
+        </button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Personal Info -->
+    <section class="section active" id="section-personal">
+      <div class="section-card">
+        <div class="section-title">Personal Information</div>
+        <div class="section-desc">Update your name and contact details.</div>
+        <div class="alert alert-error" id="personalError"></div>
+        <div class="alert alert-success" id="personalSuccess"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="fieldName" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" id="fieldPhone" placeholder="04XX XXX XXX">
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="fieldEmail" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Language</label>
+            <select class="form-input" id="fieldLang">
+              <option value="en">English</option>
+              <option value="ko">한국어</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-save" id="btnSavePersonal" onclick="savePersonalInfo()">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Subscription -->
+    <section class="section" id="section-subscription">
+      <div class="section-card">
+        <div class="section-title">Subscription</div>
+        <div class="section-desc">Your current plan and usage.</div>
+        <div id="subContent"><div style="color:#888;font-size:14px;">Loading…</div></div>
+      </div>
+    </section>
+
+    <!-- Payment -->
+    <section class="section" id="section-payment">
+      <div class="section-card">
+        <div class="section-title">Payment</div>
+        <div class="section-desc">Manage your billing details and view invoices.</div>
+        <button class="payment-btn" onclick="openPortal()">
+          <div class="payment-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div>
+            <div class="payment-btn-text">Manage Billing</div>
+            <div class="payment-btn-sub">Update card, view invoices, download receipts</div>
+          </div>
+        </button>
+        <p style="font-size:12px;color:var(--text-light);">You'll be redirected to our secure billing portal powered by Stripe.</p>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section class="section" id="section-security">
+      <div class="section-card">
+        <div class="section-title">Security</div>
+        <div class="section-desc">Manage your password and account access.</div>
+        <div class="security-row">
+          <div>
+            <div class="security-label">Password</div>
+            <div class="security-value">Last changed: unknown</div>
+          </div>
+          <button class="btn-change" onclick="togglePwForm()">Change</button>
+        </div>
+        <div class="pw-form" id="pwForm">
+          <div class="alert alert-error" id="pwError"></div>
+          <div class="alert alert-success" id="pwSuccess"></div>
+          <div class="pw-field">
+            <label>New Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="pwNew" placeholder="Minimum 8 characters">
+              <button type="button" class="pw-toggle" onclick="togglePW('pwNew',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div class="pw-field">
+            <label>Confirm Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="pwConfirm" placeholder="Re-enter new password">
+              <button type="button" class="pw-toggle" onclick="togglePW('pwConfirm',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button class="btn-save" id="btnPwSave" onclick="savePassword()">Update Password</button>
+            <button class="btn-cancel" onclick="togglePwForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Delete -->
+    <section class="section" id="section-delete">
+      <div class="section-card">
+        <div class="section-title" style="color:var(--red);">Delete Account</div>
+        <div class="section-desc">Permanently remove your account and all data.</div>
+        <div class="delete-warning">
+          <p>Deleting your account will permanently remove all your property data, service history, and subscription information. This action cannot be undone.</p>
+          <p>Any active subscriptions must be cancelled before deletion. Unused purchased Service Hours will be refunded at 70% of face value in accordance with our cancellation policy.</p>
+        </div>
+        <p style="font-size:13px;color:var(--text-light);margin-bottom:20px;">To proceed, send a deletion request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
+        <a class="btn-delete" href="mailto:hi@havenpluscare.com?subject=Account Deletion Request&body=Please delete my Haven Plus account. My registered email is: ">Send Deletion Request</a>
+      </div>
+    </section>
+
+    <!-- Admin: Subscribers -->
+    <section class="section" id="section-subscribers">
+      <div class="section-card">
+        <div class="section-title">Subscribers <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">All active and inactive subscribers.</div>
+        <div class="stat-row" id="subStats">
+          <div class="stat-mini"><div class="stat-mini-label">Total Active</div><div class="stat-mini-value" id="statActive">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Essential</div><div class="stat-mini-value" id="statEssential">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Smart</div><div class="stat-mini-value" id="statSmart">—</div></div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="subSearch" placeholder="Search name or email…" oninput="filterSubscribers()" style="flex:1;min-width:180px;">
+          <select class="filter-input" id="subPlanFilter" onchange="filterSubscribers()">
+            <option value="">All plans</option>
+            <option value="essential">Essential</option>
+            <option value="smart">Smart</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table id="subsTable">
+            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Clean hrs</th><th>SH left</th><th>Start</th></tr></thead>
+            <tbody id="subsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin: Service Schedules -->
+    <section class="section" id="section-schedules">
+      <div class="section-card">
+        <div class="section-title">Service Schedules <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Upcoming and past cleaning visits.</div>
+        <div class="filter-bar">
+          <select class="filter-input" id="schedStatusFilter" onchange="loadSchedules()">
+            <option value="">All statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Property</th><th>Worker</th><th>Status</th></tr></thead>
+            <tbody id="schedulesBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin: Hours Log -->
+    <section class="section" id="section-hourslog">
+      <div class="section-card">
+        <div class="section-title">Hours Log <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">SH transaction history across all customers.</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Customer</th><th>Type</th><th>Amount</th><th>Voucher bal.</th><th>Purchased bal.</th><th>Note</th></tr></thead>
+            <tbody id="hoursBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5OTc3NDMsImV4cCI6MjA1NjU3Mzc0M30.hDTAUFyHMi1ymYFMVLPV3J0HOE3G7eFsRYn8xjJCNGc';
+
+const PLAN_META = {
+  essential: { name:'Essential Care', price:'$55/mo', visits:'4× per year', hours:'8 hrs', vouchers:'2 / year' },
+  smart:     { name:'Smart Care',     price:'$75/mo', visits:'6× per year', hours:'12 hrs', vouchers:'3 / year' },
+  premium:   { name:'Premium Care',   price:'$150/mo',visits:'12× per year',hours:'24 hrs', vouchers:'6 / year' },
+};
+
+let sb, currentUser, isAdmin = false;
+let allSubscribers = [];
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', async () => {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'index.html'; return; }
+  currentUser = session.user;
+
+  const meta = currentUser.user_metadata || {};
+  const name = meta.full_name || currentUser.email.split('@')[0];
+  const initial = name.charAt(0).toUpperCase();
+
+  document.getElementById('navUserName').textContent = name;
+  document.getElementById('sidebarAvatar').textContent = initial;
+  document.getElementById('sidebarName').textContent = name;
+  document.getElementById('sidebarEmail').textContent = currentUser.email;
+
+  // Check admin
+  const { data: profile } = await sb.from('profiles').select('role, full_name, phone, preferred_language').eq('id', currentUser.id).maybeSingle();
+  isAdmin = profile?.role === 'admin';
+  if (isAdmin) document.getElementById('adminNav').style.display = 'block';
+
+  // Pre-fill personal info
+  document.getElementById('fieldName').value  = profile?.full_name || meta.full_name || '';
+  document.getElementById('fieldPhone').value = profile?.phone    || meta.phone     || '';
+  document.getElementById('fieldEmail').value = currentUser.email;
+  document.getElementById('fieldLang').value  = profile?.preferred_language || meta.preferred_language || 'en';
+
+  // Handle ?section= param
+  const section = new URLSearchParams(location.search).get('section');
+  if (section) switchSection(section);
+
+  document.getElementById('loadingScreen').style.opacity = '0';
+  setTimeout(() => document.getElementById('loadingScreen').style.display = 'none', 300);
+});
+
+/* ── Section switching ── */
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('section-' + name);
+  const btn = document.querySelector(`[data-section="${name}"]`);
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+  history.replaceState(null, '', '?section=' + name);
+
+  if (name === 'subscription') loadSubscription();
+  if (name === 'subscribers')  loadSubscribers();
+  if (name === 'schedules')    loadSchedules();
+  if (name === 'hourslog')     loadHoursLog();
+}
+
+/* ── Personal Info ── */
+async function savePersonalInfo() {
+  const name  = document.getElementById('fieldName').value.trim();
+  const phone = document.getElementById('fieldPhone').value.trim();
+  const lang  = document.getElementById('fieldLang').value;
+  const errEl = document.getElementById('personalError');
+  const sucEl = document.getElementById('personalSuccess');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Full name is required.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btnSavePersonal');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const [authRes, dbRes] = await Promise.all([
+    sb.auth.updateUser({ data: { full_name: name, phone, preferred_language: lang } }),
+    sb.from('profiles').update({ full_name: name, phone, preferred_language: lang, updated_at: new Date().toISOString() }).eq('id', currentUser.id),
+  ]);
+
+  btn.disabled = false; btn.textContent = 'Save Changes';
+
+  if (authRes.error || dbRes.error) {
+    errEl.textContent = (authRes.error || dbRes.error).message;
+    errEl.style.display = 'block';
+  } else {
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('navUserName').textContent = name;
+    document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
+    sucEl.textContent = 'Changes saved successfully.';
+    sucEl.style.display = 'block';
+    setTimeout(() => sucEl.style.display = 'none', 3000);
+  }
+}
+
+/* ── Subscription ── */
+async function loadSubscription() {
+  const el = document.getElementById('subContent');
+  el.innerHTML = '<div style="color:#888;font-size:14px;">Loading…</div>';
+  const { data: sub } = await sb.from('subscriptions').select('plan_type, status, start_date, end_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used').eq('user_id', currentUser.id).eq('status', 'active').maybeSingle();
+  const { data: shBal } = await sb.from('sh_balance').select('purchased_total, purchased_used').eq('user_id', currentUser.id).maybeSingle();
+
+  if (!sub) { el.innerHTML = '<p style="font-size:14px;color:#888;">No active subscription found.</p>'; return; }
+
+  const plan = PLAN_META[sub.plan_type] || { name: sub.plan_type, price:'—', visits:'—', hours:'—', vouchers:'—' };
+  const endDate  = sub.end_date   ? new Date(sub.end_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}) : '—';
+  const startDate= sub.start_date ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}) : '—';
+  const cleanRem = (sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0);
+  const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
+  const shPurchRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
+
+  el.innerHTML = `
+    <div class="sub-card">
+      <div class="sub-card-header">
+        <div>
+          <div class="sub-plan-name">${plan.name}</div>
+          <span class="sub-badge">${sub.status}</span>
+        </div>
+        <div class="sub-plan-price">${plan.price}</div>
+      </div>
+      <div class="sub-details">
+        <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
+        <div class="sub-detail-item">SH vouchers left<strong>${shVouchRem} hrs</strong></div>
+        <div class="sub-detail-item">SH purchased left<strong>${shPurchRem} hrs</strong></div>
+        <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
+        <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
+        <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
+      </div>
+    </div>
+    <p class="sub-note">To upgrade or cancel your subscription, contact us at <a href="mailto:hi@havenpluscare.com" style="color:var(--navy);">hi@havenpluscare.com</a>.</p>`;
+}
+
+/* ── Payment portal ── */
+async function openPortal() {
+  showToast('Redirecting to payment portal…');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch('https://rtkgnlcgepromqtoelre.supabase.co/functions/v1/create-portal-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ user_id: currentUser.id }),
+    });
+    const { url, error } = await res.json();
+    if (error) throw new Error(error);
+    window.open(url, '_blank');
+  } catch(e) {
+    showToast('Payment portal unavailable. Please contact hi@havenpluscare.com');
+  }
+}
+
+/* ── Security ── */
+function togglePwForm() {
+  const f = document.getElementById('pwForm');
+  f.classList.toggle('open');
+  if (!f.classList.contains('open')) {
+    document.getElementById('pwNew').value = '';
+    document.getElementById('pwConfirm').value = '';
+    document.getElementById('pwError').style.display = 'none';
+    document.getElementById('pwSuccess').style.display = 'none';
+  }
+}
+
+async function savePassword() {
+  const newPw = document.getElementById('pwNew').value;
+  const conPw = document.getElementById('pwConfirm').value;
+  const errEl = document.getElementById('pwError');
+  const sucEl = document.getElementById('pwSuccess');
+  errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+  if (!newPw || newPw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== conPw) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btnPwSave');
+  btn.disabled = true; btn.textContent = 'Updating…';
+
+  const { error } = await sb.auth.updateUser({ password: newPw });
+  btn.disabled = false; btn.textContent = 'Update Password';
+
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+  else {
+    sucEl.textContent = 'Password updated successfully.';
+    sucEl.style.display = 'block';
+    document.getElementById('pwNew').value = '';
+    document.getElementById('pwConfirm').value = '';
+    setTimeout(() => { sucEl.style.display = 'none'; togglePwForm(); }, 2000);
+  }
+}
+
+function togglePW(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+/* ── Admin: Subscribers ── */
+async function loadSubscribers() {
+  if (!isAdmin) return;
+  const body = document.getElementById('subsBody');
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  const { data: subs } = await sb.from('subscriptions').select('user_id, plan_type, status, start_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used').order('start_date', { ascending: false });
+  if (!subs?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No subscribers found.</td></tr>'; return; }
+
+  const userIds = [...new Set(subs.map(s => s.user_id))];
+  const { data: profiles } = await sb.from('profiles').select('id, full_name, phone').in('id', userIds);
+  const { data: authUsers } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+
+  const profileMap = {};
+  (profiles || []).forEach(p => profileMap[p.id] = p);
+
+  allSubscribers = subs.map(s => ({ ...s, profile: profileMap[s.user_id] || {} }));
+
+  // Stats
+  const active = subs.filter(s => s.status === 'active');
+  document.getElementById('statActive').textContent    = active.length;
+  document.getElementById('statEssential').textContent = active.filter(s => s.plan_type === 'essential').length;
+  document.getElementById('statSmart').textContent     = active.filter(s => s.plan_type === 'smart').length;
+
+  renderSubscribers(allSubscribers);
+}
+
+function renderSubscribers(list) {
+  const body = document.getElementById('subsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  body.innerHTML = list.map(s => {
+    const p = s.profile;
+    const planBadge = `<span class="badge badge-${s.plan_type}">${s.plan_type}</span>`;
+    const statusBadge = `<span class="badge badge-${s.status === 'active' ? 'active' : 'inactive'}">${s.status}</span>`;
+    const cleanRem = (s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0);
+    const shRem    = (s.sh_hours_total || 0) - (s.sh_hours_used || 0);
+    const start    = s.start_date ? new Date(s.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    return `<tr>
+      <td style="font-weight:600;">${p.full_name || '—'}</td>
+      <td style="color:var(--text-light);">${p.phone || '—'}</td>
+      <td>${planBadge}</td>
+      <td>${statusBadge}</td>
+      <td>${cleanRem} / ${s.cleaning_hours_total || 0}</td>
+      <td>${shRem}</td>
+      <td style="color:var(--text-light);">${start}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSubscribers() {
+  const q    = document.getElementById('subSearch').value.toLowerCase();
+  const plan = document.getElementById('subPlanFilter').value;
+  const filtered = allSubscribers.filter(s => {
+    const name  = (s.profile?.full_name || '').toLowerCase();
+    const phone = (s.profile?.phone || '').toLowerCase();
+    const matchQ    = !q    || name.includes(q) || phone.includes(q);
+    const matchPlan = !plan || s.plan_type === plan;
+    return matchQ && matchPlan;
+  });
+  renderSubscribers(filtered);
+}
+
+/* ── Admin: Schedules ── */
+async function loadSchedules() {
+  if (!isAdmin) return;
+  const body   = document.getElementById('schedulesBody');
+  const status = document.getElementById('schedStatusFilter').value;
+  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+
+  let q = sb.from('cleaning_schedule').select('planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id').order('planned_date', { ascending: false }).limit(50);
+  if (status) q = q.eq('status', status);
+  const { data } = await q;
+
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No schedules found.</td></tr>'; return; }
+  body.innerHTML = data.map(r => {
+    const d = new Date(r.planned_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    return `<tr>
+      <td style="font-weight:600;">${d}</td>
+      <td>${r.planned_time || '—'}</td>
+      <td>${r.duration_hours ? r.duration_hours + ' hrs' : '—'}</td>
+      <td style="color:var(--text-light);font-size:12px;">${r.property_id?.slice(0,8) || '—'}…</td>
+      <td style="color:var(--text-light);font-size:12px;">${r.assigned_worker_id?.slice(0,8) || 'Unassigned'}…</td>
+      <td><span class="badge badge-${r.status === 'completed' ? 'active' : r.status === 'cancelled' ? 'inactive' : 'essential'}">${r.status || '—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Admin: Hours Log ── */
+async function loadHoursLog() {
+  if (!isAdmin) return;
+  const body = document.getElementById('hoursBody');
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  const { data } = await sb.from('sh_transactions').select('created_at, user_id, transaction_type, sh_amount, balance_after_voucher, balance_after_purchased, description').order('created_at', { ascending: false }).limit(100);
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found.</td></tr>'; return; }
+
+  const userIds = [...new Set(data.map(r => r.user_id))];
+  const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+  const profileMap = {};
+  (profiles || []).forEach(p => profileMap[p.id] = p);
+
+  body.innerHTML = data.map(r => {
+    const d    = new Date(r.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    const name = profileMap[r.user_id]?.full_name || r.user_id?.slice(0,8) + '…';
+    const amt  = r.sh_amount > 0 ? `+${r.sh_amount}` : r.sh_amount;
+    const color= r.sh_amount > 0 ? 'color:var(--green-txt);font-weight:700;' : 'color:var(--red);font-weight:700;';
+    return `<tr>
+      <td style="color:var(--text-light);">${d}</td>
+      <td style="font-weight:600;">${name}</td>
+      <td><span class="badge badge-essential">${r.transaction_type}</span></td>
+      <td style="${color}">${amt} hrs</td>
+      <td>${r.balance_after_voucher ?? '—'}</td>
+      <td>${r.balance_after_purchased ?? '—'}</td>
+      <td style="color:var(--text-light);font-size:12px;">${r.description || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Toast ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
