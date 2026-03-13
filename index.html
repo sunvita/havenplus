@@ -2340,6 +2340,7 @@
     // AUTH FUNCTIONS
     // ============================================
     function openAuth(tab) {
+        if (currentUser) { window.location.href = '/dashboard.html'; return; }
         document.getElementById('authOverlay').classList.add('active');
         document.getElementById('authError').style.display = 'none';
         document.getElementById('authSuccess').style.display = 'none';
