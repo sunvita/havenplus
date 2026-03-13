@@ -5,31 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Haven Plus — Profile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --navy: #1B2A4A; --navy-light: #2a3f6a;
     --orange: #ff6b35; --orange-light: #f7931e;
-    --bg: #f4f6f9; --surface: #ffffff;
-    --border: #e2e6ea; --text: #2d3748;
-    --text-light: #718096; --green-bg: #e8f5e9; --green-txt: #1e5c3a;
+    --bg: #f5f6fa; --surface: #ffffff;
+    --border: #e8eaed; --text: #1a1a1a;
+    --text-light: #666; --green-bg: #e8f5e9; --green-txt: #1e5c3a;
     --red: #c0392b; --red-bg: #fff5f5;
     --blue-bg: #e8f0fb; --blue-txt: #1B2A4A;
+    --success: #27ae60; --warning: #f39c12;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { overflow-x: hidden; scroll-behavior: smooth; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
 
-  /* ── Nav ── */
-  .nav { background: linear-gradient(135deg, var(--navy), var(--navy-light)); height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
-  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .nav-logo-icon { width: 36px; height: 36px; }
-  .nav-logo-text { color: white; font-size: 15px; font-weight: 800; letter-spacing: 1px; }
-  .nav-logo-text span { color: var(--orange); }
-  .nav-logo-sub { color: rgba(255,255,255,.5); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; display: block; margin-top: -2px; }
-  .nav-right { display: flex; align-items: center; gap: 12px; }
-  .btn-back { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: flex; align-items: center; gap: 6px; }
-  .btn-back:hover { background: rgba(255,255,255,.2); color: white; }
-  .nav-user { color: rgba(255,255,255,.7); font-size: 13px; }
+  /* ── Loading ── */
+  .loading-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .3s; }
+  .loading-screen.hide { opacity: 0; pointer-events: none; }
+  .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,.2); border-top-color: var(--orange); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Nav (identical to dashboard) ── */
+  .dash-nav { background: linear-gradient(135deg, var(--navy), var(--navy-light)); height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+  .dash-nav-inner { max-width: 1000px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .dash-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .dash-logo svg { width: 32px; height: 32px; }
+  .dash-brand { font-size: 18px; font-weight: 900; color: white; letter-spacing: 1px; line-height: 1; }
+  .dash-brand span { font-weight: 300; opacity: .6; }
+  .dash-brand-sub { font-size: 8px; font-weight: 700; letter-spacing: 3px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+  .dash-nav-right { display: flex; align-items: center; gap: 16px; }
+  .dash-user-name { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 500; }
+  @media (max-width: 480px) { .dash-user-name { display: none; } }
+
+  /* ── Profile Dropdown (same as dashboard) ── */
+  .profile-menu { position: relative; }
+  .profile-trigger { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+  .profile-trigger:hover { background: rgba(255,255,255,.2); color: white; }
+  .profile-trigger svg { width: 14px; height: 14px; transition: transform .2s; }
+  .profile-trigger.open svg { transform: rotate(180deg); }
+  .profile-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.15); min-width: 220px; overflow: hidden; z-index: 300; }
+  .profile-dropdown.open { display: block; }
+  .profile-info { padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
+  .profile-info-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .profile-info-email { font-size: 12px; color: #888; margin-top: 2px; }
+  .profile-menu-item { display: block; width: 100%; text-align: left; padding: 11px 18px; font-size: 13px; font-weight: 500; color: #333; background: none; border: none; cursor: pointer; font-family: inherit; transition: background .15s; }
+  .profile-menu-item:hover { background: #f5f7fa; color: var(--navy); }
+  .profile-menu-item.active-item { background: var(--blue-bg); color: var(--navy); font-weight: 700; }
+  .profile-menu-item.danger { color: #c0392b; }
+  .profile-menu-item.danger:hover { background: #fff5f5; }
+  .profile-menu-divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
 
   /* ── Layout ── */
   .page { max-width: 1000px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
@@ -67,6 +93,7 @@
   .form-input { padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text); transition: border-color .2s; outline: none; }
   .form-input:focus { border-color: var(--orange); }
   .form-input:disabled { background: #f9fafb; color: var(--text-light); cursor: not-allowed; }
+  .form-hint { font-size: 11px; color: var(--text-light); margin-top: 2px; }
   .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   .btn-save { background: var(--navy); color: white; border: none; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s; }
   .btn-save:hover { background: var(--navy-light); }
@@ -96,6 +123,9 @@
   .payment-btn-icon { width: 40px; height: 40px; background: var(--navy); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .payment-btn-text { font-size: 14px; font-weight: 700; color: var(--navy); }
   .payment-btn-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .payment-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+  .payment-status.connected { background: var(--green-bg); color: var(--green-txt); }
+  .payment-status.not-connected { background: #fff3e0; color: #e65100; }
 
   /* ── Security ── */
   .security-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
@@ -105,9 +135,9 @@
   .btn-change { background: none; border: 2px solid var(--border); color: var(--text); padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
   .btn-change:hover { border-color: var(--navy); color: var(--navy); }
 
-  /* ── Password form (inline) ── */
-  .pw-form { display: none; margin-top: 16px; padding: 20px; background: var(--bg); border-radius: 12px; }
-  .pw-form.open { display: block; }
+  /* ── Password & Email form (inline) ── */
+  .inline-form { display: none; margin-top: 16px; padding: 20px; background: var(--bg); border-radius: 12px; }
+  .inline-form.open { display: block; }
   .pw-field { position: relative; margin-bottom: 12px; }
   .pw-field label { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 6px; }
   .pw-wrap { position: relative; }
@@ -140,14 +170,15 @@
   .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .filter-input { padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color .2s; }
   .filter-input:focus { border-color: var(--orange); }
-  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
   .stat-mini { background: var(--bg); border-radius: 10px; padding: 14px 16px; }
   .stat-mini-label { font-size: 11px; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
   .stat-mini-value { font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px; }
 
   /* ── Toast ── */
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--navy); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform .3s; white-space: nowrap; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--navy); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform .3s; white-space: nowrap; pointer-events: none; }
   .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.err { background: #b91c1c; }
 
   /* ── Responsive ── */
   @media (max-width: 700px) {
@@ -157,35 +188,53 @@
     .sub-details { grid-template-columns: 1fr 1fr; }
     .stat-row { grid-template-columns: 1fr 1fr; }
   }
+  @media (max-width: 600px) {
+    .page { padding: 20px 16px; }
+  }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div class="loading-screen" id="loadingScreen" style="position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .3s;">
-  <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite;"></div>
-</div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div></div>
 
-<!-- Nav -->
-<nav class="nav">
-  <a href="dashboard.html" class="nav-logo">
-    <svg class="nav-logo-icon" viewBox="0 0 36 36" fill="none">
-      <polygon points="18,3 33,12 33,24 18,33 3,24 3,12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-      <polygon points="18,7 29,13.5 29,22.5 18,29 7,22.5 7,13.5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
-      <path d="M12 20 L16 16 L18 18 L22 14" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-    <div>
-      <div class="nav-logo-text">HAVEN<span>PLUS</span></div>
-      <span class="nav-logo-sub">Property Care</span>
-    </div>
-  </a>
-  <div class="nav-right">
-    <span class="nav-user" id="navUserName"></span>
-    <a href="dashboard.html" class="btn-back">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-      Dashboard
+<!-- Nav (identical to dashboard) -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="index.html" class="dash-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"/>
+        <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="rgba(255,255,255,0.95)"/>
+        <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"/>
+        <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"/>
+      </svg>
+      <div>
+        <div class="dash-brand">HAVEN<span>PLUS</span></div>
+        <div class="dash-brand-sub">PROPERTY CARE</div>
+      </div>
     </a>
+    <div class="dash-nav-right">
+      <div class="profile-menu" id="profileMenu">
+        <button class="profile-trigger" id="profileTrigger" onclick="toggleProfileMenu()">
+          <span id="navUserName"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-info">
+            <div class="profile-info-name" id="profileInfoName"></div>
+            <div class="profile-info-email" id="profileInfoEmail"></div>
+          </div>
+          <button class="profile-menu-item" onclick="goSection('personal')">Profile Settings</button>
+          <button class="profile-menu-item" onclick="goSection('subscription')">Subscription</button>
+          <button class="profile-menu-item" onclick="goSection('payment')">Payment</button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item" onclick="goSection('security')">Change Password</button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item danger" onclick="goSection('delete')">Delete Account</button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item" onclick="handleLogout()">Log out</button>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -247,11 +296,11 @@
   <!-- Content -->
   <main class="content">
 
-    <!-- Personal Info -->
+    <!-- ═══ Personal Info ═══ -->
     <section class="section active" id="section-personal">
       <div class="section-card">
         <div class="section-title">Personal Information</div>
-        <div class="section-desc">Update your name and contact details.</div>
+        <div class="section-desc">Update your name, contact details, and postal address.</div>
         <div class="alert alert-error" id="personalError"></div>
         <div class="alert alert-success" id="personalSuccess"></div>
         <div class="form-grid">
@@ -266,6 +315,12 @@
           <div class="form-group full">
             <label class="form-label">Email</label>
             <input type="email" class="form-input" id="fieldEmail" disabled>
+            <div class="form-hint">To change your email, go to Security → Update Email.</div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Postal Address <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+            <input type="text" class="form-input" id="fieldPostal" placeholder="e.g. Unit 4, 12 Smith St, Perth WA 6000">
+            <div class="form-hint">Used for correspondence and invoices. Not the same as your serviced property address.</div>
           </div>
           <div class="form-group">
             <label class="form-label">Preferred Language</label>
@@ -281,7 +336,7 @@
       </div>
     </section>
 
-    <!-- Subscription -->
+    <!-- ═══ Subscription ═══ -->
     <section class="section" id="section-subscription">
       <div class="section-card">
         <div class="section-title">Subscription</div>
@@ -290,12 +345,16 @@
       </div>
     </section>
 
-    <!-- Payment -->
+    <!-- ═══ Payment ═══ -->
     <section class="section" id="section-payment">
       <div class="section-card">
         <div class="section-title">Payment</div>
         <div class="section-desc">Manage your billing details and view invoices.</div>
-        <button class="payment-btn" onclick="openPortal()">
+        <div class="payment-status not-connected" id="portalStatus" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="portalStatusText"></span>
+        </div>
+        <button class="payment-btn" id="portalBtn" onclick="openPortal()">
           <div class="payment-btn-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           </div>
@@ -308,11 +367,37 @@
       </div>
     </section>
 
-    <!-- Security -->
+    <!-- ═══ Security ═══ -->
     <section class="section" id="section-security">
       <div class="section-card">
         <div class="section-title">Security</div>
-        <div class="section-desc">Manage your password and account access.</div>
+        <div class="section-desc">Manage your email, password, and account access.</div>
+
+        <!-- Email -->
+        <div class="security-row">
+          <div>
+            <div class="security-label">Email Address</div>
+            <div class="security-value" id="securityEmail"></div>
+          </div>
+          <button class="btn-change" onclick="toggleEmailForm()">Update</button>
+        </div>
+        <div class="inline-form" id="emailForm">
+          <div class="alert alert-error" id="emailError"></div>
+          <div class="alert alert-success" id="emailSuccess"></div>
+          <div class="pw-field">
+            <label>New Email Address</label>
+            <div class="pw-wrap">
+              <input type="email" id="emailNew" placeholder="your-new-email@example.com" style="padding-right:14px;">
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text-light);margin-bottom:12px;">A confirmation link will be sent to both your current and new email addresses. The change takes effect once confirmed.</p>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-save" id="btnEmailSave" onclick="saveEmail()">Send Confirmation</button>
+            <button class="btn-cancel" onclick="toggleEmailForm()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Password -->
         <div class="security-row">
           <div>
             <div class="security-label">Password</div>
@@ -320,21 +405,21 @@
           </div>
           <button class="btn-change" onclick="togglePwForm()">Change</button>
         </div>
-        <div class="pw-form" id="pwForm">
+        <div class="inline-form" id="pwForm">
           <div class="alert alert-error" id="pwError"></div>
           <div class="alert alert-success" id="pwSuccess"></div>
           <div class="pw-field">
             <label>New Password</label>
             <div class="pw-wrap">
               <input type="password" id="pwNew" placeholder="Minimum 8 characters">
-              <button type="button" class="pw-toggle" onclick="togglePW('pwNew',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button type="button" class="pw-toggle" onclick="togglePW('pwNew')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
           </div>
           <div class="pw-field">
             <label>Confirm Password</label>
             <div class="pw-wrap">
               <input type="password" id="pwConfirm" placeholder="Re-enter new password">
-              <button type="button" class="pw-toggle" onclick="togglePW('pwConfirm',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button type="button" class="pw-toggle" onclick="togglePW('pwConfirm')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
           </div>
           <div style="display:flex;gap:10px;margin-top:4px;">
@@ -345,7 +430,7 @@
       </div>
     </section>
 
-    <!-- Delete -->
+    <!-- ═══ Delete ═══ -->
     <section class="section" id="section-delete">
       <div class="section-card">
         <div class="section-title" style="color:var(--red);">Delete Account</div>
@@ -355,11 +440,11 @@
           <p>Any active subscriptions must be cancelled before deletion. Unused purchased Service Hours will be refunded at 70% of face value in accordance with our cancellation policy.</p>
         </div>
         <p style="font-size:13px;color:var(--text-light);margin-bottom:20px;">To proceed, send a deletion request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
-        <a class="btn-delete" href="mailto:hi@havenpluscare.com?subject=Account Deletion Request&body=Please delete my Haven Plus account. My registered email is: ">Send Deletion Request</a>
+        <a class="btn-delete" id="deletionEmailLink" href="#">Send Deletion Request</a>
       </div>
     </section>
 
-    <!-- Admin: Subscribers -->
+    <!-- ═══ Admin: Subscribers ═══ -->
     <section class="section" id="section-subscribers">
       <div class="section-card">
         <div class="section-title">Subscribers <span class="admin-badge">Admin</span></div>
@@ -368,9 +453,10 @@
           <div class="stat-mini"><div class="stat-mini-label">Total Active</div><div class="stat-mini-value" id="statActive">—</div></div>
           <div class="stat-mini"><div class="stat-mini-label">Essential</div><div class="stat-mini-value" id="statEssential">—</div></div>
           <div class="stat-mini"><div class="stat-mini-label">Smart</div><div class="stat-mini-value" id="statSmart">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Premium</div><div class="stat-mini-value" id="statPremium">—</div></div>
         </div>
         <div class="filter-bar">
-          <input type="text" class="filter-input" id="subSearch" placeholder="Search name or email…" oninput="filterSubscribers()" style="flex:1;min-width:180px;">
+          <input type="text" class="filter-input" id="subSearch" placeholder="Search name or phone…" oninput="filterSubscribers()" style="flex:1;min-width:180px;">
           <select class="filter-input" id="subPlanFilter" onchange="filterSubscribers()">
             <option value="">All plans</option>
             <option value="essential">Essential</option>
@@ -379,15 +465,15 @@
           </select>
         </div>
         <div class="table-wrap">
-          <table id="subsTable">
-            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Clean hrs</th><th>SH left</th><th>Start</th></tr></thead>
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Status</th><th>Clean hrs</th><th>SH left</th><th>Start</th></tr></thead>
             <tbody id="subsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- Admin: Service Schedules -->
+    <!-- ═══ Admin: Service Schedules ═══ -->
     <section class="section" id="section-schedules">
       <div class="section-card">
         <div class="section-title">Service Schedules <span class="admin-badge">Admin</span></div>
@@ -410,7 +496,7 @@
       </div>
     </section>
 
-    <!-- Admin: Hours Log -->
+    <!-- ═══ Admin: Hours Log ═══ -->
     <section class="section" id="section-hourslog">
       <div class="section-card">
         <div class="section-title">Hours Log <span class="admin-badge">Admin</span></div>
@@ -429,9 +515,16 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* ══════════════════════════════════════════════════════════
+   Haven Plus — Profile  (v2)
+   Fixed: Supabase key, nav parity, portal, email update,
+          postal address, deletion mailto
+   ══════════════════════════════════════════════════════════ */
+
 const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5OTc3NDMsImV4cCI6MjA1NjU3Mzc0M30.hDTAUFyHMi1ymYFMVLPV3J0HOE3G7eFsRYn8xjJCNGc';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
 
 const PLAN_META = {
   essential: { name:'Essential Care', price:'$55/mo', visits:'4× per year', hours:'8 hrs', vouchers:'2 / year' },
@@ -442,42 +535,82 @@ const PLAN_META = {
 let sb, currentUser, isAdmin = false;
 let allSubscribers = [];
 
-/* ── Init ── */
+/* ── Init ────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = 'index.html'; return; }
-  currentUser = session.user;
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUser = session.user;
 
-  const meta = currentUser.user_metadata || {};
-  const name = meta.full_name || currentUser.email.split('@')[0];
-  const initial = name.charAt(0).toUpperCase();
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || currentUser.email.split('@')[0];
+    const initial = name.charAt(0).toUpperCase();
 
-  document.getElementById('navUserName').textContent = name;
-  document.getElementById('sidebarAvatar').textContent = initial;
-  document.getElementById('sidebarName').textContent = name;
-  document.getElementById('sidebarEmail').textContent = currentUser.email;
+    // Nav
+    document.getElementById('navUserName').textContent = name;
+    document.getElementById('profileInfoName').textContent = name;
+    document.getElementById('profileInfoEmail').textContent = currentUser.email;
 
-  // Check admin
-  const { data: profile } = await sb.from('profiles').select('role, full_name, phone, preferred_language').eq('id', currentUser.id).maybeSingle();
-  isAdmin = profile?.role === 'admin';
-  if (isAdmin) document.getElementById('adminNav').style.display = 'block';
+    // Sidebar
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarEmail').textContent = currentUser.email;
 
-  // Pre-fill personal info
-  document.getElementById('fieldName').value  = profile?.full_name || meta.full_name || '';
-  document.getElementById('fieldPhone').value = profile?.phone    || meta.phone     || '';
-  document.getElementById('fieldEmail').value = currentUser.email;
-  document.getElementById('fieldLang').value  = profile?.preferred_language || meta.preferred_language || 'en';
+    // Security section email display
+    document.getElementById('securityEmail').textContent = currentUser.email;
 
-  // Handle ?section= param
-  const section = new URLSearchParams(location.search).get('section');
-  if (section) switchSection(section);
+    // Check admin & load profile
+    let profile = null;
+    try {
+      const { data } = await sb.from('profiles').select('role, full_name, phone, preferred_language, postal_address').eq('id', currentUser.id).maybeSingle();
+      profile = data;
+    } catch(e) { console.warn('profiles query error:', e.message); }
 
-  document.getElementById('loadingScreen').style.opacity = '0';
-  setTimeout(() => document.getElementById('loadingScreen').style.display = 'none', 300);
+    isAdmin = profile?.role === 'admin';
+    if (isAdmin) document.getElementById('adminNav').style.display = 'block';
+
+    // Pre-fill personal info
+    document.getElementById('fieldName').value   = profile?.full_name || meta.full_name || '';
+    document.getElementById('fieldPhone').value  = profile?.phone || meta.phone || '';
+    document.getElementById('fieldEmail').value  = currentUser.email;
+    document.getElementById('fieldPostal').value = profile?.postal_address || '';
+    document.getElementById('fieldLang').value   = profile?.preferred_language || meta.preferred_language || 'en';
+
+    // Build deletion email link (avoid Cloudflare email obfuscation)
+    buildDeletionLink();
+
+    // Handle ?section= param
+    const section = new URLSearchParams(location.search).get('section');
+    if (section) switchSection(section);
+
+    document.getElementById('loadingScreen').classList.add('hide');
+  } catch(e) {
+    console.error('Profile init error:', e);
+    document.getElementById('loadingScreen').classList.add('hide');
+    showToast('Failed to load profile. Please refresh.', true);
+  }
 });
 
-/* ── Section switching ── */
+/* ── Nav profile dropdown ─────────────────────────────────── */
+function toggleProfileMenu() {
+  document.getElementById('profileTrigger').classList.toggle('open');
+  document.getElementById('profileDropdown').classList.toggle('open');
+}
+function goSection(name) {
+  document.getElementById('profileTrigger').classList.remove('open');
+  document.getElementById('profileDropdown').classList.remove('open');
+  switchSection(name);
+}
+document.addEventListener('click', e => {
+  const menu = document.getElementById('profileMenu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('profileTrigger').classList.remove('open');
+    document.getElementById('profileDropdown').classList.remove('open');
+  }
+});
+
+/* ── Section switching ──────────────────────────────────── */
 function switchSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
@@ -493,13 +626,14 @@ function switchSection(name) {
   if (name === 'hourslog')     loadHoursLog();
 }
 
-/* ── Personal Info ── */
+/* ── Personal Info ──────────────────────────────────────── */
 async function savePersonalInfo() {
-  const name  = document.getElementById('fieldName').value.trim();
-  const phone = document.getElementById('fieldPhone').value.trim();
-  const lang  = document.getElementById('fieldLang').value;
-  const errEl = document.getElementById('personalError');
-  const sucEl = document.getElementById('personalSuccess');
+  const name   = document.getElementById('fieldName').value.trim();
+  const phone  = document.getElementById('fieldPhone').value.trim();
+  const postal = document.getElementById('fieldPostal').value.trim();
+  const lang   = document.getElementById('fieldLang').value;
+  const errEl  = document.getElementById('personalError');
+  const sucEl  = document.getElementById('personalSuccess');
   errEl.style.display = 'none';
   sucEl.style.display = 'none';
 
@@ -510,7 +644,13 @@ async function savePersonalInfo() {
 
   const [authRes, dbRes] = await Promise.all([
     sb.auth.updateUser({ data: { full_name: name, phone, preferred_language: lang } }),
-    sb.from('profiles').update({ full_name: name, phone, preferred_language: lang, updated_at: new Date().toISOString() }).eq('id', currentUser.id),
+    sb.from('profiles').update({
+      full_name: name,
+      phone,
+      preferred_language: lang,
+      postal_address: postal || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentUser.id),
   ]);
 
   btn.disabled = false; btn.textContent = 'Save Changes';
@@ -521,6 +661,7 @@ async function savePersonalInfo() {
   } else {
     document.getElementById('sidebarName').textContent = name;
     document.getElementById('navUserName').textContent = name;
+    document.getElementById('profileInfoName').textContent = name;
     document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
     sucEl.textContent = 'Changes saved successfully.';
     sucEl.style.display = 'block';
@@ -528,62 +669,195 @@ async function savePersonalInfo() {
   }
 }
 
-/* ── Subscription ── */
+/* ── Subscription ──────────────────────────────────────── */
 async function loadSubscription() {
   const el = document.getElementById('subContent');
   el.innerHTML = '<div style="color:#888;font-size:14px;">Loading…</div>';
-  const { data: sub } = await sb.from('subscriptions').select('plan_type, status, start_date, end_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used').eq('user_id', currentUser.id).eq('status', 'active').maybeSingle();
-  const { data: shBal } = await sb.from('sh_balance').select('purchased_total, purchased_used').eq('user_id', currentUser.id).maybeSingle();
 
-  if (!sub) { el.innerHTML = '<p style="font-size:14px;color:#888;">No active subscription found.</p>'; return; }
-
-  const plan = PLAN_META[sub.plan_type] || { name: sub.plan_type, price:'—', visits:'—', hours:'—', vouchers:'—' };
-  const endDate  = sub.end_date   ? new Date(sub.end_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}) : '—';
-  const startDate= sub.start_date ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}) : '—';
-  const cleanRem = (sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0);
-  const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
-  const shPurchRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
-
-  el.innerHTML = `
-    <div class="sub-card">
-      <div class="sub-card-header">
-        <div>
-          <div class="sub-plan-name">${plan.name}</div>
-          <span class="sub-badge">${sub.status}</span>
-        </div>
-        <div class="sub-plan-price">${plan.price}</div>
-      </div>
-      <div class="sub-details">
-        <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
-        <div class="sub-detail-item">SH vouchers left<strong>${shVouchRem} hrs</strong></div>
-        <div class="sub-detail-item">SH purchased left<strong>${shPurchRem} hrs</strong></div>
-        <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
-        <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
-        <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
-      </div>
-    </div>
-    <p class="sub-note">To upgrade or cancel your subscription, contact us at <a href="mailto:hi@havenpluscare.com" style="color:var(--navy);">hi@havenpluscare.com</a>.</p>`;
-}
-
-/* ── Payment portal ── */
-async function openPortal() {
-  showToast('Redirecting to payment portal…');
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch('https://rtkgnlcgepromqtoelre.supabase.co/functions/v1/create-portal-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ user_id: currentUser.id }),
-    });
-    const { url, error } = await res.json();
-    if (error) throw new Error(error);
-    window.open(url, '_blank');
+    const { data: sub, error: subErr } = await sb
+      .from('subscriptions')
+      .select('plan_type, status, start_date, end_date, current_period_end, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used')
+      .eq('user_id', currentUser.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (subErr) throw subErr;
+
+    let shBal = null;
+    try {
+      const { data } = await sb.from('sh_balance').select('purchased_total, purchased_used').eq('user_id', currentUser.id).maybeSingle();
+      shBal = data;
+    } catch(e) { /* sh_balance table may not exist yet */ }
+
+    if (!sub && !shBal) {
+      el.innerHTML = '<p style="font-size:14px;color:#888;">No active subscription found. <a href="plans.html" style="color:var(--navy);font-weight:600;">View plans →</a></p>';
+      return;
+    }
+
+    let html = '';
+
+    if (sub) {
+      const plan = PLAN_META[sub.plan_type] || { name: sub.plan_type, price:'—', visits:'—', hours:'—', vouchers:'—' };
+      const endDate = sub.end_date
+        ? new Date(sub.end_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+        : sub.current_period_end
+        ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+        : '—';
+      const startDate = sub.start_date
+        ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+        : '—';
+      const cleanRem   = (sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0);
+      const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
+      const shPurchRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
+
+      html += `
+        <div class="sub-card">
+          <div class="sub-card-header">
+            <div>
+              <div class="sub-plan-name">${plan.name}</div>
+              <span class="sub-badge">${sub.status}</span>
+            </div>
+            <div class="sub-plan-price">${plan.price}</div>
+          </div>
+          <div class="sub-details">
+            <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
+            <div class="sub-detail-item">SH vouchers left<strong>${shVouchRem} hrs</strong></div>
+            <div class="sub-detail-item">SH purchased left<strong>${shPurchRem} hrs</strong></div>
+            <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
+            <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
+            <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
+          </div>
+        </div>`;
+    } else if (shBal) {
+      const shPurchRem = (shBal.purchased_total || 0) - (shBal.purchased_used || 0);
+      html += `
+        <div class="sub-card">
+          <div class="sub-card-header">
+            <div>
+              <div class="sub-plan-name">Service Hours Only</div>
+              <span class="sub-badge" style="background:#fff3e0;color:#e65100;">No subscription</span>
+            </div>
+          </div>
+          <div class="sub-details" style="grid-template-columns:1fr 1fr;">
+            <div class="sub-detail-item">SH purchased remaining<strong>${shPurchRem} hrs</strong></div>
+            <div class="sub-detail-item">Call-out fee<strong>$0 Always</strong></div>
+          </div>
+        </div>`;
+    }
+
+    html += '<p class="sub-note">To upgrade or cancel your subscription, contact us at <a href="#" id="subEmailLink" style="color:var(--navy);">hi&#64;havenpluscare.com</a>.</p>';
+    el.innerHTML = html;
+
+    // Build mailto for subscription section
+    const subLink = document.getElementById('subEmailLink');
+    if (subLink) {
+      subLink.href = 'mai' + 'lto:' + 'hi' + '@' + 'havenpluscare.com';
+      subLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location = this.href;
+      });
+    }
   } catch(e) {
-    showToast('Payment portal unavailable. Please contact hi@havenpluscare.com');
+    console.error('loadSubscription error:', e);
+    el.innerHTML = '<p style="font-size:14px;color:#c0392b;">Failed to load subscription info. Please try again.</p>';
   }
 }
 
-/* ── Security ── */
+/* ── Payment Portal ─────────────────────────────────────── */
+async function openPortal() {
+  const btn = document.getElementById('portalBtn');
+  const statusEl = document.getElementById('portalStatus');
+
+  showToast('Redirecting to payment portal…');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('Session expired. Please log in again.');
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-portal-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token
+      },
+      body: JSON.stringify({ user_id: currentUser.id }),
+    });
+
+    if (!res.ok) {
+      const status = res.status;
+      if (status === 404) throw new Error('portal_not_deployed');
+      throw new Error('Server error: ' + status);
+    }
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (!data.url)  throw new Error('No portal URL returned.');
+
+    window.open(data.url, '_blank');
+  } catch(e) {
+    console.warn('Portal error:', e.message);
+
+    // Show helpful status message
+    statusEl.style.display = 'flex';
+    if (e.message === 'portal_not_deployed' || e.message.includes('404')) {
+      statusEl.className = 'payment-status not-connected';
+      document.getElementById('portalStatusText').textContent =
+        'Billing portal is being set up. Please contact us for billing changes.';
+    } else {
+      statusEl.className = 'payment-status not-connected';
+      document.getElementById('portalStatusText').textContent =
+        'Payment portal unavailable right now. Please contact us for billing changes.';
+    }
+
+    showToast('Billing portal unavailable. Contact hi' + '@' + 'havenpluscare.com', true);
+  }
+}
+
+/* ── Security: Email Update ─────────────────────────────── */
+function toggleEmailForm() {
+  const f = document.getElementById('emailForm');
+  f.classList.toggle('open');
+  if (!f.classList.contains('open')) {
+    document.getElementById('emailNew').value = '';
+    document.getElementById('emailError').style.display = 'none';
+    document.getElementById('emailSuccess').style.display = 'none';
+  }
+}
+
+async function saveEmail() {
+  const newEmail = document.getElementById('emailNew').value.trim();
+  const errEl = document.getElementById('emailError');
+  const sucEl = document.getElementById('emailSuccess');
+  errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+  if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newEmail === currentUser.email) {
+    errEl.textContent = 'This is already your current email.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btnEmailSave');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const { error } = await sb.auth.updateUser({ email: newEmail });
+  btn.disabled = false; btn.textContent = 'Send Confirmation';
+
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+  } else {
+    sucEl.textContent = 'Confirmation email sent to both addresses. Please check your inbox.';
+    sucEl.style.display = 'block';
+    document.getElementById('emailNew').value = '';
+  }
+}
+
+/* ── Security: Password ─────────────────────────────────── */
 function togglePwForm() {
   const f = document.getElementById('pwForm');
   f.classList.toggle('open');
@@ -621,24 +895,46 @@ async function savePassword() {
   }
 }
 
-function togglePW(id, btn) {
+function togglePW(id) {
   const inp = document.getElementById(id);
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
-/* ── Admin: Subscribers ── */
+/* ── Deletion Email Link (JS-built to avoid Cloudflare obfuscation) ── */
+function buildDeletionLink() {
+  const el = document.getElementById('deletionEmailLink');
+  if (!el) return;
+  const e = 'hi' + '@' + 'havenpluscare.com';
+  const s = 'Account Deletion Request';
+  const b = 'Hi Haven Plus,%0D%0A%0D%0AI would like to request the deletion of my account and all associated data.%0D%0A%0D%0ARegistered email: (please confirm)%0D%0A%0D%0AThank you.';
+  el.href = 'mai' + 'lto:' + e + '?subject=' + encodeURIComponent(s) + '&body=' + b;
+}
+
+/* ── Logout ─────────────────────────────────────────────── */
+async function handleLogout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
+
+/* ── Toast ──────────────────────────────────────────────── */
+function showToast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+/* ══ Admin: Subscribers ══════════════════════════════════ */
 async function loadSubscribers() {
   if (!isAdmin) return;
   const body = document.getElementById('subsBody');
   body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
 
-  const { data: subs } = await sb.from('subscriptions').select('user_id, plan_type, status, start_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used').order('start_date', { ascending: false });
+  const { data: subs } = await sb.from('subscriptions')
+    .select('user_id, plan_type, status, start_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used')
+    .order('start_date', { ascending: false });
   if (!subs?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No subscribers found.</td></tr>'; return; }
 
   const userIds = [...new Set(subs.map(s => s.user_id))];
   const { data: profiles } = await sb.from('profiles').select('id, full_name, phone').in('id', userIds);
-  const { data: authUsers } = await sb.from('profiles').select('id, full_name').in('id', userIds);
-
   const profileMap = {};
   (profiles || []).forEach(p => profileMap[p.id] = p);
 
@@ -649,6 +945,7 @@ async function loadSubscribers() {
   document.getElementById('statActive').textContent    = active.length;
   document.getElementById('statEssential').textContent = active.filter(s => s.plan_type === 'essential').length;
   document.getElementById('statSmart').textContent     = active.filter(s => s.plan_type === 'smart').length;
+  document.getElementById('statPremium').textContent   = active.filter(s => s.plan_type === 'premium').length;
 
   renderSubscribers(allSubscribers);
 }
@@ -658,7 +955,7 @@ function renderSubscribers(list) {
   if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
   body.innerHTML = list.map(s => {
     const p = s.profile;
-    const planBadge = `<span class="badge badge-${s.plan_type}">${s.plan_type}</span>`;
+    const planBadge   = `<span class="badge badge-${s.plan_type}">${s.plan_type}</span>`;
     const statusBadge = `<span class="badge badge-${s.status === 'active' ? 'active' : 'inactive'}">${s.status}</span>`;
     const cleanRem = (s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0);
     const shRem    = (s.sh_hours_total || 0) - (s.sh_hours_used || 0);
@@ -688,14 +985,16 @@ function filterSubscribers() {
   renderSubscribers(filtered);
 }
 
-/* ── Admin: Schedules ── */
+/* ══ Admin: Schedules ═══════════════════════════════════ */
 async function loadSchedules() {
   if (!isAdmin) return;
   const body   = document.getElementById('schedulesBody');
   const status = document.getElementById('schedStatusFilter').value;
   body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
 
-  let q = sb.from('cleaning_schedule').select('planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id').order('planned_date', { ascending: false }).limit(50);
+  let q = sb.from('cleaning_schedule')
+    .select('planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id')
+    .order('planned_date', { ascending: false }).limit(50);
   if (status) q = q.eq('status', status);
   const { data } = await q;
 
@@ -713,13 +1012,15 @@ async function loadSchedules() {
   }).join('');
 }
 
-/* ── Admin: Hours Log ── */
+/* ══ Admin: Hours Log ═══════════════════════════════════ */
 async function loadHoursLog() {
   if (!isAdmin) return;
   const body = document.getElementById('hoursBody');
   body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
 
-  const { data } = await sb.from('sh_transactions').select('created_at, user_id, transaction_type, sh_amount, balance_after_voucher, balance_after_purchased, description').order('created_at', { ascending: false }).limit(100);
+  const { data } = await sb.from('sh_transactions')
+    .select('created_at, user_id, transaction_type, sh_amount, balance_after_voucher, balance_after_purchased, description')
+    .order('created_at', { ascending: false }).limit(100);
   if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found.</td></tr>'; return; }
 
   const userIds = [...new Set(data.map(r => r.user_id))];
@@ -744,13 +1045,13 @@ async function loadHoursLog() {
   }).join('');
 }
 
-/* ── Toast ── */
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
+/* ── Keyboard shortcut ─────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('pwForm').classList.contains('open')) togglePwForm();
+    if (document.getElementById('emailForm').classList.contains('open')) toggleEmailForm();
+  }
+});
 </script>
 </body>
 </html>
