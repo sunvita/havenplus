@@ -2619,6 +2619,45 @@
         }
     }
 
+    async function handlePasswordUpdate() {
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmPassword').value;
+            const errEl = document.getElementById('resetError');
+            const sucEl = document.getElementById('resetSuccess');
+            errEl.textContent = '';
+            sucEl.textContent = '';
+
+            if (!newPw || newPw.length < 8) {
+                errEl.textContent = 'Password must be at least 8 characters.';
+                return;
+            }
+            if (newPw !== confirmPw) {
+                errEl.textContent = 'Passwords do not match.';
+                return;
+            }
+
+            const btn = document.getElementById('btnResetPassword');
+            btn.disabled = true;
+            btn.textContent = 'Updating…';
+
+            const { error } = await sb.auth.updateUser({ password: newPw });
+            if (error) {
+                errEl.textContent = error.message;
+                btn.disabled = false;
+                btn.textContent = 'Update Password';
+            } else {
+                sucEl.textContent = 'Password updated successfully!';
+                setTimeout(async () => {
+                    await sb.auth.signOut();
+                    document.getElementById('resetPasswordOverlay').classList.remove('active');
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    document.getElementById('authOverlay').classList.add('active');
+                    switchTab('login');
+                }, 1500);
+            }
+        }
+
     async function handleForgotPassword() {
         if (!sb) { showAuthError('Service unavailable.'); return; }
         const email = document.getElementById('loginEmail').value.trim();

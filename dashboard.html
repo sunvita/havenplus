@@ -511,6 +511,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const meta = currentUser.user_metadata || {};
   const name = meta.full_name || currentUser.email.split('@')[0];
   document.getElementById('dashUserName').textContent = name;
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileEmail').textContent = currentUser.email;
   document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
 
   await loadDashboard();
@@ -881,6 +883,129 @@ function spinValue(id, delta) {
 }
 
 /* ── Auth ─────────────────────────────────────────────── */
+/* ── Profile Menu ─────────────────────────────────────── */
+function toggleProfileMenu() {
+  const trigger = document.getElementById('profileTrigger');
+  const dropdown = document.getElementById('profileDropdown');
+  trigger.classList.toggle('open');
+  dropdown.classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('profileMenu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('profileTrigger').classList.remove('open');
+    document.getElementById('profileDropdown').classList.remove('open');
+  }
+});
+
+function openProfileModal(type) {
+  document.getElementById('profileTrigger').classList.remove('open');
+  document.getElementById('profileDropdown').classList.remove('open');
+
+  if (type === 'password') {
+    document.getElementById('pwNew').value = '';
+    document.getElementById('pwConfirm').value = '';
+    document.getElementById('pwError').style.display = 'none';
+    document.getElementById('pwSuccess').style.display = 'none';
+    document.getElementById('modalPassword').classList.add('active');
+  } else if (type === 'subscription') {
+    loadSubscriptionModal();
+    document.getElementById('modalSubscription').classList.add('active');
+  } else if (type === 'payment') {
+    showToast('Redirecting to payment portal…');
+    window.open('https://billing.stripe.com/p/login/test_placeholder', '_blank');
+  } else if (type === 'delete') {
+    document.getElementById('modalDelete').classList.add('active');
+  }
+}
+
+function closeProfileModal(type) {
+  const map = { password: 'modalPassword', subscription: 'modalSubscription', delete: 'modalDelete' };
+  if (map[type]) document.getElementById(map[type]).classList.remove('active');
+}
+
+async function handlePasswordChange() {
+  const newPw = document.getElementById('pwNew').value;
+  const confirmPw = document.getElementById('pwConfirm').value;
+  const errEl = document.getElementById('pwError');
+  const sucEl = document.getElementById('pwSuccess');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!newPw || newPw.length < 8) {
+    errEl.textContent = 'Password must be at least 8 characters.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newPw !== confirmPw) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btnPwUpdate');
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+
+  const { error } = await sb.auth.updateUser({ password: newPw });
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Update Password';
+  } else {
+    sucEl.textContent = 'Password updated successfully.';
+    sucEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Update Password';
+    document.getElementById('pwNew').value = '';
+    document.getElementById('pwConfirm').value = '';
+    setTimeout(() => closeProfileModal('password'), 2000);
+  }
+}
+
+async function loadSubscriptionModal() {
+  const body = document.getElementById('subModalBody');
+  body.innerHTML = '<div style="color:#888;font-size:14px;">Loading…</div>';
+
+  try {
+    const { data: sub } = await sb
+      .from('subscriptions')
+      .select('plan, status, current_period_end')
+      .eq('user_id', currentUser.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!sub) {
+      body.innerHTML = '<p style="font-size:14px;color:#555;">No active subscription found.</p>';
+      return;
+    }
+
+    const plan = PLAN_META[sub.plan] || { name: sub.plan, price: '—', visits: '—', hours: '—', vouchers: '—' };
+    const nextDate = sub.current_period_end
+      ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+
+    body.innerHTML = `
+      <div style="background:#f5f8fa;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:15px;font-weight:800;color:var(--navy);">${plan.name}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--navy);">${plan.price}</span>
+        </div>
+        <div style="font-size:13px;color:#666;line-height:1.8;">
+          <div>Cleaning: ${plan.hours} (${plan.visits})</div>
+          <div>Service Hour vouchers: ${plan.vouchers}</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e0e4ea;">Next billing date: <strong>${nextDate}</strong></div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#999;margin:0;">To upgrade or cancel your subscription, please contact us at <a href="mailto:hi@havenpluscare.com" style="color:var(--navy);">hi@havenpluscare.com</a>.</p>
+    `;
+  } catch(e) {
+    body.innerHTML = '<p style="font-size:14px;color:#c0392b;">Failed to load subscription info.</p>';
+  }
+}
+
 async function handleLogout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
 
 /* ── Helpers ──────────────────────────────────────────── */
