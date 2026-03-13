@@ -124,6 +124,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .stat-badge { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; background: var(--green-bg); color: var(--green-txt); }
 
 .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+.action-row .btn-action { flex: 1; min-width: 160px; text-align: center; justify-content: center; }
 .btn-action { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 14px; font-weight: 700; padding: 11px 22px; border-radius: 12px; cursor: pointer; transition: all .2s; border: none; text-decoration: none; }
 .btn-primary { background: var(--orange); color: white; }
 .btn-primary:hover { background: #e85a24; box-shadow: 0 4px 14px rgba(255,107,53,.3); transform: translateY(-1px); }
@@ -693,7 +694,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <div style="background:#f5f8fa;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;color:var(--text-light)">Estimated SH usage</span>
-          <span style="font-size:18px;font-weight:900;color:var(--navy)" id="shReqEstimate">~1 SH</span>
+          <span style="font-size:18px;font-weight:900;color:var(--navy)" id="shReqEstimate">1 SH~</span>
         </div>
         <div style="font-size:11px;color:var(--text-light);margin-top:4px">Final SH confirmed after assessment or completion. Surcharge may apply for urgency or complexity.</div>
       </div>
@@ -1565,7 +1566,7 @@ function openShRequestModal() {
   document.getElementById('shReqDate').value = '';
   document.getElementById('shReqUrgency').value = 'standard';
   document.getElementById('emergencyNotice').style.display = 'none';
-  document.getElementById('shReqEstimate').textContent = '~1 SH';
+  document.getElementById('shReqEstimate').textContent = '1 SH~';
 
   // Populate property selector
   const sel = document.getElementById('shReqProperty');
@@ -1586,10 +1587,9 @@ function updateShEstimate() {
   // Show emergency notice for emergency category OR urgent options
   notice.style.display = (cat === 'emergency' || urg === 'same_day' || urg === 'after_hours') ? 'block' : 'none';
 
-  // Base estimate by category
+  // Base estimate by category (minimum SH)
   let base = 1;
-  if (['electrical','plumbing'].includes(cat)) base = 2;
-  else if (cat === 'emergency') base = 2;
+  if (['electrical','plumbing','emergency'].includes(cat)) base = 1.5;
   else if (['property_upkeep','seasonal_care'].includes(cat)) base = 1.5;
 
   // Surcharge: take the highest applicable multiplier (no stacking)
@@ -1604,8 +1604,7 @@ function updateShEstimate() {
   if (urg === 'after_hours' && 2 > mult) mult = 2;
 
   const est = Math.round(base * mult * 10) / 10;
-  const prefix = mult > 1 ? '' : '~';
-  document.getElementById('shReqEstimate').textContent = `${prefix}${est} SH`;
+  document.getElementById('shReqEstimate').textContent = `${est} SH~`;
 }
 
 async function submitShRequest() {
