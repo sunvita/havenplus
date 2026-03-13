@@ -968,7 +968,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* Auto-open SH panel if mode=sh */
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('mode') === 'sh') { selectType('sh'); }
+  if (urlParams.get('mode') === 'sh') { selectChoice('sh'); }
 
   /* Handle Stripe return */
   const p = new URLSearchParams(window.location.search);
