@@ -124,7 +124,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .stat-badge { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; background: var(--green-bg); color: var(--green-txt); }
 
 .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
-.action-row .btn-action { flex: 1; min-width: 160px; text-align: center; justify-content: center; }
+.action-row .btn-action { min-width: 180px; text-align: center; justify-content: center; }
 .btn-action { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 14px; font-weight: 700; padding: 11px 22px; border-radius: 12px; cursor: pointer; transition: all .2s; border: none; text-decoration: none; }
 .btn-primary { background: var(--orange); color: white; }
 .btn-primary:hover { background: #e85a24; box-shadow: 0 4px 14px rgba(255,107,53,.3); transform: translateY(-1px); }
@@ -968,8 +968,9 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
     ` : `
       <div class="prop-hub-noplan">
         <div class="prop-hub-noplan-text">No subscription plan for this property yet.</div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <a href="plans.html" class="btn-action btn-primary" onclick="event.stopPropagation();sessionStorage.setItem('hp_selected_property','${p.id}')">Choose a Plan</a>
+          <button class="btn-action btn-secondary" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>
           ${isAdmin ? `<button class="btn-delete-prop" onclick="event.stopPropagation();deleteProperty('${p.id}','${p.address.replace(/'/g,"\\'")}')">Delete</button>` : ''}
         </div>
       </div>
@@ -983,7 +984,10 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
             <div class="prop-hub-meta">${summaryMeta}</div>
           </div>
           <div class="prop-hub-right">
-            ${hasSub ? `<button class="btn-edit-prop" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>` : ''}
+            ${hasSub
+              ? `<button class="btn-edit-prop" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>`
+              : `<a class="btn-edit-prop" style="background:var(--orange);color:white;border-color:var(--orange);text-decoration:none" href="plans.html" onclick="event.stopPropagation();sessionStorage.setItem('hp_selected_property','${p.id}')">Choose a Plan</a>
+                 <button class="btn-edit-prop" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>`}
             <svg class="prop-hub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
         </div>
