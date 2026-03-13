@@ -1060,6 +1060,7 @@ async function confirmStartSchedule(subId) {
   btn.textContent = 'Saving…';
 
   try {
+    // 1. Update subscription with start month + preferred week
     const { data, error } = await sb.from('subscriptions')
       .update({ cleaning_start_month: month + '-01', preferred_week: week })
       .eq('id', subId)
@@ -1067,7 +1068,42 @@ async function confirmStartSchedule(subId) {
       .select();
     if (error) throw error;
     if (!data || data.length === 0) throw new Error('Update failed — check RLS policies');
-    showToast('Cleaning schedule saved! Pending admin confirmation.');
+
+    const sub = data[0];
+    const planKey = sub.plan_type || '';
+    const propertyId = sub.property_id;
+
+    if (!propertyId) throw new Error('No property linked to this subscription');
+
+    // 2. Calculate visit months based on plan
+    const visits = PLAN_VISITS[planKey] || 6;
+    const interval = PLAN_INTERVAL[planKey] || 2;
+    const startYear = parseInt(month.split('-')[0]);
+    const startMon = parseInt(month.split('-')[1]) - 1; // 0-indexed
+
+    // 3. Generate cleaning_schedule records
+    const schedRows = [];
+    for (let i = 0; i < visits; i++) {
+      const visitDate = new Date(startYear, startMon + (i * interval), 1);
+      // Place in selected week: week 1 = 1st-7th, week 2 = 8th-14th, etc.
+      const dayOffset = ((week - 1) * 7) + 3; // mid-week of selected week (Wed)
+      visitDate.setDate(Math.min(dayOffset, 28)); // cap at 28 to avoid month overflow
+
+      schedRows.push({
+        user_id: currentUser.id,
+        property_id: propertyId,
+        subscription_id: subId,
+        planned_date: visitDate.toISOString().split('T')[0],
+        duration_hours: 2,
+        status: 'pending',
+      });
+    }
+
+    // 4. Insert all schedule records
+    const { error: schedErr } = await sb.from('cleaning_schedule').insert(schedRows);
+    if (schedErr) throw schedErr;
+
+    showToast(`Cleaning schedule created — ${visits} visits pending admin confirmation.`);
     setTimeout(() => loadDashboard(), 600);
   } catch(e) {
     console.error('confirmStartSchedule error:', e);
