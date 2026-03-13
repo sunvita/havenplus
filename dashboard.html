@@ -46,6 +46,23 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .dash-btn-logout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
 .dash-btn-logout:hover { background: rgba(255,255,255,.2); color: white; }
 
+/* ── Profile Dropdown ─────────────────────────────────── */
+.profile-menu { position: relative; }
+.profile-trigger { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+.profile-trigger:hover { background: rgba(255,255,255,.2); color: white; }
+.profile-trigger svg { width: 14px; height: 14px; transition: transform .2s; }
+.profile-trigger.open svg { transform: rotate(180deg); }
+.profile-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.15); min-width: 220px; overflow: hidden; z-index: 300; }
+.profile-dropdown.open { display: block; }
+.profile-info { padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
+.profile-info-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+.profile-info-email { font-size: 12px; color: #888; margin-top: 2px; }
+.profile-menu-item { display: block; width: 100%; text-align: left; padding: 11px 18px; font-size: 13px; font-weight: 500; color: #333; background: none; border: none; cursor: pointer; font-family: inherit; transition: background .15s; }
+.profile-menu-item:hover { background: #f5f7fa; color: var(--navy); }
+.profile-menu-item.danger { color: #c0392b; }
+.profile-menu-item.danger:hover { background: #fff5f5; }
+.profile-menu-divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
+
 /* ── Main ────────────────────────────────────────────── */
 .dash-main { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
 @media (max-width: 600px) { .dash-main { padding: 20px 16px; } }
@@ -221,8 +238,26 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       </div>
     </a>
     <div class="dash-nav-right">
-      <span class="dash-user-name" id="dashUserName"></span>
-      <button class="dash-btn-logout" onclick="handleLogout()">Log out</button>
+      <div class="profile-menu" id="profileMenu">
+        <button class="profile-trigger" id="profileTrigger" onclick="toggleProfileMenu()">
+          <span id="dashUserName"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-info">
+            <div class="profile-info-name" id="profileName"></div>
+            <div class="profile-info-email" id="profileEmail"></div>
+          </div>
+          <button class="profile-menu-item" onclick="openProfileModal('subscription')">Subscription</button>
+          <button class="profile-menu-item" onclick="openProfileModal('payment')">Payment</button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item" onclick="openProfileModal('password')">Change Password</button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item danger" onclick="openProfileModal('delete')">Delete Account</button>
+          <div class="profile-menu-divider"></div>
+          <button class="profile-menu-item" onclick="handleLogout()">Log out</button>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -481,6 +516,57 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="confirm-addr-val" id="confirmAddrVal"></div>
       </div>
       <button class="btn-submit" onclick="closePropConfirmModal(); window.location.href='plans.html'">Continue to Plans →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal-overlay" id="modalPassword" onclick="if(event.target===this)closeProfileModal('password')">
+  <div class="modal-box narrow">
+    <div class="modal-header">
+      <div class="modal-title">Change Password</div>
+      <button class="modal-close" onclick="closeProfileModal('password')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="pwError" style="display:none;background:#fff0f0;color:#c0392b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;"></div>
+      <div id="pwSuccess" style="display:none;background:#f0fff4;color:#27ae60;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;"></div>
+      <div style="margin-bottom:16px;">
+        <label class="form-label">New Password</label>
+        <input type="password" id="pwNew" class="form-input" placeholder="Minimum 8 characters">
+      </div>
+      <div style="margin-bottom:24px;">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" id="pwConfirm" class="form-input" placeholder="Re-enter new password">
+      </div>
+      <button class="btn-submit" id="btnPwUpdate" onclick="handlePasswordChange()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subscription Modal -->
+<div class="modal-overlay" id="modalSubscription" onclick="if(event.target===this)closeProfileModal('subscription')">
+  <div class="modal-box narrow">
+    <div class="modal-header">
+      <div class="modal-title">Subscription</div>
+      <button class="modal-close" onclick="closeProfileModal('subscription')">&times;</button>
+    </div>
+    <div class="modal-body" id="subModalBody">
+      <div style="color:#888;font-size:14px;">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal-overlay" id="modalDelete" onclick="if(event.target===this)closeProfileModal('delete')">
+  <div class="modal-box narrow">
+    <div class="modal-header">
+      <div class="modal-title">Delete Account</div>
+      <button class="modal-close" onclick="closeProfileModal('delete')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:#555;margin:0 0 16px;">To delete your account and all associated data, please send a request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
+      <p style="font-size:14px;color:#555;margin:0 0 24px;">Any active subscriptions must be cancelled before account deletion. Unused purchased Service Hours will be refunded at 70% of face value.</p>
+      <a href="mailto:hi@havenpluscare.com?subject=Account Deletion Request&body=Please delete my Haven Plus account. My registered email is: " class="btn-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
     </div>
   </div>
 </div>

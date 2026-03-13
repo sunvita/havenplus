@@ -1523,6 +1523,23 @@
             font-family: 'Noto Sans KR', sans-serif;
         }
         .nav-btn-small:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        /* ── Profile Dropdown ── */
+        .profile-menu { position: relative; }
+        .profile-trigger { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .profile-trigger:hover { background: rgba(255,255,255,.2); color: white; }
+        .profile-trigger svg { width: 14px; height: 14px; transition: transform .2s; }
+        .profile-trigger.open svg { transform: rotate(180deg); }
+        .profile-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.15); min-width: 220px; overflow: hidden; z-index: 300; }
+        .profile-dropdown.open { display: block; }
+        .profile-info { padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
+        .profile-info-name { font-size: 14px; font-weight: 700; color: #1B2A4A; }
+        .profile-info-email { font-size: 12px; color: #888; margin-top: 2px; }
+        .profile-menu-item { display: block; width: 100%; text-align: left; padding: 11px 18px; font-size: 13px; font-weight: 500; color: #333; background: none; border: none; cursor: pointer; font-family: inherit; transition: background .15s; }
+        .profile-menu-item:hover { background: #f5f7fa; color: #1B2A4A; }
+        .profile-menu-item.danger { color: #c0392b; }
+        .profile-menu-item.danger:hover { background: #fff5f5; }
+        .profile-menu-divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -1560,17 +1577,28 @@
                     <button class="btn-auth btn-signup" onclick="openAuth('signup')">Sign Up</button>
                 </div>
                 <!-- User menu (logged in) -->
-                <div id="userMenu" style="display:none;" class="user-menu">
-                    <div class="user-avatar" id="userAvatar"></div>
-                    <span class="user-name" id="userName"></span>
-                    <button class="nav-btn-small" onclick="openDashboard()">
-                        <span class="lang-nav-en">Dashboard</span>
-                        <span class="lang-nav-ko" style="display:none;">대시보드</span>
+                <div id="userMenu" style="display:none;">
+                  <div class="profile-menu" id="profileMenu">
+                    <button class="profile-trigger" id="profileTrigger" onclick="toggleProfileMenu()">
+                      <span id="userName"></span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
-                    <button class="nav-btn-small" onclick="handleLogout()">
-                        <span class="lang-nav-en">Logout</span>
-                        <span class="lang-nav-ko" style="display:none;">로그아웃</span>
-                    </button>
+                    <div class="profile-dropdown" id="profileDropdown">
+                      <div class="profile-info">
+                        <div class="profile-info-name" id="profileName"></div>
+                        <div class="profile-info-email" id="profileEmail"></div>
+                      </div>
+                      <button class="profile-menu-item" onclick="openDashboard()">Dashboard</button>
+                      <button class="profile-menu-item" onclick="openProfileModal('subscription')">Subscription</button>
+                      <button class="profile-menu-item" onclick="openProfileModal('payment')">Payment</button>
+                      <div class="profile-menu-divider"></div>
+                      <button class="profile-menu-item" onclick="openProfileModal('password')">Change Password</button>
+                      <div class="profile-menu-divider"></div>
+                      <button class="profile-menu-item danger" onclick="openProfileModal('delete')">Delete Account</button>
+                      <div class="profile-menu-divider"></div>
+                      <button class="profile-menu-item" onclick="handleLogout()">Logout</button>
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>
@@ -1706,6 +1734,82 @@
                     <span class="lang-auth-ko" style="display:none;">이미 계정이 있으신가요? <a href="#" onclick="switchTab('login'); return false;" style="color:#1B2A4A; font-weight:700;">로그인</a></span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="auth-overlay" id="modalPassword" onclick="if(event.target===this)closeProfileModal('password')">
+        <div class="auth-modal">
+            <button class="auth-close" onclick="closeProfileModal('password')">&times;</button>
+            <div class="auth-logo"><div class="auth-logo-text">HAVEN<span>PLUS</span></div></div>
+            <h3 style="text-align:center;margin:0 0 20px;color:#1B2A4A;font-size:18px;">Change Password</h3>
+            <div class="auth-error" id="pwError2" style="display:none;"></div>
+            <div class="auth-success" id="pwSuccess2" style="display:none;"></div>
+            <div class="auth-field password-field">
+                <label>New Password</label>
+                <div class="password-wrap">
+                    <input type="password" id="pwNew2" placeholder="Minimum 8 characters">
+                    <button type="button" class="pw-toggle" onclick="togglePW('pwNew2', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <div class="auth-field password-field">
+                <label>Confirm Password</label>
+                <div class="password-wrap">
+                    <input type="password" id="pwConfirm2" placeholder="Re-enter new password">
+                    <button type="button" class="pw-toggle" onclick="togglePW('pwConfirm2', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <button class="auth-submit" id="btnPwUpdate2" onclick="handlePasswordChange()">Update Password</button>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="auth-overlay" id="modalSubscription" onclick="if(event.target===this)closeProfileModal('subscription')">
+        <div class="auth-modal">
+            <button class="auth-close" onclick="closeProfileModal('subscription')">&times;</button>
+            <div class="auth-logo"><div class="auth-logo-text">HAVEN<span>PLUS</span></div></div>
+            <h3 style="text-align:center;margin:0 0 20px;color:#1B2A4A;font-size:18px;">Subscription</h3>
+            <div id="subModalBody2"><div style="color:#888;font-size:14px;text-align:center;">Loading…</div></div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div class="auth-overlay" id="modalDelete" onclick="if(event.target===this)closeProfileModal('delete')">
+        <div class="auth-modal">
+            <button class="auth-close" onclick="closeProfileModal('delete')">&times;</button>
+            <div class="auth-logo"><div class="auth-logo-text">HAVEN<span>PLUS</span></div></div>
+            <h3 style="text-align:center;margin:0 0 20px;color:#1B2A4A;font-size:18px;">Delete Account</h3>
+            <p style="font-size:14px;color:#555;margin:0 0 16px;">To delete your account and all associated data, please send a request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
+            <p style="font-size:14px;color:#555;margin:0 0 24px;">Any active subscriptions must be cancelled before account deletion. Unused purchased Service Hours will be refunded at 70% of face value.</p>
+            <a href="mailto:hi@havenpluscare.com?subject=Account Deletion Request&body=Please delete my Haven Plus account. My registered email is: " class="auth-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="auth-overlay" id="resetPasswordOverlay">
+        <div class="auth-modal">
+            <div class="auth-logo">
+                <div class="auth-logo-text">HAVEN<span>PLUS</span></div>
+            </div>
+            <h3 style="text-align:center;margin:0 0 8px;color:#1B2A4A;font-size:18px;">Set New Password</h3>
+            <p style="text-align:center;color:#888;font-size:13px;margin:0 0 24px;">Enter your new password below.</p>
+            <div class="auth-error" id="resetError"></div>
+            <div class="auth-success" id="resetSuccess"></div>
+            <div class="auth-field password-field">
+                <label>New Password</label>
+                <div class="password-wrap">
+                    <input type="password" id="newPassword" placeholder="Minimum 8 characters">
+                    <button type="button" class="pw-toggle" onclick="togglePW('newPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <div class="auth-field password-field">
+                <label>Confirm Password</label>
+                <div class="password-wrap">
+                    <input type="password" id="confirmPassword" placeholder="Re-enter new password">
+                    <button type="button" class="pw-toggle" onclick="togglePW('confirmPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+            </div>
+            <button class="auth-submit" onclick="handlePasswordUpdate()" id="btnResetPassword">Update Password</button>
         </div>
     </div>
 
@@ -2658,6 +2762,118 @@
             }
         }
 
+    /* ── Profile Menu ── */
+    function toggleProfileMenu() {
+        const trigger = document.getElementById('profileTrigger');
+        const dropdown = document.getElementById('profileDropdown');
+        trigger.classList.toggle('open');
+        dropdown.classList.toggle('open');
+    }
+
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('profileMenu');
+        if (menu && !menu.contains(e.target)) {
+            document.getElementById('profileTrigger')?.classList.remove('open');
+            document.getElementById('profileDropdown')?.classList.remove('open');
+        }
+    });
+
+    const PLAN_META_INDEX = {
+        essential: { name: 'Essential Care', price: '$55/mo', hours: '8 hrs', visits: '4× per year', vouchers: '2 / year' },
+        smart:     { name: 'Smart Care',     price: '$75/mo', hours: '12 hrs', visits: '6× per year', vouchers: '3 / year' },
+        premium:   { name: 'Premium Care',   price: '$150/mo', hours: '24 hrs', visits: '12× per year', vouchers: '6 / year' },
+    };
+
+    function openProfileModal(type) {
+        document.getElementById('profileTrigger')?.classList.remove('open');
+        document.getElementById('profileDropdown')?.classList.remove('open');
+        if (type === 'password') {
+            document.getElementById('pwNew2').value = '';
+            document.getElementById('pwConfirm2').value = '';
+            document.getElementById('pwError2').style.display = 'none';
+            document.getElementById('pwSuccess2').style.display = 'none';
+            document.getElementById('modalPassword').classList.add('active');
+        } else if (type === 'subscription') {
+            loadSubscriptionModal();
+            document.getElementById('modalSubscription').classList.add('active');
+        } else if (type === 'payment') {
+            window.open('https://billing.stripe.com/p/login/test_placeholder', '_blank');
+        } else if (type === 'delete') {
+            document.getElementById('modalDelete').classList.add('active');
+        }
+    }
+
+    function closeProfileModal(type) {
+        const map = { password: 'modalPassword', subscription: 'modalSubscription', delete: 'modalDelete' };
+        if (map[type]) document.getElementById(map[type]).classList.remove('active');
+    }
+
+    async function handlePasswordChange() {
+        const newPw = document.getElementById('pwNew2').value;
+        const confirmPw = document.getElementById('pwConfirm2').value;
+        const errEl = document.getElementById('pwError2');
+        const sucEl = document.getElementById('pwSuccess2');
+        errEl.style.display = 'none';
+        sucEl.style.display = 'none';
+
+        if (!newPw || newPw.length < 8) {
+            errEl.textContent = 'Password must be at least 8 characters.';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (newPw !== confirmPw) {
+            errEl.textContent = 'Passwords do not match.';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        const btn = document.getElementById('btnPwUpdate2');
+        btn.disabled = true;
+        btn.textContent = 'Updating…';
+
+        const { error } = await sb.auth.updateUser({ password: newPw });
+        if (error) {
+            errEl.textContent = error.message;
+            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Update Password';
+        } else {
+            sucEl.textContent = 'Password updated successfully.';
+            sucEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Update Password';
+            document.getElementById('pwNew2').value = '';
+            document.getElementById('pwConfirm2').value = '';
+            setTimeout(() => closeProfileModal('password'), 2000);
+        }
+    }
+
+    async function loadSubscriptionModal() {
+        const body = document.getElementById('subModalBody2');
+        body.innerHTML = '<div style="color:#888;font-size:14px;text-align:center;">Loading…</div>';
+        try {
+            const { data: sub } = await sb.from('subscriptions').select('plan, status, current_period_end').eq('user_id', currentUser.id).eq('status', 'active').maybeSingle();
+            if (!sub) { body.innerHTML = '<p style="font-size:14px;color:#555;text-align:center;">No active subscription found.</p>'; return; }
+            const plan = PLAN_META_INDEX[sub.plan] || { name: sub.plan, price: '—', visits: '—', hours: '—', vouchers: '—' };
+            const nextDate = sub.current_period_end ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+            body.innerHTML = `
+                <div style="background:#f5f8fa;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span style="font-size:15px;font-weight:800;color:#1B2A4A;">${plan.name}</span>
+                        <span style="font-size:13px;font-weight:700;color:#1B2A4A;">${plan.price}</span>
+                    </div>
+                    <div style="font-size:13px;color:#666;line-height:1.8;">
+                        <div>Cleaning: ${plan.hours} (${plan.visits})</div>
+                        <div>Service Hour vouchers: ${plan.vouchers}</div>
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e0e4ea;">Next billing date: <strong>${nextDate}</strong></div>
+                    </div>
+                </div>
+                <p style="font-size:12px;color:#999;margin:0;">To upgrade or cancel, contact us at <a href="mailto:hi@havenpluscare.com" style="color:#1B2A4A;">hi@havenpluscare.com</a>.</p>`;
+        } catch(e) {
+            body.innerHTML = '<p style="font-size:14px;color:#c0392b;text-align:center;">Failed to load subscription info.</p>';
+        }
+    }
+
     async function handleForgotPassword() {
         if (!sb) { showAuthError('Service unavailable.'); return; }
         const email = document.getElementById('loginEmail').value.trim();
@@ -2689,8 +2905,9 @@
         
         document.getElementById('authButtons').style.display = 'none';
         document.getElementById('userMenu').style.display = 'flex';
-        document.getElementById('userAvatar').textContent = initial;
         document.getElementById('userName').textContent = name;
+        document.getElementById('profileName').textContent = name;
+        document.getElementById('profileEmail').textContent = user.email || '';
     }
 
     function openDashboard() {
@@ -2922,7 +3139,10 @@
         if (session?.user) updateUIForUser(session.user);
 
         sb.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
+            if (event === 'PASSWORD_RECOVERY') {
+                document.getElementById('resetPasswordOverlay').classList.add('active');
+            } else if (event === 'SIGNED_IN' && session?.user) {
+                if (document.getElementById('resetPasswordOverlay').classList.contains('active')) return;
                 window.location.href = '/dashboard.html';
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
