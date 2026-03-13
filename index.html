@@ -1634,7 +1634,7 @@
                         <span class="lang-auth-en">Email</span>
                         <span class="lang-auth-ko" style="display:none;">이메일</span>
                     </label>
-                    <input type="email" id="loginEmail" placeholder="email@example.com">
+                    <input type="email" id="loginEmail" placeholder="email@example.com" onkeydown="if(event.key==='Enter')handleLogin()">
                 </div>
                 <div class="auth-field password-field">
                     <label>
@@ -1642,7 +1642,7 @@
                         <span class="lang-auth-ko" style="display:none;">비밀번호</span>
                     </label>
                     <div class="password-wrap">
-                        <input type="password" id="loginPassword" placeholder="••••••••">
+                        <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()">
                         <button type="button" class="pw-toggle" onclick="togglePW('loginPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
                 </div>
@@ -1691,7 +1691,7 @@
                         <span class="lang-auth-ko" style="display:none;">비밀번호 (8자 이상, 영문+숫자)</span>
                     </label>
                     <div class="password-wrap">
-                        <input type="password" id="signupPassword" placeholder="••••••••">
+                        <input type="password" id="signupPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleSignup()">
                         <button type="button" class="pw-toggle" onclick="togglePW('signupPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                     </div>
                     <div class="password-hint" id="passwordHint" style="display:none;">
@@ -1806,7 +1806,7 @@
             <div class="auth-field password-field">
                 <label>Confirm Password</label>
                 <div class="password-wrap">
-                    <input type="password" id="confirmPassword" placeholder="Re-enter new password">
+                    <input type="password" id="confirmPassword" placeholder="Re-enter new password" onkeydown="if(event.key==='Enter')handlePasswordUpdate()">
                     <button type="button" class="pw-toggle" onclick="togglePW('confirmPassword', this)" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
                 </div>
             </div>
