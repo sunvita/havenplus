@@ -714,7 +714,7 @@ body {
         <div class="card-name">Essential Care</div>
         <div class="card-target">Busy professional · Interstate investor</div>
         <div class="price-row"><span class="price-sup">$</span><span class="price-big">55</span></div>
-        <div class="price-mo">per month · GST incl.</div>
+        <div class="price-mo">per month</div>
         <div class="price-yr">Annual $660</div>
         <div class="divider"></div>
         <div class="features">
@@ -732,7 +732,7 @@ body {
         <div class="card-name">Smart Care</div>
         <div class="card-target">Busy professional · Interstate investor · High-yield rental investor</div>
         <div class="price-row"><span class="price-sup">$</span><span class="price-big">75</span></div>
-        <div class="price-mo">per month · GST incl.</div>
+        <div class="price-mo">per month</div>
         <div class="price-yr">Annual $900</div>
         <div class="divider"></div>
         <div class="features">
@@ -749,7 +749,7 @@ body {
         <div class="card-name">Premium Care</div>
         <div class="card-target">Busy professional · Interstate investor · Multi-property owner · Property manager</div>
         <div class="price-row"><span class="price-sup">$</span><span class="price-big">150</span></div>
-        <div class="price-mo">per month · GST incl.</div>
+        <div class="price-mo">per month</div>
         <div class="price-yr">Annual $1,800</div>
         <div class="divider"></div>
         <div class="features">
@@ -778,7 +778,7 @@ body {
         <div class="sh-badge-row"><span class="sh-badge pay-as-you-go">Pay as You Go</span></div>
         <div class="sh-pack">1 × Service Hour</div>
         <div class="sh-rate-row"><span class="sh-sup">$</span><span class="sh-rate">99</span></div>
-        <div class="sh-unit">per hour · GST incl.</div>
+        <div class="sh-unit">per hour</div>
         <div class="sh-total">Total $99</div>
         <div class="sh-save">&nbsp;</div>
         <div class="sh-div"></div>
@@ -791,7 +791,7 @@ body {
         <div class="sh-badge-row"><span class="sh-badge recommended">Recommended</span></div>
         <div class="sh-pack">4 × Service Hours</div>
         <div class="sh-rate-row"><span class="sh-sup">$</span><span class="sh-rate">85</span></div>
-        <div class="sh-unit">per hour · GST incl.</div>
+        <div class="sh-unit">per hour</div>
         <div class="sh-total">Total $340</div>
         <div class="sh-save">Save $56 vs single</div>
         <div class="sh-div"></div>
@@ -804,7 +804,7 @@ body {
         <div class="sh-badge-row"><span class="sh-badge best-value">Best Value</span></div>
         <div class="sh-pack">8 × Service Hours</div>
         <div class="sh-rate-row"><span class="sh-sup">$</span><span class="sh-rate">80</span></div>
-        <div class="sh-unit">per hour · GST incl.</div>
+        <div class="sh-unit">per hour</div>
         <div class="sh-total">Total $640</div>
         <div class="sh-save">Save $152 vs single</div>
         <div class="sh-div"></div>
@@ -847,7 +847,7 @@ body {
   </div>
   <div class="cta-trust">
     <span>🔒 Secured by Stripe</span>
-    <span>🇦🇺 AUD · GST incl.</span>
+    <span>🇦🇺 AUD</span>
     <span>✕ Cancel anytime</span>
   </div>
 </div>
@@ -965,6 +965,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (activePlanKey) document.getElementById('cardSub').classList.add('has-active');
     }
   } catch(e) { console.warn('Sub check failed:', e); }
+
+  /* Auto-open SH panel if mode=sh */
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('mode') === 'sh') { selectType('sh'); }
 
   /* Handle Stripe return */
   const p = new URLSearchParams(window.location.search);
