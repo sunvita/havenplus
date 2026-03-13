@@ -30,8 +30,7 @@ body {
   font-family: 'Noto Sans KR', sans-serif;
   background: var(--bg);
   color: var(--txt);
-  max-width: 1080px;
-  margin: 0 auto;
+  margin: 0;
   line-height: 1.6;
   overflow-x: hidden;
   padding-bottom: 90px;
@@ -42,10 +41,11 @@ body {
 ═══════════════════════════════════════════════════════ */
 .header {
   background: var(--cream-h);
-  padding: 84px 80px 96px;
+  padding: 84px 40px 96px;
   text-align: left;
   border-bottom: 1px solid var(--border);
   position: relative;
+  width: 100%;
 }
 @media (max-width: 1080px) { .header { padding: 66px 40px 78px; } }
 @media (max-width: 768px)  { .header { padding: 48px 20px 60px; } }
@@ -600,8 +600,8 @@ body {
 .sh-card:nth-child(3)   { animation: fadeUp .35s .14s ease both; }
 
 /* ── Top Nav Bar (shared with dashboard) ─────────────── */
-.top-nav { background: linear-gradient(135deg, #1B2A4A, #2a3f6a); height: 64px; display: flex; align-items: center; justify-content: center; padding: 0 24px; position: sticky; top: 0; z-index: 300; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
-.top-nav-inner { max-width: 1200px; width: 100%; display: flex; align-items: center; justify-content: space-between; }
+.top-nav { background: linear-gradient(135deg, #1B2A4A, #2a3f6a); height: 64px; display: flex; align-items: center; position: sticky; top: 0; z-index: 300; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+.top-nav-inner { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
 .top-nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .top-nav-logo svg { width: 32px; height: 32px; }
 .top-nav-brand { font-size: 18px; font-weight: 900; color: white; letter-spacing: 1px; line-height: 1; }
@@ -610,7 +610,7 @@ body {
 .top-nav-right { display: flex; align-items: center; gap: 12px; }
 .top-nav-user { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 500; }
 @media (max-width: 480px) { .top-nav-user { display: none; } }
-.nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 32px; }
 .nav-btn:hover { background: rgba(255,255,255,.2); color: white; }
 .nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .nav-btn-label { }

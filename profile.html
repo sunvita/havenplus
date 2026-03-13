@@ -38,8 +38,7 @@
   .dash-nav-right { display: flex; align-items: center; gap: 12px; }
   .dash-user-name { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 500; }
   @media (max-width: 480px) { .dash-user-name { display: none; } }
-  .nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; }
-  .nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+  .nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 32px; }
   .nav-btn:hover { background: rgba(255,255,255,.2); color: white; }
   .nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
   .nav-btn-label { }
@@ -631,12 +630,12 @@ async function loadSubscription() {
   el.innerHTML = '<div style="color:#888;font-size:14px;">Loading…</div>';
 
   try {
-    const { data: sub, error: subErr } = await sb
+    // Fetch all active subscriptions (user may have multiple properties)
+    const { data: subs, error: subErr } = await sb
       .from('subscriptions')
-      .select('plan_type, status, start_date, end_date, current_period_end, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used')
+      .select('plan_type, status, start_date, end_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used, preferred_week, confirmed_date, cleaning_start_month, property_id')
       .eq('user_id', currentUser.id)
-      .eq('status', 'active')
-      .maybeSingle();
+      .eq('status', 'active');
 
     if (subErr) throw subErr;
 
@@ -646,60 +645,72 @@ async function loadSubscription() {
       shBal = data;
     } catch(e) { /* sh_balance table may not exist yet */ }
 
-    if (!sub && !shBal) {
+    // Fetch properties for name display
+    let props = [];
+    try {
+      const { data } = await sb.from('properties').select('id, address, suburb').eq('user_id', currentUser.id);
+      props = data || [];
+    } catch(e) {}
+    const propMap = {};
+    props.forEach(p => { propMap[p.id] = `${p.address}, ${p.suburb}`; });
+
+    if ((!subs || subs.length === 0) && !shBal) {
       el.innerHTML = '<p style="font-size:14px;color:#888;">No active subscription found. <a href="plans.html" style="color:var(--navy);font-weight:600;">View plans →</a></p>';
       return;
     }
 
     let html = '';
 
-    if (sub) {
-      const plan = PLAN_META[sub.plan_type] || { name: sub.plan_type, price:'—', visits:'—', hours:'—', vouchers:'—' };
-      const endDate = sub.end_date
-        ? new Date(sub.end_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
-        : sub.current_period_end
-        ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
-        : '—';
-      const startDate = sub.start_date
-        ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
-        : '—';
-      const cleanRem   = (sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0);
-      const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
-      const shPurchRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
+    if (subs && subs.length > 0) {
+      subs.forEach(sub => {
+        const plan = PLAN_META[sub.plan_type] || { name: sub.plan_type, price:'—', visits:'—', hours:'—', vouchers:'—' };
+        const endDate = sub.end_date
+          ? new Date(sub.end_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+          : '—';
+        const startDate = sub.start_date
+          ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+          : '—';
+        const cleanRem   = (sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0);
+        const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
+        const propLabel  = sub.property_id && propMap[sub.property_id] ? propMap[sub.property_id] : '';
 
-      html += `
-        <div class="sub-card">
-          <div class="sub-card-header">
-            <div>
-              <div class="sub-plan-name">${plan.name}</div>
-              <span class="sub-badge">${sub.status}</span>
+        html += `
+          <div class="sub-card">
+            <div class="sub-card-header">
+              <div>
+                <div class="sub-plan-name">${plan.name}</div>
+                <span class="sub-badge">${sub.status}</span>
+                ${propLabel ? `<div style="font-size:12px;color:#888;margin-top:4px;">${propLabel}</div>` : ''}
+              </div>
+              <div class="sub-plan-price">${plan.price}</div>
             </div>
-            <div class="sub-plan-price">${plan.price}</div>
-          </div>
-          <div class="sub-details">
-            <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
-            <div class="sub-detail-item">SH vouchers left<strong>${shVouchRem} hrs</strong></div>
-            <div class="sub-detail-item">SH purchased left<strong>${shPurchRem} hrs</strong></div>
-            <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
-            <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
-            <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
-          </div>
-        </div>`;
-    } else if (shBal) {
+            <div class="sub-details">
+              <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
+              <div class="sub-detail-item">SH vouchers left<strong>${shVouchRem} hrs</strong></div>
+              <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
+              <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
+              <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
+            </div>
+          </div>`;
+      });
+    }
+
+    if (shBal) {
       const shPurchRem = (shBal.purchased_total || 0) - (shBal.purchased_used || 0);
-      html += `
-        <div class="sub-card">
-          <div class="sub-card-header">
-            <div>
-              <div class="sub-plan-name">Service Hours Only</div>
-              <span class="sub-badge" style="background:#fff3e0;color:#e65100;">No subscription</span>
+      if (shPurchRem > 0) {
+        html += `
+          <div class="sub-card" style="margin-top:12px;">
+            <div class="sub-card-header">
+              <div>
+                <div class="sub-plan-name">Purchased Service Hours</div>
+              </div>
             </div>
-          </div>
-          <div class="sub-details" style="grid-template-columns:1fr 1fr;">
-            <div class="sub-detail-item">SH purchased remaining<strong>${shPurchRem} hrs</strong></div>
-            <div class="sub-detail-item">Call-out fee<strong>$0 Always</strong></div>
-          </div>
-        </div>`;
+            <div class="sub-details" style="grid-template-columns:1fr 1fr;">
+              <div class="sub-detail-item">SH purchased remaining<strong>${shPurchRem} hrs</strong></div>
+              <div class="sub-detail-item">Call-out fee<strong>$0 Always</strong></div>
+            </div>
+          </div>`;
+      }
     }
 
     html += '<p class="sub-note">To upgrade or cancel your subscription, contact us at <a href="#" id="subEmailLink" style="color:var(--navy);">hi&#64;havenpluscare.com</a>.</p>';

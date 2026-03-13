@@ -45,7 +45,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 @media (max-width: 480px) { .dash-user-name { display: none; } }
 .dash-btn-logout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
 .dash-btn-logout:hover { background: rgba(255,255,255,.2); color: white; }
-.nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 32px; }
 .nav-btn:hover { background: rgba(255,255,255,.2); color: white; }
 .nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 .nav-btn-label { }
@@ -367,12 +367,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="stat-sub" id="ovPropSub">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Cleaning Hrs</div>
+        <div class="stat-label">Cleaning Hours</div>
         <div class="stat-value" id="ovCleanRem">0</div>
         <div class="stat-sub" id="ovCleanSub">total remaining</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Service Hrs</div>
+        <div class="stat-label">Service Hours</div>
         <div class="stat-value" id="ovSHRem">0</div>
         <div class="stat-sub" id="ovSHSub">voucher + purchased</div>
       </div>
@@ -904,7 +904,7 @@ function buildStartMonthSelector(propertyId, subId) {
           <button class="start-month-btn" onclick="event.stopPropagation();pickWeek('${subId}',4,this)">Week 4 (22nd–end)</button>
         </div>
       </div>
-      <button class="btn-submit" id="confirmStart_${subId}" style="display:none;margin-top:14px" onclick="event.stopPropagation();confirmStartSchedule('${subId}')">Confirm Schedule</button>
+      <button class="btn-submit" id="confirmStart_${subId}" style="display:none;margin-top:14px" onclick="event.stopPropagation();confirmStartSchedule('${subId}')">Request Schedule</button>
     </div>
   `;
 }
@@ -952,7 +952,7 @@ async function confirmStartSchedule(subId) {
     console.error('confirmStartSchedule error:', e);
     showToast('Failed to save: ' + e.message, true);
     btn.disabled = false;
-    btn.textContent = 'Confirm Schedule';
+    btn.textContent = 'Request Schedule';
   }
 }
 
