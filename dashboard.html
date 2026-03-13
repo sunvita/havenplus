@@ -45,6 +45,14 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 @media (max-width: 480px) { .dash-user-name { display: none; } }
 .dash-btn-logout { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
 .dash-btn-logout:hover { background: rgba(255,255,255,.2); color: white; }
+.nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+.nav-btn:hover { background: rgba(255,255,255,.2); color: white; }
+.nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nav-btn-label { }
+@media (max-width: 600px) { .nav-btn-label { display: none; } .nav-btn { padding: 6px 8px; } }
+.nav-lang-toggle { display: flex; gap: 2px; background: rgba(255,255,255,.08); border-radius: 7px; padding: 3px; margin: 0 4px; }
+.nav-lang-btn { color: rgba(255,255,255,.4); font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 5px; cursor: pointer; transition: all .2s; }
+.nav-lang-btn.active { background: rgba(255,255,255,.18); color: white; }
 
 /* ── Profile Dropdown ─────────────────────────────────── */
 .profile-menu { position: relative; }
@@ -190,6 +198,9 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .spinner-btn { width: 40px; min-width: 40px; max-width: 40px; height: 42px; background: #f5f6fa; border: none; font-size: 18px; cursor: pointer; color: var(--navy); font-weight: 700; transition: background .15s; flex: 0 0 40px; }
 .spinner-btn:hover { background: #e8eaed; }
 .spinner-value { flex: 1; min-width: 0; text-align: center; border: none; outline: none; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--navy); background: white; }
+.spinner-wrap.locked { background: #f0f1f3; border-style: dashed; }
+.spinner-wrap.locked .spinner-value { background: #f0f1f3; color: #999; }
+.spinner-wrap.locked .spinner-btn { background: #e8e9eb; color: #aaa; cursor: not-allowed; }
 
 .form-error, .form-success { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: none; }
 .form-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
@@ -285,27 +296,13 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       </div>
     </a>
     <div class="dash-nav-right">
-      <div class="profile-menu" id="profileMenu">
-        <button class="profile-trigger" id="profileTrigger" onclick="toggleProfileMenu()">
-          <span id="dashUserName"></span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="profile-dropdown" id="profileDropdown">
-          <div class="profile-info">
-            <div class="profile-info-name" id="profileName"></div>
-            <div class="profile-info-email" id="profileEmail"></div>
-          </div>
-          <button class="profile-menu-item" onclick="window.location.href='profile.html?section=personal'">Profile Settings</button>
-          <button class="profile-menu-item" onclick="window.location.href='profile.html?section=subscription'">Subscription</button>
-          <button class="profile-menu-item" onclick="window.location.href='profile.html?section=payment'">Payment</button>
-          <div class="profile-menu-divider"></div>
-          <button class="profile-menu-item" onclick="window.location.href='profile.html?section=security'">Change Password</button>
-          <div class="profile-menu-divider"></div>
-          <button class="profile-menu-item danger" onclick="window.location.href='profile.html?section=delete'">Delete Account</button>
-          <div class="profile-menu-divider"></div>
-          <button class="profile-menu-item" onclick="handleLogout()">Log out</button>
-        </div>
+      <div class="nav-lang-toggle">
+        <span class="nav-lang-btn active" id="lang-en" onclick="toggleLang('en')">EN</span>
+        <span class="nav-lang-btn" id="lang-ko" onclick="toggleLang('ko')">KOR</span>
       </div>
+      <span class="dash-user-name" id="dashUserName"></span>
+      <a href="profile.html" class="nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg><span class="nav-btn-label">Profile</span></a>
+      <button class="nav-btn" onclick="handleLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span class="nav-btn-label">Log out</span></button>
     </div>
   </div>
 </nav>
@@ -429,7 +426,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <div class="form-success" id="propSuccess"></div>
       <input type="hidden" id="propEditId">
       <div id="propLockHint" style="display:none;background:#fff8f0;border:1px solid #fde0c0;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92600a;line-height:1.5;">
-        🔒 Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>.<br>You can update property manager/key holder and access instructions below.
+        🔒 Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>.<br><br>You can update property manager/key holder and access instructions below.
       </div>
       <div class="form-group">
         <label class="form-label">Address *</label>
@@ -612,8 +609,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const meta = currentUser.user_metadata || {};
     const name = meta.full_name || currentUser.email.split('@')[0];
     document.getElementById('dashUserName').textContent = name;
-    document.getElementById('profileName').textContent = name;
-    document.getElementById('profileEmail').textContent = currentUser.email;
     document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
 
     // Fetch role from profiles table BEFORE loading dashboard
@@ -699,7 +694,7 @@ const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 
 function showStateActive(allSubs, shBal, shPurchasedRem) {
   document.getElementById('welcomeSub').textContent = allProperties.length > 1
-    ? `Managing ${allProperties.length} properties with Haven Plus.`
+    ? `Managing ${allProperties.length} properties with Haven Plus. Your properties are in good hands.`
     : 'Your property is in good hands.';
   document.getElementById('stateActive').classList.add('show');
 
@@ -1043,8 +1038,12 @@ function openEditPropertyModal(propId) {
   document.getElementById('propType').disabled     = lockStructure;
 
   // Lock spinner buttons for bedrooms/bathrooms
+  ['spinBedrooms','spinBathrooms'].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (lockStructure) wrap.classList.add('locked'); else wrap.classList.remove('locked');
+  });
   document.querySelectorAll('#spinBedrooms .spinner-btn, #spinBathrooms .spinner-btn')
-    .forEach(btn => { btn.disabled = lockStructure; if (lockStructure) btn.style.opacity = '.4'; else btn.style.opacity = ''; });
+    .forEach(btn => { btn.disabled = lockStructure; });
 
   // Show hint if locked
   const lockHint = document.getElementById('propLockHint');
@@ -1074,8 +1073,9 @@ function resetPropertyForm() {
   const lockHint = document.getElementById('propLockHint');
   if (lockHint) lockHint.style.display = 'none';
   // Reset spinner buttons
+  ['spinBedrooms','spinBathrooms'].forEach(id => document.getElementById(id).classList.remove('locked'));
   document.querySelectorAll('#spinBedrooms .spinner-btn, #spinBathrooms .spinner-btn')
-    .forEach(btn => { btn.disabled = false; btn.style.opacity = ''; });
+    .forEach(btn => { btn.disabled = false; });
 }
 
 function closePropertyModal() { document.getElementById('propertyModal').classList.remove('active'); }
@@ -1199,26 +1199,8 @@ function spinValue(id, delta) {
 }
 
 /* ── Auth ─────────────────────────────────────────────── */
-/* ── Profile Menu ─────────────────────────────────────── */
-function toggleProfileMenu() {
-  const trigger = document.getElementById('profileTrigger');
-  const dropdown = document.getElementById('profileDropdown');
-  trigger.classList.toggle('open');
-  dropdown.classList.toggle('open');
-}
-
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('profileMenu');
-  if (menu && !menu.contains(e.target)) {
-    document.getElementById('profileTrigger').classList.remove('open');
-    document.getElementById('profileDropdown').classList.remove('open');
-  }
-});
 
 function openProfileModal(type) {
-  document.getElementById('profileTrigger').classList.remove('open');
-  document.getElementById('profileDropdown').classList.remove('open');
-
   if (type === 'password') {
     document.getElementById('pwNew').value = '';
     document.getElementById('pwConfirm').value = '';
@@ -1376,14 +1358,23 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ── Close profile dropdown on outside click ──────────── */
-document.addEventListener('click', e => {
-  const menu = document.getElementById('profileMenu');
-  if (menu && !menu.contains(e.target)) {
-    document.getElementById('profileTrigger').classList.remove('open');
-    document.getElementById('profileDropdown').classList.remove('open');
-  }
-});
+/* ── Language Toggle (placeholder — translation logic TBD) ── */
+let currentLang = localStorage.getItem('hp_lang') || 'en';
+function toggleLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('hp_lang', lang);
+  document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('lang-' + lang);
+  if (el) el.classList.add('active');
+  // TODO: apply translations
+}
+(function initLang() {
+  const lang = localStorage.getItem('hp_lang') || 'en';
+  currentLang = lang;
+  document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('lang-' + lang);
+  if (el) el.classList.add('active');
+})();
 </script>
 </body>
 </html>
