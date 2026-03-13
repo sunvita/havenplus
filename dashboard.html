@@ -705,7 +705,7 @@ const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 function showStateActive(allSubs, shBal, shPurchasedRem) {
   document.getElementById('welcomeSub').textContent = allProperties.length > 1
     ? `Managing ${allProperties.length} properties with Haven Plus. Your properties are in good hands.`
-    : 'Your property is in good hands.';
+    : `Managing 1 property with Haven Plus. Your property is in good hands.`;
   document.getElementById('stateActive').classList.add('show');
 
   // Build property→subscription map
