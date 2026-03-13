@@ -332,13 +332,13 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
     <div class="action-grid">
       <div class="action-card" id="cardProperty" onclick="openAddPropertyModal()">
-        <div class="action-icon">🏠</div>
+        <div class="action-icon" style="font-size:28px;color:var(--navy)"><svg viewBox="0 0 16 16" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg></div>
         <div class="action-title">Register Property</div>
         <div class="action-desc">Add your property address, type, and access details</div>
         <div class="action-badge badge-todo" id="badgeProperty">TO DO</div>
       </div>
       <div class="action-card disabled" id="cardPlan" onclick="handleChoosePlan()">
-        <div class="action-icon">📋</div>
+        <div class="action-icon" style="font-size:28px;color:var(--navy)"><svg viewBox="0 0 16 16" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="1" width="10" height="14" rx="1.5"/><line x1="6" y1="5" x2="11" y2="5"/><line x1="6" y1="8" x2="11" y2="8"/><line x1="6" y1="11" x2="9" y2="11"/></svg></div>
         <div class="action-title">Choose a Plan</div>
         <div class="action-desc">Select a subscription or purchase Service Hours</div>
         <div class="action-badge badge-locked" id="badgePlan">Register property first</div>
@@ -347,7 +347,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
     <!-- Property list (shown after first registration) -->
     <div class="info-section" id="propInfoSection" style="display:none">
-      <div class="info-title">🏠 My Properties</div>
+      <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> My Properties</div>
       <div id="propertyList"></div>
       <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
     </div>
@@ -406,7 +406,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <a href="plans.html" class="btn-nudge">View Subscription Plans →</a>
     </div>
     <div class="info-section" id="propInfoSH" style="display:none">
-      <div class="info-title">🏠 My Properties</div>
+      <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> My Properties</div>
       <div id="propertyListSH"></div>
       <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
     </div>
@@ -426,7 +426,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <div class="form-success" id="propSuccess"></div>
       <input type="hidden" id="propEditId">
       <div id="propLockHint" style="display:none;background:#fff8f0;border:1px solid #fde0c0;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92600a;line-height:1.5;">
-        🔒 Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>.<br><br>You can update property manager/key holder and access instructions below.
+        <svg style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:3px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg> Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>.<br><br>You can update property manager/key holder and access instructions below.
       </div>
       <div class="form-group">
         <label class="form-label">Address *</label>
@@ -595,7 +595,17 @@ const PLAN_META = {
   premium:  { name:'Premium Care',   price:'$150/mo',visits:'12× per year', hours:'24 hrs', vouchers:'6 / year' },
 };
 
-let sb = null, currentUser = null, allProperties = [], selectedPropId = null;
+const ICO = {
+  clean: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6.5" y1="0.5" x2="6.5" y2="5"/><rect x="2" y="5" width="9" height="4" rx="1.5"/><line x1="3.5" y1="9" x2="2.5" y2="13.5"/><line x1="5.2" y1="9" x2="4.7" y2="14"/><line x1="7" y1="9" x2="7" y2="14"/><line x1="8.8" y1="9" x2="9.3" y2="13"/><circle cx="13" cy="7.5" r="0.5" fill="currentColor" opacity=".5"/><circle cx="14" cy="6" r="0.4" fill="currentColor" opacity=".4"/><path d="M11 10c1.5 0 3 .5 4 1.5" opacity=".4"/></svg>',
+  sh: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 1.5C4.2 1.5 3 2.5 3 4c0 1 .6 1.8 1.3 2.2L4.3 11c0 .8.4 1.5 1.7 1.5s1.7-.7 1.7-1.5L7.7 6.2C8.4 5.8 9 5 9 4c0-1.5-1.2-2.5-2.5-2.5L5.5 4c0 .4.4.6 1 .6s1-.2 1-.6L6.5 1.5"/></svg>',
+  cal: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="12" rx="2"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/></svg>',
+  plan: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="1" width="10" height="14" rx="1.5"/><line x1="6" y1="5" x2="11" y2="5"/><line x1="6" y1="8" x2="11" y2="8"/><line x1="6" y1="11" x2="9" y2="11"/></svg>',
+  prop: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg>',
+  key: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="5.5" cy="5.5" r="3"/><path d="M8 8l5.5 5.5"/><path d="M11.5 11.5l2 0"/></svg>',
+  door: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="1" width="10" height="14" rx="1"/><circle cx="11" cy="8" r="0.8" fill="currentColor"/></svg>',
+  lock: '<svg style="display:inline-block;vertical-align:middle;width:14px;height:14px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>',
+  swap: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 2 1 5 4 8"/><line x1="1" y1="5" x2="15" y2="5"/><polyline points="12 8 15 11 12 14"/><line x1="15" y1="11" x2="1" y2="11"/></svg>',
+};
 let isAdmin = false, hasActiveSub = false;
 
 /* ── Init ─────────────────────────────────────────────── */
@@ -752,7 +762,10 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
     let nextVisitText = '';
 
     if (hasSub && cleaningStartMonth) {
-      const startDate = new Date(cleaningStartMonth + '-01');
+      const startDate = new Date(cleaningStartMonth);
+      if (isNaN(startDate.getTime())) {
+        scheduleHTML = '<div style="font-size:13px;color:var(--text-light)">Schedule date error — please contact support.</div>';
+      } else {
       const startM = startDate.getMonth();
       const interval = PLAN_INTERVAL[planKey] || 2;
       const visits = PLAN_VISITS[planKey] || 6;
@@ -772,7 +785,7 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
       }
       scheduleHTML = `
         <div style="margin-bottom:16px">
-          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">📅 Cleaning Schedule</div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">${ICO.cal} Cleaning Schedule</div>
           <div class="sched-timeline">
             ${dots.map((d, i) => `
               <div class="sched-dot ${d.cls}">
@@ -783,6 +796,7 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
             `).join('')}
           </div>
         </div>`;
+      }
     } else if (hasSub && !cleaningStartMonth) {
       scheduleHTML = buildStartMonthSelector(p.id, sub.id);
     }
@@ -792,16 +806,16 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
     // Summary line
     const summaryMeta = hasSub
       ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
-         <span>🧹 ${cleanR}/${cleanT}h</span>
-         <span>🔧 ${shVR} SH</span>
-         ${nextVisitText ? `<span>📅 Next: <strong>${nextVisitText}</strong></span>` : ''}`
+         <span>${ICO.clean} ${cleanR}/${cleanT}h</span>
+         <span>${ICO.sh} ${shVR} SH</span>
+         ${nextVisitText ? `<span>${ICO.cal} Next: <strong>${nextVisitText}</strong></span>` : ''}`
       : `<span class="prop-hub-plan-pill pill-none">No plan</span>`;
 
     // PM / Key Holder info
     const keyName = p.key_holder_name || p.key_holder || '';
     const keyContact = p.key_holder_contact || '';
-    const keyLine = keyName ? `<div style="font-size:13px;color:var(--text-light)">🔑 ${keyName}${keyContact ? ' (' + keyContact + ')' : ''}</div>` : '';
-    const accessLine = p.access_instructions ? `<div style="font-size:13px;color:var(--text-light);margin-top:4px">🚪 ${p.access_instructions}</div>` : '';
+    const keyLine = keyName ? `<div style="font-size:13px;color:var(--text-light)">${ICO.key} ${keyName}${keyContact ? ' (' + keyContact + ')' : ''}</div>` : '';
+    const accessLine = p.access_instructions ? `<div style="font-size:13px;color:var(--text-light);margin-top:4px">${ICO.door} ${p.access_instructions}</div>` : '';
 
     // Detail section
     const detailInner = hasSub ? `
@@ -866,7 +880,7 @@ function buildStartMonthSelector(propertyId, subId) {
   }
   return `
     <div class="start-month-card">
-      <div class="start-month-title">📅 When would you like regular cleaning to begin?</div>
+      <div class="start-month-title">${ICO.cal} When would you like regular cleaning to begin?</div>
       <div class="start-month-desc">Select your preferred start month. Your cleaning schedule will be automatically calculated based on your plan.</div>
       <div class="start-month-options">${options}</div>
     </div>
@@ -874,19 +888,26 @@ function buildStartMonthSelector(propertyId, subId) {
 }
 
 async function selectStartMonth(subId, monthVal, btnEl) {
-  // Visual feedback
   btnEl.closest('.start-month-options').querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
   btnEl.classList.add('selected');
+  const originalText = btnEl.textContent;
   btnEl.textContent = 'Saving…';
 
   try {
-    const { error } = await sb.from('subscriptions').update({ cleaning_start_month: monthVal + '-01' }).eq('id', subId);
+    const { data, error, count } = await sb.from('subscriptions')
+      .update({ cleaning_start_month: monthVal + '-01' })
+      .eq('id', subId)
+      .eq('user_id', currentUser.id)
+      .select();
     if (error) throw error;
+    if (!data || data.length === 0) throw new Error('Update returned no rows — check RLS policies');
     showToast('Cleaning start month saved!');
     setTimeout(() => loadDashboard(), 600);
   } catch(e) {
-    showToast('Failed to save. Please try again.', true);
-    btnEl.textContent = btnEl.dataset.label || 'Retry';
+    console.error('selectStartMonth error:', e);
+    showToast('Failed to save: ' + e.message, true);
+    btnEl.textContent = originalText;
+    btnEl.classList.remove('selected');
   }
 }
 
