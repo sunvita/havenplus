@@ -1525,21 +1525,11 @@
         .nav-btn-small:hover { background: rgba(255,255,255,0.2); color: white; }
 
         /* ── Profile Dropdown ── */
-        .profile-menu { position: relative; }
-        .profile-trigger { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.85); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
-        .profile-trigger:hover { background: rgba(255,255,255,.2); color: white; }
-        .profile-trigger svg { width: 14px; height: 14px; transition: transform .2s; }
-        .profile-trigger.open svg { transform: rotate(180deg); }
-        .profile-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.15); min-width: 220px; overflow: hidden; z-index: 300; }
-        .profile-dropdown.open { display: block; }
-        .profile-info { padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
-        .profile-info-name { font-size: 14px; font-weight: 700; color: #1B2A4A; }
-        .profile-info-email { font-size: 12px; color: #888; margin-top: 2px; }
-        .profile-menu-item { display: block; width: 100%; text-align: left; padding: 11px 18px; font-size: 13px; font-weight: 500; color: #333; background: none; border: none; cursor: pointer; font-family: inherit; transition: background .15s; }
-        .profile-menu-item:hover { background: #f5f7fa; color: #1B2A4A; }
-        .profile-menu-item.danger { color: #c0392b; }
-        .profile-menu-item.danger:hover { background: #fff5f5; }
-        .profile-menu-divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
+        .nav-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .nav-btn:hover { background: rgba(255,255,255,.2); color: white; }
+        .nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .nav-btn-label { }
+        @media (max-width: 600px) { .nav-btn-label { display: none; } .nav-btn { padding: 6px 8px; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -1577,29 +1567,11 @@
                     <button class="btn-auth btn-signup" onclick="openAuth('signup')">Sign Up</button>
                 </div>
                 <!-- User menu (logged in) -->
-                <div id="userMenu" style="display:none;">
-                  <div class="profile-menu" id="profileMenu">
-                    <button class="profile-trigger" id="profileTrigger" onclick="toggleProfileMenu()">
-                      <span id="userName"></span>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div class="profile-dropdown" id="profileDropdown">
-                      <div class="profile-info">
-                        <div class="profile-info-name" id="profileName"></div>
-                        <div class="profile-info-email" id="profileEmail"></div>
-                      </div>
-                      <button class="profile-menu-item" onclick="openDashboard()">Dashboard</button>
-                      <button class="profile-menu-item" onclick="window.location.href='profile.html?section=personal'">Profile Settings</button>
-                      <button class="profile-menu-item" onclick="window.location.href='profile.html?section=subscription'">Subscription</button>
-                      <button class="profile-menu-item" onclick="window.location.href='profile.html?section=payment'">Payment</button>
-                      <div class="profile-menu-divider"></div>
-                      <button class="profile-menu-item" onclick="window.location.href='profile.html?section=security'">Change Password</button>
-                      <div class="profile-menu-divider"></div>
-                      <button class="profile-menu-item danger" onclick="window.location.href='profile.html?section=delete'">Delete Account</button>
-                      <div class="profile-menu-divider"></div>
-                      <button class="profile-menu-item" onclick="handleLogout()">Logout</button>
-                    </div>
-                  </div>
+                <div id="userMenu" style="display:none; align-items:center; gap:10px;">
+                  <span class="nav-user-name" id="userName" style="color:rgba(255,255,255,.8);font-size:13px;font-weight:500;"></span>
+                  <a href="dashboard.html" class="nav-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="0.5" y="0.5" width="15" height="6" rx="1.2"/><rect x="0.5" y="8.5" width="6.5" height="6.5" rx="1.2"/><rect x="9" y="8.5" width="6.5" height="6.5" rx="1.2"/></svg><span class="nav-btn-label">Dashboard</span></a>
+                  <a href="profile.html" class="nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg><span class="nav-btn-label">Profile</span></a>
+                  <button class="nav-btn" onclick="handleLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="nav-btn-label">Log out</span></button>
                 </div>
             </div>
         </div>
@@ -1782,7 +1754,7 @@
             <h3 style="text-align:center;margin:0 0 20px;color:#1B2A4A;font-size:18px;">Delete Account</h3>
             <p style="font-size:14px;color:#555;margin:0 0 16px;">To delete your account and all associated data, please send a request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
             <p style="font-size:14px;color:#555;margin:0 0 24px;">Any active subscriptions must be cancelled before account deletion. Unused purchased Service Hours will be refunded at 70% of face value.</p>
-            <a href="/cdn-cgi/l/email-protection#731b1a331b1205161d031f0600101201165d101c1e4c000611191610074e3210101c061d075337161f16071a1c1d532116020616000755111c170a4e231f161200165317161f160716531e0a533b1205161d53231f0600531210101c061d075d533e0a530116141a00071601161753161e121a1f531a004953" class="auth-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
+            <a id="deletionEmailLink2" class="auth-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
         </div>
     </div>
 
@@ -2340,7 +2312,7 @@
         <div class="contact-footer">Haven Plus Property Care | Perth, WA | ABN: 83 695 213 499</div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    <script>
     // ============================================
     // SUPABASE INIT
     // ============================================
@@ -2763,22 +2735,6 @@
             }
         }
 
-    /* ── Profile Menu ── */
-    function toggleProfileMenu() {
-        const trigger = document.getElementById('profileTrigger');
-        const dropdown = document.getElementById('profileDropdown');
-        trigger.classList.toggle('open');
-        dropdown.classList.toggle('open');
-    }
-
-    document.addEventListener('click', (e) => {
-        const menu = document.getElementById('profileMenu');
-        if (menu && !menu.contains(e.target)) {
-            document.getElementById('profileTrigger')?.classList.remove('open');
-            document.getElementById('profileDropdown')?.classList.remove('open');
-        }
-    });
-
     const PLAN_META_INDEX = {
         essential: { name: 'Essential Care', price: '$55/mo', hours: '8 hrs', visits: '4× per year', vouchers: '2 / year' },
         smart:     { name: 'Smart Care',     price: '$75/mo', hours: '12 hrs', visits: '6× per year', vouchers: '3 / year' },
@@ -2786,8 +2742,6 @@
     };
 
     function openProfileModal(type) {
-        document.getElementById('profileTrigger')?.classList.remove('open');
-        document.getElementById('profileDropdown')?.classList.remove('open');
         if (type === 'password') {
             document.getElementById('pwNew2').value = '';
             document.getElementById('pwConfirm2').value = '';
@@ -2924,13 +2878,10 @@
     function updateUIForUser(user) {
         currentUser = user;
         const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-        const initial = name.charAt(0).toUpperCase();
         
         document.getElementById('authButtons').style.display = 'none';
         document.getElementById('userMenu').style.display = 'flex';
         document.getElementById('userName').textContent = name;
-        document.getElementById('profileName').textContent = name;
-        document.getElementById('profileEmail').textContent = user.email || '';
     }
 
     function openDashboard() {
@@ -3323,4 +3274,13 @@
                         <div class="faq-answer">Feel free to start without any pressure—you can cancel at any time! Within the first 90 days, the early termination fee is waived. However, as the plan provides discounted membership rates, you'll need to settle the cost of services already used at the standard rate. If you're selling your property, you can transfer your subscription to the new owner, and in this case no cancellation fees or settlement procedures apply as the subscription continues through transfer.</div>
                     </div>
                 </div>
-          
+                <div class="faq-content lang-en">
+                    <h3 class="faq-title">Haven Plus FAQ</h3>
+                    <p style="color:#888;font-size:14px;margin-bottom:24px;">English FAQ coming soon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
