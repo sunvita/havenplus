@@ -3161,13 +3161,17 @@
         const { data: { session } } = await sb.auth.getSession();
         if (session?.user) updateUIForUser(session.user);
 
+        let isRecoveryMode = false;
+
         sb.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY') {
+                isRecoveryMode = true;
                 document.getElementById('resetPasswordOverlay').classList.add('active');
             } else if (event === 'SIGNED_IN' && session?.user) {
-                if (document.getElementById('resetPasswordOverlay').classList.contains('active')) return;
+                if (isRecoveryMode) return;
                 window.location.href = '/dashboard.html';
             } else if (event === 'SIGNED_OUT') {
+                isRecoveryMode = false;
                 currentUser = null;
                 document.getElementById('authButtons').style.display = 'flex';
                 document.getElementById('userMenu').style.display = 'none';
