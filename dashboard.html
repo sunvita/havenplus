@@ -178,6 +178,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
 .form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text); transition: border-color .2s; outline: none; box-sizing: border-box; }
 .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--orange); }
+.form-input:disabled, .form-select:disabled { background: #f0f1f3; color: #999; cursor: not-allowed; border-style: dashed; }
 .form-textarea { resize: vertical; min-height: 80px; }
 .form-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; width: 100%; box-sizing: border-box; }
 .form-row-half { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; box-sizing: border-box; }
@@ -216,6 +217,52 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .toast { position: fixed; bottom: 1.6rem; right: 1.6rem; z-index: 950; background: var(--navy); color: white; font-size: 13px; font-weight: 500; padding: 11px 18px; border-radius: 11px; max-width: 300px; transform: translateY(60px); opacity: 0; transition: all .28s cubic-bezier(.22,1,.36,1); pointer-events: none; }
 .toast.show { transform: translateY(0); opacity: 1; }
 .toast.err { background: #b91c1c; }
+
+/* ── Property Hub Cards ────────────────────────────────── */
+.prop-hub-card { background: var(--card); border-radius: 16px; border: 2px solid var(--border); margin-bottom: 14px; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.prop-hub-card:hover { border-color: #ccc; }
+.prop-hub-card.expanded { border-color: var(--orange); box-shadow: 0 4px 20px rgba(255,107,53,.1); }
+.prop-hub-summary { padding: 20px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+@media (max-width: 600px) { .prop-hub-summary { padding: 16px 18px; flex-direction: column; } }
+.prop-hub-left { flex: 1; min-width: 0; }
+.prop-hub-addr { font-size: 15px; font-weight: 800; color: var(--navy); margin-bottom: 3px; }
+.prop-hub-meta { font-size: 13px; color: var(--text-light); display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.prop-hub-meta strong { color: var(--navy); font-weight: 700; }
+.prop-hub-plan-pill { font-size: 11px; font-weight: 900; letter-spacing: .5px; padding: 3px 10px; border-radius: 20px; }
+.pill-active { background: var(--green-bg); color: var(--green-txt); }
+.pill-none { background: #fff3e0; color: var(--orange); }
+.prop-hub-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.prop-hub-chevron { width: 20px; height: 20px; color: var(--text-light); transition: transform .25s; flex-shrink: 0; }
+.prop-hub-card.expanded .prop-hub-chevron { transform: rotate(180deg); }
+.prop-hub-detail { display: none; padding: 0 24px 24px; }
+@media (max-width: 600px) { .prop-hub-detail { padding: 0 18px 20px; } }
+.prop-hub-card.expanded .prop-hub-detail { display: block; }
+.prop-hub-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+
+/* Schedule timeline */
+.sched-timeline { display: flex; gap: 0; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+.sched-dot { display: flex; flex-direction: column; align-items: center; min-width: 52px; }
+.sched-dot-circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); background: white; }
+.sched-dot-circle.done { background: var(--success); border-color: var(--success); }
+.sched-dot-circle.next { background: var(--orange); border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255,107,53,.15); }
+.sched-dot-circle.future { background: white; border-color: var(--border); }
+.sched-dot-label { font-size: 11px; font-weight: 600; color: var(--text-light); margin-top: 4px; }
+.sched-dot-circle.next + .sched-dot-label, .sched-dot.next .sched-dot-label { color: var(--orange); font-weight: 700; }
+.sched-line { flex: 1; height: 2px; background: var(--border); min-width: 12px; margin-top: -16px; }
+.sched-line.done { background: var(--success); }
+
+/* Start month selector */
+.start-month-card { background: #fff8f0; border: 2px dashed var(--orange); border-radius: 14px; padding: 20px 24px; margin-bottom: 16px; }
+.start-month-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.start-month-desc { font-size: 13px; color: var(--text-light); margin-bottom: 14px; line-height: 1.5; }
+.start-month-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.start-month-btn { padding: 8px 18px; border: 2px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 700; background: white; color: var(--navy); cursor: pointer; font-family: inherit; transition: all .15s; }
+.start-month-btn:hover { border-color: var(--orange); color: var(--orange); }
+.start-month-btn.selected { border-color: var(--orange); background: var(--orange); color: white; }
+
+/* No-plan property card */
+.prop-hub-noplan { padding: 16px 24px 20px; background: #fafafa; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.prop-hub-noplan-text { font-size: 13px; color: var(--text-light); }
 </style>
 </head>
 <body>
@@ -311,79 +358,33 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
   <!-- ── STATE B: ACTIVE SUBSCRIPTION ─────────────── -->
   <div id="stateActive">
-    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    <!-- Overview stats -->
+    <div class="stat-grid" id="overviewStats">
       <div class="stat-card hl">
-        <div class="stat-label">Current Plan</div>
-        <div class="stat-value" id="statPlanName">—</div>
-        <div class="stat-sub" id="statPlanPrice"></div>
-        <div class="stat-badge">Active</div>
+        <div class="stat-label">Properties</div>
+        <div class="stat-value" id="ovPropCount">0</div>
+        <div class="stat-sub" id="ovPropSub">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Plan End Date</div>
-        <div class="stat-value" id="statRenewal">—</div>
-        <div class="stat-sub">Auto-renews monthly</div>
+        <div class="stat-label">Cleaning Hrs</div>
+        <div class="stat-value" id="ovCleanRem">0</div>
+        <div class="stat-sub" id="ovCleanSub">total remaining</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Cleaning Hrs Left</div>
-        <div class="stat-value" id="statCleanRem">0</div>
-        <div class="stat-sub" id="statCleanBreakdown">of annual allocation</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Service Hrs Left</div>
-        <div class="stat-value" id="statSHTotal">0</div>
-        <div class="stat-sub" id="statSHBreakdown">voucher + purchased</div>
+        <div class="stat-label">Service Hrs</div>
+        <div class="stat-value" id="ovSHRem">0</div>
+        <div class="stat-sub" id="ovSHSub">voucher + purchased</div>
       </div>
     </div>
 
     <div class="action-row">
       <a href="plans.html?mode=sh" class="btn-action btn-primary">+ Add Service Hours</a>
-      <button class="btn-action btn-secondary" onclick="showToast('Coming soon — we\'ll notify you when upgrades are available.')">Upgrade Plan</button>
     </div>
 
-    <div class="info-section">
-      <div class="info-title">
-        📋 Plan Details
-        <span class="plan-active-pill" id="pdActivePill">Active</span>
-      </div>
-      <div class="pd-grid">
-        <div><div class="pd-item-label">Plan</div><div class="pd-item-val" id="pdName">—</div></div>
-        <div><div class="pd-item-label">Cleaning visits / yr</div><div class="pd-item-val" id="pdVisits">—</div></div>
-        <div><div class="pd-item-label">Cleaning hrs / yr</div><div class="pd-item-val" id="pdHours">—</div></div>
-        <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
-        <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
-        <div><div class="pd-item-label">SH vouchers / yr</div><div class="pd-item-val" id="pdVouchers">—</div></div>
-      </div>
-    </div>
+    <!-- Property hub cards rendered here -->
+    <div id="propertyHubList"></div>
 
-    <div class="info-section">
-      <div class="info-title">⏱ Hour Balance</div>
-      <div class="sh-bal-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="sh-bal-item">
-          <div class="sh-bal-item-label">🧹 Cleaning hrs remaining</div>
-          <div class="sh-bal-item-val"><span id="shBalCleanRem">0</span><span class="u">hrs</span></div>
-          <div style="font-size:11px;color:var(--text-light);margin-top:4px"><span id="shBalCleanUsed">0</span> used of <span id="shBalCleanTotal">0</span> total</div>
-        </div>
-        <div class="sh-bal-item">
-          <div class="sh-bal-item-label">🔧 SH vouchers remaining</div>
-          <div class="sh-bal-item-val"><span id="shBalVouchRem">0</span><span class="u">hrs</span></div>
-          <div style="font-size:11px;color:var(--text-light);margin-top:4px"><span id="shBalVouchUsed">0</span> used this year</div>
-        </div>
-        <div class="sh-bal-item">
-          <div class="sh-bal-item-label">💳 SH purchased bundles</div>
-          <div class="sh-bal-item-val"><span id="shBalPurchased">0</span><span class="u">hrs</span></div>
-          <div style="font-size:11px;color:var(--text-light);margin-top:4px">No expiry</div>
-        </div>
-      </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text-light);background:#f8f9fa;border-radius:8px;padding:10px 14px">
-        💡 <strong>Conversion:</strong> 1 Service Hour = 1.5 Cleaning Hours — contact us to convert.
-      </div>
-    </div>
-
-    <div class="info-section" id="propInfoActive" style="display:none">
-      <div class="info-title">🏠 My Properties</div>
-      <div id="propertyListActive"></div>
-      <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
-    </div>
+    <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
   </div>
 
   <!-- ── STATE C: SH ONLY ──────────────────────────── -->
@@ -427,6 +428,9 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <div class="form-error" id="propError"></div>
       <div class="form-success" id="propSuccess"></div>
       <input type="hidden" id="propEditId">
+      <div id="propLockHint" style="display:none;background:#fff8f0;border:1px solid #fde0c0;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92600a;line-height:1.5;">
+        🔒 Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>.<br>You can update property manager/key holder and access instructions below.
+      </div>
       <div class="form-group">
         <label class="form-label">Address *</label>
         <input type="text" class="form-input" id="propAddress" placeholder="Start typing your address..." autocomplete="off">
@@ -454,10 +458,10 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
           <option value="other">Other</option>
         </select>
       </div>
-      <div class="form-row-half">
+      <div class="form-row-half" id="bedroomBathroomRow">
         <div class="form-group">
           <label class="form-label">Bedrooms</label>
-          <div class="spinner-wrap">
+          <div class="spinner-wrap" id="spinBedrooms">
             <button type="button" class="spinner-btn" onclick="spinValue('propBedrooms',-1)">−</button>
             <input type="text" class="spinner-value" id="propBedrooms" value="0" readonly>
             <button type="button" class="spinner-btn" onclick="spinValue('propBedrooms',1)">+</button>
@@ -465,7 +469,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         </div>
         <div class="form-group">
           <label class="form-label">Bathrooms</label>
-          <div class="spinner-wrap">
+          <div class="spinner-wrap" id="spinBathrooms">
             <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',-1)">−</button>
             <input type="text" class="spinner-value" id="propBathrooms" value="0" readonly>
             <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',1)">+</button>
@@ -473,15 +477,24 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">Property Manager or Key Holder</label>
+        <div class="form-row-half">
+          <div class="form-group" style="margin-bottom:0">
+            <input type="text" class="form-input" id="propKeyName"
+              placeholder="Name (e.g. John Smith, ABC Realty)">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <input type="text" class="form-input" id="propKeyContact"
+              placeholder="Phone or email">
+          </div>
+        </div>
+        <div class="form-hint">Who holds the keys or manages the property? Leave blank if not applicable.</div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Access Instructions</label>
         <textarea class="form-textarea" id="propAccess"
           placeholder="e.g. Key under pot near front door, gate code 1234, lockbox on fence..."></textarea>
         <div class="form-hint">How should our team access the property? This information is securely stored.</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Key Holder (if applicable)</label>
-        <input type="text" class="form-input" id="propKeyHolder"
-          placeholder="e.g. Neighbour at unit 3, real estate agent name">
       </div>
       <button class="btn-submit" id="btnSaveProperty" onclick="saveProperty()">Save Property</button>
     </div>
@@ -603,13 +616,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('profileEmail').textContent = currentUser.email;
     document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
 
-    await loadDashboard();
-
-    // Fetch role from profiles table (graceful if table missing)
+    // Fetch role from profiles table BEFORE loading dashboard
     try {
       const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
       isAdmin = profile?.role === 'admin';
     } catch(e) { console.warn('profiles table not available:', e.message); }
+
+    await loadDashboard();
 
     document.getElementById('loadingScreen').classList.add('hide');
     document.getElementById('dashContent').style.display = 'block';
@@ -626,43 +639,27 @@ async function loadDashboard() {
   ['stateOnboard','stateActive','stateSHOnly'].forEach(id =>
     document.getElementById(id).classList.remove('show'));
 
-  // Fetch data — graceful fallback if tables don't exist yet
-  let sub = null, shBal = null;
+  let allSubs = [], shBal = null;
   allProperties = [];
 
   try {
-    const [subRes, shBalRes, propRes] = await Promise.all([
-      sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').maybeSingle().then(r => r, () => ({ data: null })),
+    const [subsRes, shBalRes, propRes] = await Promise.all([
+      sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').then(r => r, () => ({ data: [] })),
       sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle().then(r => r, () => ({ data: null })),
       sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at').then(r => r, () => ({ data: [] })),
     ]);
-    sub           = subRes?.data || null;
+    allSubs       = subsRes?.data || [];
     shBal         = shBalRes?.data || null;
     allProperties = propRes?.data || [];
   } catch(e) {
     console.warn('loadDashboard query error:', e.message);
   }
 
-  hasActiveSub = !!sub;
-
-  // plan key: use 'plan' if set, fall back to 'plan_type'
-  const planKey = sub ? (sub.plan_type || '') : '';
-
-  // Cleaning hours (from subscription)
-  const cleanTotal     = sub ? (sub.cleaning_hours_total || 0) : 0;
-  const cleanUsed      = sub ? (sub.cleaning_hours_used  || 0) : 0;
-  const cleanRemaining = cleanTotal - cleanUsed;
-
-  // SH vouchers (from subscription)
-  const shVoucherTotal = sub ? (sub.sh_hours_total || sub.voucher_sh_total || 0) : 0;
-  const shVoucherUsed  = sub ? (sub.sh_hours_used  || 0) : 0;
-  const shVoucherRem   = shVoucherTotal - shVoucherUsed;
-
-  // SH purchased bundles (from sh_balance table)
+  hasActiveSub = allSubs.length > 0;
   const shPurchasedRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
 
-  if (sub) {
-    showStateActive(sub, planKey, cleanTotal, cleanUsed, cleanRemaining, shVoucherTotal, shVoucherUsed, shVoucherRem, shPurchasedRem);
+  if (hasActiveSub) {
+    showStateActive(allSubs, shBal, shPurchasedRem);
   } else if (shPurchasedRem > 0) {
     showStateSHOnly(shPurchasedRem);
   } else {
@@ -696,42 +693,201 @@ function showStateOnboard() {
 }
 
 /* ── State B ─────────────────────────────────────────── */
-function showStateActive(sub, planKey, cleanTotal, cleanUsed, cleanRem, shVoucherTotal, shVoucherUsed, shVoucherRem, shPurchasedRem) {
-  document.getElementById('welcomeSub').textContent = 'Your property is in good hands.';
+const PLAN_VISITS = { essential: 4, smart: 6, premium: 12 };
+const PLAN_INTERVAL = { essential: 3, smart: 2, premium: 1 }; // months between visits
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function showStateActive(allSubs, shBal, shPurchasedRem) {
+  document.getElementById('welcomeSub').textContent = allProperties.length > 1
+    ? `Managing ${allProperties.length} properties with Haven Plus.`
+    : 'Your property is in good hands.';
   document.getElementById('stateActive').classList.add('show');
-  const m = PLAN_META[planKey] || {};
-  const renewal = sub.end_date
-    ? new Date(sub.end_date).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})
-    : sub.current_period_end
-    ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})
-    : '—';
 
-  // Stat cards
-  setText('statPlanName', m.name || sub.plan_type);
-  setText('statPlanPrice', m.price || '');
-  setText('statRenewal', renewal);
-  setText('statCleanRem', cleanRem);
-  setText('statCleanBreakdown', `${cleanUsed} used · ${cleanTotal} total`);
-  setText('statSHTotal', shVoucherRem + shPurchasedRem);
-  setText('statSHBreakdown', `${shVoucherRem} voucher + ${shPurchasedRem} purchased`);
+  // Build property→subscription map
+  const subByProp = {};
+  allSubs.forEach(s => { if (s.property_id) subByProp[s.property_id] = s; });
+  // If no property_id set (legacy), assign first sub to first property
+  if (allSubs.length > 0 && !allSubs[0].property_id && allProperties.length > 0) {
+    subByProp[allProperties[0].id] = allSubs[0];
+  }
 
-  // Plan detail
-  setText('pdName', m.name || sub.plan_type);
-  setText('pdVisits', m.visits || '—');
-  setText('pdHours', m.hours || '—');
-  setText('pdVouchers', m.vouchers || '—');
+  // Calculate totals for overview
+  let totalCleanRem = 0, totalCleanTotal = 0;
+  let totalSHVouchRem = 0;
+  let activePlanCount = 0;
+  allSubs.forEach(s => {
+    const ct = s.cleaning_hours_total || 0;
+    const cu = s.cleaning_hours_used || 0;
+    totalCleanTotal += ct;
+    totalCleanRem += (ct - cu);
+    const svt = s.sh_hours_total || s.voucher_sh_total || 0;
+    const svu = s.sh_hours_used || 0;
+    totalSHVouchRem += (svt - svu);
+    activePlanCount++;
+  });
 
-  // Hour balance detail
-  setText('shBalCleanRem',   cleanRem);
-  setText('shBalCleanUsed',  cleanUsed);
-  setText('shBalCleanTotal', cleanTotal);
-  setText('shBalVouchRem',   shVoucherRem);
-  setText('shBalVouchUsed',  shVoucherUsed);
-  setText('shBalPurchased',  shPurchasedRem);
+  // Overview stats
+  const planWord = activePlanCount === 1 ? 'plan' : 'plans';
+  setText('ovPropCount', allProperties.length);
+  setText('ovPropSub', `${activePlanCount} active ${planWord}`);
+  setText('ovCleanRem', totalCleanRem);
+  setText('ovCleanSub', `of ${totalCleanTotal} total hrs`);
+  setText('ovSHRem', totalSHVouchRem + shPurchasedRem);
+  setText('ovSHSub', `${totalSHVouchRem} voucher + ${shPurchasedRem} purchased`);
 
-  if (allProperties.length > 0) {
-    renderPropertyList('propertyListActive');
-    document.getElementById('propInfoActive').style.display = 'block';
+  // Render property hub cards
+  const hub = document.getElementById('propertyHubList');
+  hub.innerHTML = allProperties.map(p => {
+    const sub = subByProp[p.id];
+    const planKey = sub ? (sub.plan_type || '') : '';
+    const m = PLAN_META[planKey] || {};
+    const hasSub = !!sub;
+
+    // Cleaning hours for this property
+    const cleanT = sub ? (sub.cleaning_hours_total || 0) : 0;
+    const cleanU = sub ? (sub.cleaning_hours_used || 0) : 0;
+    const cleanR = cleanT - cleanU;
+    const shVT = sub ? (sub.sh_hours_total || sub.voucher_sh_total || 0) : 0;
+    const shVU = sub ? (sub.sh_hours_used || 0) : 0;
+    const shVR = shVT - shVU;
+
+    // Next visit & schedule
+    const cleaningStartMonth = sub ? sub.cleaning_start_month : null;
+    let scheduleHTML = '';
+    let nextVisitText = '';
+
+    if (hasSub && cleaningStartMonth) {
+      const startDate = new Date(cleaningStartMonth + '-01');
+      const startM = startDate.getMonth();
+      const interval = PLAN_INTERVAL[planKey] || 2;
+      const visits = PLAN_VISITS[planKey] || 6;
+      const now = new Date();
+      const nowM = now.getFullYear() * 12 + now.getMonth();
+      let dots = [];
+      let foundNext = false;
+      for (let i = 0; i < visits; i++) {
+        const visitM = startM + (i * interval);
+        const visitMonth = visitM % 12;
+        const visitYear = startDate.getFullYear() + Math.floor(visitM / 12);
+        const visitAbs = visitYear * 12 + visitMonth;
+        let cls = 'future';
+        if (visitAbs < nowM) cls = 'done';
+        else if (!foundNext) { cls = 'next'; foundNext = true; nextVisitText = `${MONTH_NAMES[visitMonth]} ${visitYear}`; }
+        dots.push({ label: MONTH_NAMES[visitMonth], cls });
+      }
+      scheduleHTML = `
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">📅 Cleaning Schedule</div>
+          <div class="sched-timeline">
+            ${dots.map((d, i) => `
+              <div class="sched-dot ${d.cls}">
+                <div class="sched-dot-circle ${d.cls}"></div>
+                <div class="sched-dot-label">${d.label}</div>
+              </div>
+              ${i < dots.length - 1 ? `<div class="sched-line ${d.cls === 'done' ? 'done' : ''}"></div>` : ''}
+            `).join('')}
+          </div>
+        </div>`;
+    } else if (hasSub && !cleaningStartMonth) {
+      scheduleHTML = buildStartMonthSelector(p.id, sub.id);
+    }
+
+    if (!nextVisitText && hasSub) nextVisitText = cleaningStartMonth ? '—' : 'Set start month';
+
+    // Summary line
+    const summaryMeta = hasSub
+      ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
+         <span>🧹 ${cleanR}/${cleanT}h</span>
+         <span>🔧 ${shVR} SH</span>
+         ${nextVisitText ? `<span>📅 Next: <strong>${nextVisitText}</strong></span>` : ''}`
+      : `<span class="prop-hub-plan-pill pill-none">No plan</span>`;
+
+    // PM / Key Holder info
+    const keyName = p.key_holder_name || p.key_holder || '';
+    const keyContact = p.key_holder_contact || '';
+    const keyLine = keyName ? `<div style="font-size:13px;color:var(--text-light)">🔑 ${keyName}${keyContact ? ' (' + keyContact + ')' : ''}</div>` : '';
+    const accessLine = p.access_instructions ? `<div style="font-size:13px;color:var(--text-light);margin-top:4px">🚪 ${p.access_instructions}</div>` : '';
+
+    // Detail section
+    const detailInner = hasSub ? `
+      <div class="prop-hub-divider"></div>
+      ${scheduleHTML}
+      <div class="pd-grid" style="margin-bottom:16px">
+        <div><div class="pd-item-label">Plan</div><div class="pd-item-val">${m.name || planKey}</div></div>
+        <div><div class="pd-item-label">Visits / yr</div><div class="pd-item-val">${m.visits || '—'}</div></div>
+        <div><div class="pd-item-label">Cleaning hrs</div><div class="pd-item-val">${cleanU} used / ${cleanT}</div></div>
+        <div><div class="pd-item-label">SH vouchers</div><div class="pd-item-val">${shVU} used / ${shVT}</div></div>
+        <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
+        <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
+      </div>
+      ${keyLine}${accessLine}
+      ${keyLine || accessLine ? '<div style="margin-bottom:16px"></div>' : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-action btn-secondary" onclick="event.stopPropagation();showToast('Coming soon — we\\'ll notify you when upgrades are available.')">Upgrade Plan</button>
+        <button class="btn-action btn-secondary" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>
+      </div>
+    ` : `
+      <div class="prop-hub-noplan">
+        <div class="prop-hub-noplan-text">No subscription plan for this property yet.</div>
+        <a href="plans.html" class="btn-action btn-primary" onclick="event.stopPropagation();sessionStorage.setItem('hp_selected_property','${p.id}')">Choose a Plan</a>
+      </div>
+    `;
+
+    return `
+      <div class="prop-hub-card" id="phub_${p.id}" onclick="togglePropHub('${p.id}')">
+        <div class="prop-hub-summary">
+          <div class="prop-hub-left">
+            <div class="prop-hub-addr">${p.address}, ${p.suburb} ${p.postcode}</div>
+            <div class="prop-hub-meta">${summaryMeta}</div>
+          </div>
+          <div class="prop-hub-right">
+            ${hasSub ? `<button class="btn-edit-prop" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>` : ''}
+            <svg class="prop-hub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="prop-hub-detail">${detailInner}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function togglePropHub(propId) {
+  const card = document.getElementById('phub_' + propId);
+  if (card) card.classList.toggle('expanded');
+}
+
+function buildStartMonthSelector(propertyId, subId) {
+  const now = new Date();
+  let options = '';
+  for (let i = 0; i <= 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+    options += `<button class="start-month-btn" onclick="event.stopPropagation();selectStartMonth('${subId}','${val}',this)">${label}</button>`;
+  }
+  return `
+    <div class="start-month-card">
+      <div class="start-month-title">📅 When would you like regular cleaning to begin?</div>
+      <div class="start-month-desc">Select your preferred start month. Your cleaning schedule will be automatically calculated based on your plan.</div>
+      <div class="start-month-options">${options}</div>
+    </div>
+  `;
+}
+
+async function selectStartMonth(subId, monthVal, btnEl) {
+  // Visual feedback
+  btnEl.closest('.start-month-options').querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  btnEl.textContent = 'Saving…';
+
+  try {
+    const { error } = await sb.from('subscriptions').update({ cleaning_start_month: monthVal + '-01' }).eq('id', subId);
+    if (error) throw error;
+    showToast('Cleaning start month saved!');
+    setTimeout(() => loadDashboard(), 600);
+  } catch(e) {
+    showToast('Failed to save. Please try again.', true);
+    btnEl.textContent = btnEl.dataset.label || 'Retry';
   }
 }
 
@@ -751,18 +907,25 @@ function showStateSHOnly(shPurchasedRem) {
 function renderPropertyList(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  // Edit allowed: admin always | user only before subscription
-  const canEdit = isAdmin || !hasActiveSub;
   container.innerHTML = allProperties.map(p => {
     const notes = [];
     if (p.notes) notes.push(p.notes);
     if (p.access_instructions) notes.push(`Access: ${p.access_instructions}`);
-    const editBtn = canEdit
-      ? `<button class="btn-edit-prop" onclick="openEditPropertyModal('${p.id}')">Edit</button>`
-      : `<span class="btn-edit-prop locked" title="Contact support to update property details">Locked${isAdmin ? '' : ' 🔒'}</span>`;
-    const deleteBtn = isAdmin
-      ? `<button class="btn-delete-prop" onclick="deleteProperty('${p.id}', '${p.address}')">Delete</button>`
-      : '';
+    if (p.key_holder_name || p.key_holder) {
+      const kn = p.key_holder_name || p.key_holder || '';
+      const kc = p.key_holder_contact ? ` (${p.key_holder_contact})` : '';
+      notes.push(`PM/Key: ${kn}${kc}`);
+    }
+    // Admin: full edit + delete | User+active sub: update details only | User+no sub: full edit
+    let editBtn, deleteBtn = '';
+    if (isAdmin) {
+      editBtn = `<button class="btn-edit-prop" onclick="openEditPropertyModal('${p.id}')">Edit</button>`;
+      deleteBtn = `<button class="btn-delete-prop" onclick="deleteProperty('${p.id}', '${p.address}')">Delete</button>`;
+    } else if (hasActiveSub) {
+      editBtn = `<button class="btn-edit-prop" onclick="openEditPropertyModal('${p.id}')">Update Details</button>`;
+    } else {
+      editBtn = `<button class="btn-edit-prop" onclick="openEditPropertyModal('${p.id}')">Edit</button>`;
+    }
     return `
       <div class="prop-card">
         <div class="prop-card-left">
@@ -854,14 +1017,35 @@ function openEditPropertyModal(propId) {
   if (!p) return;
   resetPropertyForm();
   document.getElementById('propEditId').value = propId;
-  document.getElementById('propModalTitle').textContent = 'Edit Property';
-  document.getElementById('btnSaveProperty').textContent = 'Update Property';
+
+  // Determine if structure fields should be locked (non-admin + active subscription)
+  const lockStructure = !isAdmin && hasActiveSub;
+
+  document.getElementById('propModalTitle').textContent = lockStructure ? 'Update Property Details' : 'Edit Property';
+  document.getElementById('btnSaveProperty').textContent = lockStructure ? 'Update Details' : 'Update Property';
+
   document.getElementById('propAddress').value  = p.address || '';
   document.getElementById('propSuburb').value   = p.suburb  || '';
   document.getElementById('propPostcode').value = p.postcode|| '';
   document.getElementById('propType').value     = p.property_type || '';
   document.getElementById('propAccess').value   = p.access_instructions || '';
-  document.getElementById('propKeyHolder').value= p.key_holder || '';
+  document.getElementById('propKeyName').value  = p.key_holder_name || p.key_holder || '';
+  document.getElementById('propKeyContact').value = p.key_holder_contact || '';
+
+  // Lock address, type, bedrooms/bathrooms
+  document.getElementById('propAddress').disabled  = lockStructure;
+  document.getElementById('propSuburb').disabled   = lockStructure;
+  document.getElementById('propPostcode').disabled = lockStructure;
+  document.getElementById('propType').disabled     = lockStructure;
+
+  // Lock spinner buttons for bedrooms/bathrooms
+  document.querySelectorAll('#spinBedrooms .spinner-btn, #spinBathrooms .spinner-btn')
+    .forEach(btn => { btn.disabled = lockStructure; if (lockStructure) btn.style.opacity = '.4'; else btn.style.opacity = ''; });
+
+  // Show hint if locked
+  const lockHint = document.getElementById('propLockHint');
+  if (lockHint) lockHint.style.display = lockStructure ? 'block' : 'none';
+
   // Extract bedrooms/bathrooms from notes
   if (p.notes) {
     const bedMatch  = p.notes.match(/Bedrooms:\s*(\d+)/);
@@ -874,14 +1058,20 @@ function openEditPropertyModal(propId) {
 }
 
 function resetPropertyForm() {
-  ['propAddress','propSuburb','propPostcode','propAccess','propKeyHolder']
-    .forEach(id => document.getElementById(id).value = '');
-  document.getElementById('propType').value = '';
+  ['propAddress','propSuburb','propPostcode','propAccess','propKeyName','propKeyContact']
+    .forEach(id => { const el = document.getElementById(id); el.value = ''; el.disabled = false; });
+  const typeEl = document.getElementById('propType');
+  typeEl.value = ''; typeEl.disabled = false;
   document.getElementById('propBedrooms').value = '0';
   document.getElementById('propBathrooms').value = '0';
   document.getElementById('suburbAuto').textContent = '';
   document.getElementById('propError').style.display = 'none';
   document.getElementById('propSuccess').style.display = 'none';
+  const lockHint = document.getElementById('propLockHint');
+  if (lockHint) lockHint.style.display = 'none';
+  // Reset spinner buttons
+  document.querySelectorAll('#spinBedrooms .spinner-btn, #spinBathrooms .spinner-btn')
+    .forEach(btn => { btn.disabled = false; btn.style.opacity = ''; });
 }
 
 function closePropertyModal() { document.getElementById('propertyModal').classList.remove('active'); }
@@ -889,6 +1079,7 @@ function closePropertyModal() { document.getElementById('propertyModal').classLi
 /* ── Save / Update Property ──────────────────────────── */
 async function saveProperty() {
   const editId  = document.getElementById('propEditId').value;
+  const lockStructure = !isAdmin && hasActiveSub && editId;
   const address = document.getElementById('propAddress').value.trim();
   const suburb  = document.getElementById('propSuburb').value.trim();
   const pc      = document.getElementById('propPostcode').value.trim();
@@ -896,12 +1087,16 @@ async function saveProperty() {
   const beds    = parseInt(document.getElementById('propBedrooms').value) || 0;
   const baths   = parseInt(document.getElementById('propBathrooms').value) || 0;
   const access  = document.getElementById('propAccess').value.trim();
-  const key     = document.getElementById('propKeyHolder').value.trim();
+  const keyName = document.getElementById('propKeyName').value.trim();
+  const keyContact = document.getElementById('propKeyContact').value.trim();
 
-  if (!address || !suburb || !pc || !type)
-    return showPropMsg('Please fill in all required fields (*).', 'error');
-  if (!/^\d{4}$/.test(pc))
-    return showPropMsg('Please enter a valid 4-digit postcode.', 'error');
+  // Validate address fields only if not locked
+  if (!lockStructure) {
+    if (!address || !suburb || !pc || !type)
+      return showPropMsg('Please fill in all required fields (*).', 'error');
+    if (!/^\d{4}$/.test(pc))
+      return showPropMsg('Please enter a valid 4-digit postcode.', 'error');
+  }
 
   const btn = document.getElementById('btnSaveProperty');
   btn.disabled = true;
@@ -910,12 +1105,24 @@ async function saveProperty() {
   try {
     const notes = [beds > 0 ? `Bedrooms: ${beds}` : '', baths > 0 ? `Bathrooms: ${baths}` : '']
       .filter(Boolean).join(', ');
-    const payload = {
-      address, suburb, postcode: pc, property_type: type,
-      access_instructions: access || null,
-      key_holder: key || null,
-      notes: notes || null,
-    };
+
+    let payload;
+    if (lockStructure) {
+      // Only update editable fields (PM/key holder + access)
+      payload = {
+        access_instructions: access || null,
+        key_holder_name: keyName || null,
+        key_holder_contact: keyContact || null,
+      };
+    } else {
+      payload = {
+        address, suburb, postcode: pc, property_type: type,
+        access_instructions: access || null,
+        key_holder_name: keyName || null,
+        key_holder_contact: keyContact || null,
+        notes: notes || null,
+      };
+    }
     let error;
     if (editId) {
       ({ error } = await sb.from('properties').update(payload).eq('id', editId).eq('user_id', currentUser.id));
