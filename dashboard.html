@@ -567,14 +567,14 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
     <div class="modal-body">
       <p style="font-size:14px;color:#555;margin:0 0 16px;">To delete your account and all associated data, please send a request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
       <p style="font-size:14px;color:#555;margin:0 0 24px;">Any active subscriptions must be cancelled before account deletion. Unused purchased Service Hours will be refunded at 70% of face value.</p>
-      <a href="/cdn-cgi/l/email-protection#264e4f664e47504348564a5355454754430845494b195553444c4345521b674545495348520662434a43524f49480674435753435552004449425f1b764a434755430642434a435243064b5f066e4750434806764a5355064745454953485208066b5f065443414f55524354434206434b474f4a064f551c06" class="btn-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
+      <a id="deletionEmailLink" class="btn-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
@@ -590,25 +590,35 @@ let isAdmin = false, hasActiveSub = false;
 
 /* ── Init ─────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = 'index.html'; return; }
-  currentUser = session.user;
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUser = session.user;
 
-  const meta = currentUser.user_metadata || {};
-  const name = meta.full_name || currentUser.email.split('@')[0];
-  document.getElementById('dashUserName').textContent = name;
-  document.getElementById('profileName').textContent = name;
-  document.getElementById('profileEmail').textContent = currentUser.email;
-  document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || currentUser.email.split('@')[0];
+    document.getElementById('dashUserName').textContent = name;
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('profileEmail').textContent = currentUser.email;
+    document.getElementById('welcomeTitle').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
 
-  await loadDashboard();
+    await loadDashboard();
 
-  // Fetch role from profiles table
-  const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
-  isAdmin = profile?.role === 'admin';
-  document.getElementById('loadingScreen').classList.add('hide');
-  document.getElementById('dashContent').style.display = 'block';
+    // Fetch role from profiles table (graceful if table missing)
+    try {
+      const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+      isAdmin = profile?.role === 'admin';
+    } catch(e) { console.warn('profiles table not available:', e.message); }
+
+    document.getElementById('loadingScreen').classList.add('hide');
+    document.getElementById('dashContent').style.display = 'block';
+  } catch(e) {
+    console.error('Dashboard init error:', e);
+    document.getElementById('loadingScreen').classList.add('hide');
+    document.getElementById('dashContent').style.display = 'block';
+    showToast('Failed to load some data. Please refresh.', true);
+  }
 });
 
 /* ── Load & route state ──────────────────────────────── */
@@ -616,16 +626,24 @@ async function loadDashboard() {
   ['stateOnboard','stateActive','stateSHOnly'].forEach(id =>
     document.getElementById(id).classList.remove('show'));
 
-  const [subRes, shBalRes, propRes] = await Promise.all([
-    sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').maybeSingle(),
-    sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle(),
-    sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at'),
-  ]);
+  // Fetch data — graceful fallback if tables don't exist yet
+  let sub = null, shBal = null;
+  allProperties = [];
 
-  const sub         = subRes.data;
-  const shBal       = shBalRes.data;
-  allProperties     = propRes.data || [];
-  hasActiveSub      = !!sub;
+  try {
+    const [subRes, shBalRes, propRes] = await Promise.all([
+      sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').maybeSingle().catch(() => ({ data: null })),
+      sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle().catch(() => ({ data: null })),
+      sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at').catch(() => ({ data: [] })),
+    ]);
+    sub           = subRes?.data || null;
+    shBal         = shBalRes?.data || null;
+    allProperties = propRes?.data || [];
+  } catch(e) {
+    console.warn('loadDashboard query error:', e.message);
+  }
+
+  hasActiveSub = !!sub;
 
   // plan key: use 'plan' if set, fall back to 'plan_type'
   const planKey = sub ? (sub.plan_type || '') : '';
@@ -1088,7 +1106,7 @@ async function loadSubscriptionModal() {
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e0e4ea;">Contract end date: <strong>${contractEnd}</strong></div>
         </div>
       </div>
-      <p style="font-size:12px;color:#999;margin:0;">To upgrade or cancel your subscription, please contact us at <a href="mailto:hi@havenpluscare.com" style="color:var(--navy);">hi@havenpluscare.com</a>.</p>
+      <p style="font-size:12px;color:#999;margin:0;">To upgrade or cancel your subscription, please contact us at <a href="#" onclick="window.location='mai'+'lto:'+'hi'+'@'+'havenpluscare.com';return false;" style="color:var(--navy);">hi&#64;havenpluscare.com</a>.</p>
     `;
   } catch(e) {
     body.innerHTML = '<p style="font-size:14px;color:#c0392b;">Failed to load subscription info.</p>';
@@ -1108,7 +1126,7 @@ async function openPortal() {
     if (error) throw new Error(error);
     window.open(url, '_blank');
   } catch(e) {
-    showToast('Payment portal unavailable. Please contact hi@havenpluscare.com');
+    showToast('Payment portal unavailable. Please contact hi'+'@'+'havenpluscare.com');
   }
 }
 
@@ -1121,4 +1139,40 @@ function showToast(msg, isErr = false) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast' + (isErr ? ' err' : '');
-  el.classList.add('show
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+/* ── Deletion email link (JS-built to avoid Cloudflare email obfuscation) ── */
+(function() {
+  const el = document.getElementById('deletionEmailLink');
+  if (el) {
+    const e = 'hi' + '@' + 'havenpluscare.com';
+    const s = 'Account Deletion Request';
+    const b = 'Hi Haven Plus,%0D%0A%0D%0AI would like to request the deletion of my account and all associated data.%0D%0A%0D%0ARegistered email: (please confirm)%0D%0A%0D%0AThank you.';
+    el.href = 'mai' + 'lto:' + e + '?subject=' + encodeURIComponent(s) + '&body=' + b;
+  }
+})();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closePropertyModal();
+    closePropSelectModal();
+    closePropConfirmModal();
+    closeProfileModal('password');
+    closeProfileModal('subscription');
+    closeProfileModal('delete');
+  }
+});
+
+/* ── Close profile dropdown on outside click ──────────── */
+document.addEventListener('click', e => {
+  const menu = document.getElementById('profileMenu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('profileTrigger').classList.remove('open');
+    document.getElementById('profileDropdown').classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
