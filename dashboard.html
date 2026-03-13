@@ -202,6 +202,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .spinner-wrap.locked .spinner-value { background: #f0f1f3; color: #999; }
 .spinner-wrap.locked .spinner-btn { background: #e8e9eb; color: #aaa; cursor: not-allowed; }
 
+/* Preference day chips */
+.pref-chip { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--navy); cursor: pointer; transition: all .15s; user-select: none; }
+.pref-chip:hover { border-color: var(--orange); }
+.pref-chip:has(input:checked) { border-color: var(--orange); background: #fff5ef; color: var(--orange); }
+.pref-chip input { display: none; }
+
 .form-error, .form-success { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; display: none; }
 .form-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 .form-success { background: #f0fdf4; color: var(--green-txt); border: 1px solid #bbf7d0; }
@@ -380,6 +386,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
     <div class="action-row">
       <a href="plans.html?mode=sh" class="btn-action btn-primary">+ Add Service Hours</a>
+      <button class="btn-action btn-secondary" onclick="openShRequestModal()">🔧 Job Request (SH)</button>
     </div>
 
     <!-- Property hub cards rendered here -->
@@ -403,6 +410,10 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
           <div class="sh-bal-item-val" style="font-size:16px;font-weight:700;color:var(--success)">$0 Always</div>
         </div>
       </div>
+    </div>
+    <div class="action-row" style="margin-bottom:20px">
+      <a href="plans.html?mode=sh" class="btn-action btn-primary">+ Add Service Hours</a>
+      <button class="btn-action btn-secondary" onclick="openShRequestModal()">🔧 Job Request (SH)</button>
     </div>
     <div class="nudge">
       <div class="nudge-title">Add regular cleaning to your plan</div>
@@ -497,6 +508,47 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
           placeholder="e.g. Key under pot near front door, gate code 1234, lockbox on fence..."></textarea>
         <div class="form-hint">How should our team access the property? This information is securely stored.</div>
       </div>
+
+      <!-- Cleaning Preferences -->
+      <div style="border-top:1px solid var(--border);margin:20px 0 18px;padding-top:18px">
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">🧹 Cleaning Visit Preferences <span style="font-size:11px;font-weight:400;color:var(--text-light)">(optional)</span></div>
+        <div class="form-hint" style="margin-bottom:14px">Helps us schedule visits without extra back-and-forth.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Day(s)</label>
+        <div id="prefDaysWrap" style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="pref-chip"><input type="checkbox" value="mon" class="pref-day-cb"> Mon</label>
+          <label class="pref-chip"><input type="checkbox" value="tue" class="pref-day-cb"> Tue</label>
+          <label class="pref-chip"><input type="checkbox" value="wed" class="pref-day-cb"> Wed</label>
+          <label class="pref-chip"><input type="checkbox" value="thu" class="pref-day-cb"> Thu</label>
+          <label class="pref-chip"><input type="checkbox" value="fri" class="pref-day-cb"> Fri</label>
+          <label class="pref-chip"><input type="checkbox" value="sat" class="pref-day-cb"> Sat</label>
+          <label class="pref-chip"><input type="checkbox" value="sun" class="pref-day-cb"> Sun</label>
+        </div>
+      </div>
+      <div class="form-row-half">
+        <div class="form-group">
+          <label class="form-label">Preferred Time</label>
+          <select class="form-select" id="propPrefTime">
+            <option value="">No preference</option>
+            <option value="morning">Morning (8 AM – 12 PM)</option>
+            <option value="afternoon">Afternoon (12 – 5 PM)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Presence Required?</label>
+          <select class="form-select" id="propPresence">
+            <option value="">No preference</option>
+            <option value="absent_ok">Visit OK when absent</option>
+            <option value="present_only">Only when I'm home</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Special Notes</label>
+        <input type="text" class="form-input" id="propCleanNotes" placeholder="e.g. Wednesday unavailable, morning only, pets at home...">
+      </div>
+
       <button class="btn-submit" id="btnSaveProperty" onclick="saveProperty()">Save Property</button>
     </div>
   </div>
@@ -582,6 +634,69 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <p style="font-size:14px;color:#555;margin:0 0 16px;">To delete your account and all associated data, please send a request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</p>
       <p style="font-size:14px;color:#555;margin:0 0 24px;">Any active subscriptions must be cancelled before account deletion. Unused purchased Service Hours will be refunded at 70% of face value.</p>
       <a id="deletionEmailLink" class="btn-submit" style="display:block;text-align:center;text-decoration:none;">Send Deletion Request</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SH Job Request Modal ══════════════════════════════ -->
+<div class="modal-overlay" id="shRequestModal" onclick="if(event.target===this)closeShRequestModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Job Request (SH)</div>
+      <button class="modal-close" onclick="closeShRequestModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-error" id="shReqError"></div>
+      <div class="form-success" id="shReqSuccess"></div>
+
+      <div class="form-group">
+        <label class="form-label">Property *</label>
+        <select class="form-select" id="shReqProperty"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select class="form-select" id="shReqCategory" onchange="updateShEstimate()">
+          <option value="">Select category</option>
+          <option value="minor_repair">Minor Repair</option>
+          <option value="simple_maintenance">Simple Maintenance</option>
+          <option value="electrical">Electrical</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="handyman">Handyman</option>
+          <option value="property_upkeep">Property Upkeep</option>
+          <option value="seasonal_care">Seasonal Care</option>
+          <option value="emergency">Emergency</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="emergencyNotice" style="display:none;background:#fff8f0;border:1px solid #fde0c0;border-radius:10px;padding:10px 14px;margin:-8px 0 16px;font-size:12px;color:#92600a;line-height:1.5;">
+        ⚠ <strong>Emergency surcharge applies.</strong> Same-day or after-hours emergency services are charged at 1.5× standard SH rate. Our team will confirm the estimate before work begins.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea class="form-textarea" id="shReqDesc" placeholder="Describe the issue or service needed..."></textarea>
+      </div>
+      <div class="form-row-half">
+        <div class="form-group">
+          <label class="form-label">Preferred Date</label>
+          <input type="date" class="form-input" id="shReqDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Urgency</label>
+          <select class="form-select" id="shReqUrgency" onchange="updateShEstimate()">
+            <option value="standard">Standard (24–48 hrs)</option>
+            <option value="same_day">Same Day (1.5× SH)</option>
+            <option value="after_hours">After Hours (2× SH)</option>
+          </select>
+        </div>
+      </div>
+      <div style="background:#f5f8fa;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--text-light)">Estimated SH cost</span>
+          <span style="font-size:18px;font-weight:900;color:var(--navy)" id="shReqEstimate">~1 SH</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px">Final cost confirmed after assessment. Surcharge may apply for urgency or complexity.</div>
+      </div>
+      <button class="btn-submit" id="btnSubmitShReq" onclick="submitShRequest()">Submit Request</button>
     </div>
   </div>
 </div>
@@ -1115,24 +1230,40 @@ function openEditPropertyModal(propId) {
   const lockHint = document.getElementById('propLockHint');
   if (lockHint) lockHint.style.display = lockStructure ? 'block' : 'none';
 
-  // Extract bedrooms/bathrooms from notes
-  if (p.notes) {
-    const bedMatch  = p.notes.match(/Bedrooms:\s*(\d+)/);
-    const bathMatch = p.notes.match(/Bathrooms:\s*(\d+)/);
-    if (bedMatch)  document.getElementById('propBedrooms').value  = bedMatch[1];
-    if (bathMatch) document.getElementById('propBathrooms').value = bathMatch[1];
+  // Load bedrooms/bathrooms from DB columns (fallback to notes for legacy data)
+  if (p.bedrooms) document.getElementById('propBedrooms').value = p.bedrooms;
+  else if (p.notes) { const m = p.notes.match(/Bedrooms:\s*(\d+)/); if (m) document.getElementById('propBedrooms').value = m[1]; }
+  if (p.bathrooms) document.getElementById('propBathrooms').value = p.bathrooms;
+  else if (p.notes) { const m = p.notes.match(/Bathrooms:\s*(\d+)/); if (m) document.getElementById('propBathrooms').value = m[1]; }
+
+  // Load cleaning preferences
+  // Preferred days (stored as comma-separated: "mon,wed,fri")
+  document.querySelectorAll('.pref-day-cb').forEach(cb => cb.checked = false);
+  if (p.pref_days) {
+    const days = p.pref_days.split(',');
+    days.forEach(d => {
+      const cb = document.querySelector(`.pref-day-cb[value="${d.trim()}"]`);
+      if (cb) cb.checked = true;
+    });
   }
+  document.getElementById('propPrefTime').value = p.pref_time || '';
+  document.getElementById('propPresence').value = p.pref_presence || '';
+  document.getElementById('propCleanNotes').value = p.pref_notes || '';
+
   document.getElementById('propertyModal').classList.add('active');
   if (!placesAC && window.google) initPlaces();
 }
 
 function resetPropertyForm() {
-  ['propAddress','propSuburb','propPostcode','propAccess','propKeyName','propKeyContact']
+  ['propAddress','propSuburb','propPostcode','propAccess','propKeyName','propKeyContact','propCleanNotes']
     .forEach(id => { const el = document.getElementById(id); el.value = ''; el.disabled = false; });
   const typeEl = document.getElementById('propType');
   typeEl.value = ''; typeEl.disabled = false;
   document.getElementById('propBedrooms').value = '0';
   document.getElementById('propBathrooms').value = '0';
+  document.querySelectorAll('.pref-day-cb').forEach(cb => cb.checked = false);
+  document.getElementById('propPrefTime').value = '';
+  document.getElementById('propPresence').value = '';
   document.getElementById('suburbAuto').textContent = '';
   document.getElementById('propError').style.display = 'none';
   document.getElementById('propSuccess').style.display = 'none';
@@ -1159,6 +1290,10 @@ async function saveProperty() {
   const access  = document.getElementById('propAccess').value.trim();
   const keyName = document.getElementById('propKeyName').value.trim();
   const keyContact = document.getElementById('propKeyContact').value.trim();
+  const prefDays = Array.from(document.querySelectorAll('.pref-day-cb:checked')).map(cb => cb.value).join(',');
+  const prefTime = document.getElementById('propPrefTime').value;
+  const prefPresence = document.getElementById('propPresence').value;
+  const prefNotes = document.getElementById('propCleanNotes').value.trim();
 
   // Validate address fields only if not locked
   if (!lockStructure) {
@@ -1173,24 +1308,31 @@ async function saveProperty() {
   btn.textContent = editId ? 'Updating…' : 'Saving…';
 
   try {
-    const notes = [beds > 0 ? `Bedrooms: ${beds}` : '', baths > 0 ? `Bathrooms: ${baths}` : '']
-      .filter(Boolean).join(', ');
-
     let payload;
     if (lockStructure) {
-      // Only update editable fields (PM/key holder + access)
+      // Only update editable fields (PM/key holder + access + cleaning prefs)
       payload = {
         access_instructions: access || null,
         key_holder_name: keyName || null,
         key_holder_contact: keyContact || null,
+        pref_days: prefDays || null,
+        pref_time: prefTime || null,
+        pref_presence: prefPresence || null,
+        pref_notes: prefNotes || null,
       };
     } else {
       payload = {
         address, suburb, postcode: pc, property_type: type,
+        bedrooms: beds || null,
+        bathrooms: baths || null,
         access_instructions: access || null,
         key_holder_name: keyName || null,
         key_holder_contact: keyContact || null,
-        notes: notes || null,
+        pref_days: prefDays || null,
+        pref_time: prefTime || null,
+        pref_presence: prefPresence || null,
+        pref_notes: prefNotes || null,
+        notes: null, // clear legacy notes field
       };
     }
     let error;
@@ -1413,11 +1555,110 @@ function showToast(msg, isErr = false) {
   }
 })();
 
+/* ── SH Job Request ───────────────────────────────────── */
+function openShRequestModal() {
+  document.getElementById('shReqError').style.display = 'none';
+  document.getElementById('shReqSuccess').style.display = 'none';
+  document.getElementById('shReqCategory').value = '';
+  document.getElementById('shReqDesc').value = '';
+  document.getElementById('shReqDate').value = '';
+  document.getElementById('shReqUrgency').value = 'standard';
+  document.getElementById('emergencyNotice').style.display = 'none';
+  document.getElementById('shReqEstimate').textContent = '~1 SH';
+
+  // Populate property selector
+  const sel = document.getElementById('shReqProperty');
+  sel.innerHTML = allProperties.map(p =>
+    `<option value="${p.id}">${p.address}, ${p.suburb} ${p.postcode}</option>`
+  ).join('');
+
+  document.getElementById('shRequestModal').classList.add('active');
+}
+function closeShRequestModal() { document.getElementById('shRequestModal').classList.remove('active'); }
+
+function updateShEstimate() {
+  const cat = document.getElementById('shReqCategory').value;
+  const urg = document.getElementById('shReqUrgency').value;
+  const notice = document.getElementById('emergencyNotice');
+
+  // Show emergency notice
+  notice.style.display = (cat === 'emergency') ? 'block' : 'none';
+
+  // Base estimate
+  let base = 1;
+  if (['electrical','plumbing'].includes(cat)) base = 2;
+  else if (cat === 'emergency') base = 2;
+  else if (['property_upkeep','seasonal_care'].includes(cat)) base = 1.5;
+
+  // Urgency multiplier
+  let mult = 1;
+  if (urg === 'same_day') mult = 1.5;
+  else if (urg === 'after_hours') mult = 2;
+
+  const est = Math.round(base * mult * 10) / 10;
+  document.getElementById('shReqEstimate').textContent = `~${est} SH`;
+}
+
+async function submitShRequest() {
+  const propId = document.getElementById('shReqProperty').value;
+  const cat = document.getElementById('shReqCategory').value;
+  const desc = document.getElementById('shReqDesc').value.trim();
+  const date = document.getElementById('shReqDate').value;
+  const urg = document.getElementById('shReqUrgency').value;
+
+  const errEl = document.getElementById('shReqError');
+  const sucEl = document.getElementById('shReqSuccess');
+  errEl.style.display = 'none';
+
+  if (!propId || !cat || !desc) {
+    errEl.textContent = 'Please fill in property, category, and description.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Calculate estimate
+  let base = 1;
+  if (['electrical','plumbing','emergency'].includes(cat)) base = 2;
+  else if (['property_upkeep','seasonal_care'].includes(cat)) base = 1.5;
+  let mult = 1;
+  if (urg === 'same_day') mult = 1.5;
+  else if (urg === 'after_hours') mult = 2;
+
+  const btn = document.getElementById('btnSubmitShReq');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const { error } = await sb.from('service_requests').insert({
+      user_id: currentUser.id,
+      property_id: propId,
+      category: cat,
+      description: desc,
+      preferred_date: date || null,
+      urgency: urg,
+      sh_estimate: Math.round(base * 10) / 10,
+      sh_multiplier: mult,
+      status: 'pending',
+    });
+    if (error) throw error;
+    sucEl.textContent = 'Service request submitted! We will confirm the estimate and schedule shortly.';
+    sucEl.style.display = 'block';
+    setTimeout(() => closeShRequestModal(), 2000);
+  } catch(e) {
+    errEl.textContent = e.message || 'Failed to submit. Please try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit Request';
+  }
+}
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closePropertyModal();
     closePropSelectModal();
     closePropConfirmModal();
+    closeShRequestModal();
     closeProfileModal('password');
     closeProfileModal('subscription');
     closeProfileModal('delete');
