@@ -109,7 +109,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 @media (max-width: 700px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 420px) { .stat-grid { grid-template-columns: 1fr; } }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
-.stat-card.hl { border-color: var(--navy); background: #f0f3fa; }
+.stat-card.hl { border-color: var(--green-txt); background: var(--green-bg); }
 .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
 .stat-value { font-size: 26px; font-weight: 900; color: var(--navy); line-height: 1; margin-bottom: 3px; }
 .stat-sub { font-size: 12px; color: var(--text-light); }
@@ -825,11 +825,15 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-action btn-secondary" onclick="event.stopPropagation();showToast('Coming soon — we\\'ll notify you when upgrades are available.')">Upgrade Plan</button>
         <button class="btn-action btn-secondary" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>
+        ${isAdmin ? `<button class="btn-delete-prop" onclick="event.stopPropagation();deleteProperty('${p.id}','${p.address.replace(/'/g,"\\'")}')">Delete Property</button>` : ''}
       </div>
     ` : `
       <div class="prop-hub-noplan">
         <div class="prop-hub-noplan-text">No subscription plan for this property yet.</div>
-        <a href="plans.html" class="btn-action btn-primary" onclick="event.stopPropagation();sessionStorage.setItem('hp_selected_property','${p.id}')">Choose a Plan</a>
+        <div style="display:flex;gap:8px;align-items:center">
+          <a href="plans.html" class="btn-action btn-primary" onclick="event.stopPropagation();sessionStorage.setItem('hp_selected_property','${p.id}')">Choose a Plan</a>
+          ${isAdmin ? `<button class="btn-delete-prop" onclick="event.stopPropagation();deleteProperty('${p.id}','${p.address.replace(/'/g,"\\'")}')">Delete</button>` : ''}
+        </div>
       </div>
     `;
 
