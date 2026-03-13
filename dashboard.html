@@ -632,9 +632,9 @@ async function loadDashboard() {
 
   try {
     const [subRes, shBalRes, propRes] = await Promise.all([
-      sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').maybeSingle().catch(() => ({ data: null })),
-      sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle().catch(() => ({ data: null })),
-      sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at').catch(() => ({ data: [] })),
+      sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').maybeSingle().then(r => r, () => ({ data: null })),
+      sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle().then(r => r, () => ({ data: null })),
+      sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at').then(r => r, () => ({ data: [] })),
     ]);
     sub           = subRes?.data || null;
     shBal         = shBalRes?.data || null;
