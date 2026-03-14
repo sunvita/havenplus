@@ -2904,7 +2904,7 @@ async function loadDashboard() {
       // Pending job requests
       sb.from('service_requests').select('id').eq('status', 'pending'),
       // All active/suspended subscriptions
-      sb.from('subscriptions').select('id, status, plan_type, user_id, property_id').in('status', ['active', 'suspended']),
+      sb.from('subscriptions').select('id, status, plan_type, user_id, property_id, cleaning_hours_total, cleaning_hours_used').in('status', ['active', 'suspended']),
       // All properties
       sb.from('properties').select('id, address, suburb, user_id'),
       // Cleanings this month
@@ -2941,8 +2941,12 @@ async function loadDashboard() {
     document.getElementById('ctaNoPlanProps').textContent = noPlanProps;
     updateCtaCardState('cta-noplan', noPlanProps);
     
-    // 4. CH Low Alert (ch_balance not available yet - needs column check)
-    const chLowSubs = 0; // TODO: Add ch_balance column to subscriptions table
+    // 4. CH Low Alert (remaining hours <= 2)
+    const chLowSubs = subs.filter(s => {
+      if (s.status !== 'active') return false;
+      const remaining = (s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0);
+      return remaining <= 2;
+    }).length;
     document.getElementById('ctaChLow').textContent = chLowSubs;
     updateCtaCardState('cta-chlow', chLowSubs);
     
