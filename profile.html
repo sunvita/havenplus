@@ -6,6 +6,9 @@
 <title>Haven Plus — Profile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<!-- FullCalendar -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 <style>
   :root {
     --navy: #1B2A4A; --navy-light: #2a3f6a;
@@ -144,6 +147,36 @@
 
   /* ── Admin ── */
   .admin-badge { display: inline-block; background: #e8f0fb; color: var(--navy); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+  
+  /* ── CTA Cards (Dashboard) ── */
+  .cta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
+  @media (max-width: 900px) { .cta-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .cta-grid { grid-template-columns: 1fr; } }
+  .cta-card { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 14px; cursor: pointer; transition: all .2s; border: 2px solid transparent; }
+  .cta-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+  .cta-icon { font-size: 24px; flex-shrink: 0; }
+  .cta-content { flex: 1; }
+  .cta-value { font-size: 28px; font-weight: 800; line-height: 1.1; }
+  .cta-label { font-size: 12px; font-weight: 600; opacity: .8; margin-top: 2px; }
+  .cta-arrow { font-size: 18px; opacity: .5; transition: opacity .2s; }
+  .cta-card:hover .cta-arrow { opacity: 1; }
+  .cta-pending { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); color: #b7791f; }
+  .cta-pending .cta-value { color: #d97706; }
+  .cta-payment { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; }
+  .cta-payment .cta-value { color: #dc2626; }
+  .cta-noplan { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; }
+  .cta-noplan .cta-value { color: #4f46e5; }
+  .cta-chlow { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; }
+  .cta-chlow .cta-value { color: #ea580c; }
+  .cta-card.cta-ok { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; }
+  .cta-card.cta-ok .cta-value { color: #059669; }
+  .cta-revenue { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46; }
+  .cta-revenue .cta-value { color: #059669; }
+  .cta-fees { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; }
+  .cta-fees .cta-value { color: #d97706; }
+  .cta-net { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; }
+  .cta-net .cta-value { color: #2563eb; }
+  
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 10px 12px; background: var(--bg); color: var(--text-light); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid var(--border); }
@@ -246,6 +279,29 @@
   .modal-alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
   .modal-alert.error { background: #fee; color: var(--red); display: block; }
   .modal-alert.success { background: var(--green-bg); color: var(--green-txt); display: block; }
+  
+  /* ── Worker Checkbox List ── */
+  .worker-checkbox-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+  .worker-checkbox-item:last-child { border-bottom: none; }
+  .worker-checkbox-item:hover { background: #f9fafb; }
+  .worker-checkbox-item.selected { background: #e8f4fd; }
+  .worker-checkbox-item.conflict { background: #fee; }
+  .worker-checkbox-item.warning { background: #fff8e1; }
+  .worker-checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--navy); flex-shrink: 0; }
+  .worker-checkbox-item .worker-info { flex: 1; }
+  .worker-checkbox-item .worker-name { font-weight: 600; color: var(--navy); font-size: 14px; }
+  .worker-checkbox-item .worker-meta { font-size: 11px; color: var(--text-light); }
+  .worker-checkbox-item .worker-distance { font-size: 11px; color: var(--text-light); white-space: nowrap; }
+  .worker-checkbox-item .worker-status { font-size: 11px; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .worker-checkbox-item .worker-status.available { background: var(--green-bg); color: var(--green-txt); }
+  .worker-checkbox-item .worker-status.warning { background: #fff3e0; color: #e65100; }
+  .worker-checkbox-item .worker-status.conflict { background: #fee; color: var(--red); }
+  
+  /* ── Conflict Alert ── */
+  .conflict-alert { padding: 10px 12px; border-radius: 8px; font-size: 12px; display: flex; align-items: flex-start; gap: 8px; }
+  .conflict-alert.error { background: #fee; color: var(--red); border: 1px solid #f5c6cb; }
+  .conflict-alert.warning { background: #fff8e1; color: #b7791f; border: 1px solid #ffeeba; }
+  .conflict-alert-icon { font-size: 16px; flex-shrink: 0; }
 
   /* ── Action Buttons in Tables ── */
   .btn-action-sm { background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; color: var(--navy); }
@@ -253,6 +309,34 @@
   .btn-action-sm.danger { color: var(--red); border-color: #f5c6cb; }
   .btn-action-sm.danger:hover { background: var(--red); color: white; border-color: var(--red); }
   .action-cell { display: flex; gap: 6px; }
+
+  /* ── Calendar ── */
+  #calendarContainer { min-height: 600px; }
+  .fc { font-family: 'Noto Sans KR', sans-serif; }
+  .fc .fc-toolbar-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .fc .fc-button { background: var(--navy); border: none; font-weight: 600; font-size: 12px; }
+  .fc .fc-button:hover { background: var(--navy-light); }
+  .fc .fc-button-active { background: var(--orange) !important; }
+  .fc .fc-daygrid-day-number { font-weight: 600; color: var(--navy); }
+  .fc .fc-event { border: none; border-radius: 4px; font-size: 11px; padding: 2px 4px; cursor: grab; }
+  .fc .fc-event:hover { opacity: 0.9; }
+  .fc .fc-timegrid-slot { height: 40px; }
+  .fc .fc-timegrid-event { border-radius: 4px; }
+  
+  /* Unscheduled Panel */
+  .unscheduled-panel { background: #f9f9f9; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .unscheduled-header { padding: 12px 16px; background: var(--navy); color: white; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .unscheduled-count { background: var(--orange); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .unscheduled-list { padding: 8px; max-height: 540px; overflow-y: auto; }
+  .unscheduled-item { background: white; border: 1px solid var(--border); border-left: 4px solid #ccc; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; cursor: grab; transition: all .15s; font-size: 12px; }
+  .unscheduled-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); transform: translateY(-1px); }
+  .unscheduled-item.dragging { opacity: 0.5; }
+  .unscheduled-item .item-address { font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .unscheduled-item .item-meta { color: var(--text-light); font-size: 11px; }
+  .unscheduled-item .item-area { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-top: 4px; }
+  
+  /* Area Legend */
+  .area-legend-item { padding: 3px 8px; border-radius: 4px; font-weight: 600; }
 
   /* ── Toast ── */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--navy); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform .3s; white-space: nowrap; pointer-events: none; }
@@ -343,9 +427,17 @@
       <div id="adminNav" style="display:none;">
         <div class="sidebar-divider"></div>
         <div class="sidebar-section">Admin <span class="admin-badge">Admin</span></div>
+        <button class="sidebar-item" data-section="dashboard" onclick="switchSection('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </button>
         <button class="sidebar-item" data-section="cleanings" onclick="switchSection('cleanings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Cleanings
+        </button>
+        <button class="sidebar-item" data-section="calendar" onclick="switchSection('calendar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="4" height="4" rx="0.5"/><rect x="14" y="13" width="4" height="4" rx="0.5"/></svg>
+          Calendar
         </button>
         <button class="sidebar-item" data-section="jobrequests" onclick="switchSection('jobrequests')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
@@ -526,6 +618,100 @@
       </div>
     </section>
 
+    <!-- ═══ Admin: Dashboard ═══ -->
+    <section class="section" id="section-dashboard">
+      <div class="section-card">
+        <div class="section-title">Admin Dashboard <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Quick overview of items requiring attention.</div>
+        
+        <!-- CTA Cards Row 1: Action Items -->
+        <div class="cta-grid" id="ctaCards">
+          <div class="cta-card cta-pending" onclick="switchSection('jobrequests')">
+            <div class="cta-icon">📋</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaPendingJobs">—</div>
+              <div class="cta-label">Pending Jobs</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+          <div class="cta-card cta-payment" onclick="switchSection('subscribers')">
+            <div class="cta-icon">💳</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaPaymentIssues">—</div>
+              <div class="cta-label">Payment Issues</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+          <div class="cta-card cta-noplan" onclick="switchSection('properties')">
+            <div class="cta-icon">🏠</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaNoPlanProps">—</div>
+              <div class="cta-label">No Plan Properties</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+          <div class="cta-card cta-chlow" onclick="switchSection('subscribers')">
+            <div class="cta-icon">⏰</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaChLow">—</div>
+              <div class="cta-label">CH Low Alert</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+        </div>
+        
+        <!-- CTA Cards Row 2: Revenue -->
+        <div class="cta-grid" style="margin-top:16px;grid-template-columns:repeat(3, 1fr);">
+          <div class="cta-card cta-revenue">
+            <div class="cta-icon">💰</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaRevenueMonth">—</div>
+              <div class="cta-label">This Month Revenue</div>
+            </div>
+          </div>
+          <div class="cta-card cta-fees">
+            <div class="cta-icon">💳</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaFeesMonth">—</div>
+              <div class="cta-label">Stripe Fees</div>
+            </div>
+          </div>
+          <div class="cta-card cta-net">
+            <div class="cta-icon">✨</div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaNetMonth">—</div>
+              <div class="cta-label">Net Revenue</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div style="margin-top:24px;">
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">📊 This Month Overview</div>
+          <div class="stat-row">
+            <div class="stat-mini"><div class="stat-mini-label">Cleanings</div><div class="stat-mini-value" id="dashCleaningsMonth">—</div></div>
+            <div class="stat-mini"><div class="stat-mini-label">Jobs Completed</div><div class="stat-mini-value" id="dashJobsMonth">—</div></div>
+            <div class="stat-mini"><div class="stat-mini-label">Active Subs</div><div class="stat-mini-value" id="dashActiveSubs">—</div></div>
+            <div class="stat-mini"><div class="stat-mini-label">Total CH Used</div><div class="stat-mini-value" id="dashChUsed">—</div></div>
+          </div>
+        </div>
+        
+        <!-- Upcoming Cleanings Preview -->
+        <div style="margin-top:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);">📅 Upcoming Cleanings (Next 7 Days)</div>
+            <button class="btn-action-sm" onclick="switchSection('calendar')">View Calendar</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Time</th><th>Property</th><th>Worker</th><th>Status</th></tr></thead>
+              <tbody id="dashUpcomingBody"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══ Admin: Job Requests ═══ -->
     <section class="section" id="section-jobrequests">
       <div class="section-card">
@@ -598,6 +784,51 @@
             <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="schedulesBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Calendar ═══ -->
+    <section class="section" id="section-calendar">
+      <div class="section-card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <div class="section-title" style="margin-bottom:4px;">Cleaning Calendar <span class="admin-badge">Admin</span></div>
+            <div class="section-desc" style="margin-bottom:0;">Drag & drop to schedule cleanings. Same color = nearby areas.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="filter-input" id="calAreaFilter" onchange="filterCalendarByArea()">
+              <option value="">All areas</option>
+            </select>
+            <select class="filter-input" id="calWorkerFilter" onchange="filterCalendarByWorker()">
+              <option value="">All workers</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;">
+          <div id="calendarContainer"></div>
+          <div class="unscheduled-panel">
+            <div class="unscheduled-header">
+              <span>📋 Unscheduled</span>
+              <span class="unscheduled-count" id="unschedCount">0</span>
+            </div>
+            <div class="unscheduled-list" id="unscheduledList">
+              <div class="empty-state" style="padding:20px;font-size:12px;">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <!-- Area Color Legend -->
+        <div class="area-legend" style="margin-top:16px;padding:12px;background:#f9f9f9;border-radius:8px;">
+          <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;">AREA COLORS (by distance)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
+            <span class="area-legend-item" style="background:#3F51B5;color:#fff;">Indigo: SE Inner/East</span>
+            <span class="area-legend-item" style="background:#2196F3;color:#fff;">Blue: Inner South/SE Mid/CBD</span>
+            <span class="area-legend-item" style="background:#009688;color:#fff;">Teal: SE Outer/Melville/NE Inner</span>
+            <span class="area-legend-item" style="background:#4CAF50;color:#fff;">Green: NE Mid/West/Cockburn/Freo</span>
+            <span class="area-legend-item" style="background:#FFEB3B;color:#333;">Yellow: NE Outer/North Inner</span>
+            <span class="area-legend-item" style="background:#FF9800;color:#fff;">Orange: North Outer</span>
+            <span class="area-legend-item" style="background:#F44336;color:#fff;">Red: Rockingham</span>
+          </div>
         </div>
       </div>
     </section>
@@ -764,46 +995,90 @@
   </div>
 </div>
 
-<!-- Schedule Edit Modal -->
+<!-- Cleanings Edit Modal (Enhanced) -->
 <div class="modal-overlay" id="schedEditModal" onclick="if(event.target===this)closeSchedEditModal()">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:580px;">
     <div class="modal-header">
-      <div class="modal-title">Edit Schedule</div>
+      <div class="modal-title">Edit Cleaning</div>
       <button class="modal-close" onclick="closeSchedEditModal()">×</button>
     </div>
     <div class="modal-body">
       <div class="modal-alert" id="schedEditAlert"></div>
       <input type="hidden" id="schedEditId">
+      
+      <!-- Property Info -->
+      <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;" id="schedEditAddress">—</div>
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-light);flex-wrap:wrap;">
+          <span id="schedEditAreaBadge" class="area-badge" style="font-size:11px;">—</span>
+          <span id="schedEditBedBath">— bed / — bath</span>
+        </div>
+      </div>
+      
+      <!-- Customer Preferences -->
+      <div style="background:#fff8e1;border-radius:10px;padding:14px;margin-bottom:16px;border-left:4px solid #f39c12;">
+        <div style="font-size:11px;font-weight:700;color:#b7791f;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📋 Customer Preferences</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
+          <div><span style="color:var(--text-light);">Day:</span> <strong id="schedEditPrefDay">—</strong></div>
+          <div><span style="color:var(--text-light);">Time:</span> <strong id="schedEditPrefTime">—</strong></div>
+          <div><span style="color:var(--text-light);">Presence:</span> <strong id="schedEditPrefPresence">—</strong></div>
+        </div>
+        <div id="schedEditCleaningNotes" style="margin-top:8px;font-size:12px;color:var(--text);display:none;"></div>
+      </div>
+      
+      <!-- Schedule -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📅 Schedule</div>
+        <div class="modal-form-row">
+          <div class="modal-form-group">
+            <label>Date</label>
+            <input type="date" id="schedEditDate" onchange="checkWorkerConflicts()">
+          </div>
+          <div class="modal-form-group">
+            <label>Start Time</label>
+            <input type="time" id="schedEditTime" onchange="checkWorkerConflicts()">
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <label>Duration (hours)</label>
+          <input type="number" id="schedEditDuration" step="0.5" min="0.5" value="2" onchange="updateChCalculation();checkWorkerConflicts()">
+        </div>
+      </div>
+      
+      <!-- Worker Assignment -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">👷 Assign Workers</div>
+        <div id="schedEditWorkerList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;">
+          <!-- Workers will be populated here -->
+        </div>
+        <div id="schedEditConflictAlert" style="margin-top:8px;display:none;"></div>
+      </div>
+      
+      <!-- Summary -->
+      <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📊 Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
+          <div>Workers: <strong id="schedEditWorkerCount">0</strong></div>
+          <div>Duration: <strong id="schedEditDurationDisplay">2 hrs</strong></div>
+          <div>End Time: <strong id="schedEditEndTime">—</strong></div>
+          <div>CH to deduct: <strong id="schedEditChDeduct">0 hrs</strong></div>
+        </div>
+      </div>
+      
+      <!-- Status -->
       <div class="modal-form-group">
         <label>Status</label>
         <select id="schedEditStatus">
           <option value="pending">Pending</option>
           <option value="scheduled">Scheduled</option>
           <option value="confirmed">Confirmed</option>
+          <option value="in_progress">In Progress</option>
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </select>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px;">💡 Status auto-updates to "Scheduled" when worker is assigned.</div>
       </div>
-      <div class="modal-form-row">
-        <div class="modal-form-group">
-          <label>Confirmed Date</label>
-          <input type="date" id="schedEditDate">
-        </div>
-        <div class="modal-form-group">
-          <label>Time</label>
-          <input type="time" id="schedEditTime">
-        </div>
-      </div>
-      <div class="modal-form-group">
-        <label>Assigned Worker</label>
-        <select id="schedEditWorker">
-          <option value="">Unassigned</option>
-        </select>
-      </div>
-      <div class="modal-form-group">
-        <label>Duration (hours)</label>
-        <input type="number" id="schedEditDuration" step="0.5" min="0.5" value="2">
-      </div>
+      
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeSchedEditModal()">Cancel</button>
         <button class="modal-btn modal-btn-primary" id="btnSaveSched" onclick="saveSchedEdit()">Save Changes</button>
@@ -1088,9 +1363,11 @@ function switchSection(name) {
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '?section=' + name);
 
+  if (name === 'dashboard')     loadDashboard();
   if (name === 'subscription') loadSubscription();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'cleanings')    loadSchedules();
+  if (name === 'calendar')     loadCalendar();
   if (name === 'hourslog')     loadHoursLog();
   if (name === 'jobrequests')  loadJobRequests();
   if (name === 'workers')      loadWorkers();
@@ -1552,11 +1829,11 @@ async function loadSchedules() {
   // 'all' = no date filter
 
   let q = sb.from('cleaning_schedule')
-    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, user_id')
+    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, assigned_workers, user_id')
     .order('planned_date', { ascending: true }).limit(200);
   
   if (status) q = q.eq('status', status);
-  if (worker) q = q.eq('assigned_worker_id', worker);
+  // Worker filter is handled client-side to support assigned_workers JSONB array
   if (dateFrom) q = q.gte('planned_date', dateFrom.toISOString().split('T')[0]);
   if (dateTo) q = q.lte('planned_date', dateTo.toISOString().split('T')[0]);
   
@@ -1567,13 +1844,13 @@ async function loadSchedules() {
     return; 
   }
 
-  // Get property info (including area)
+  // Get property info (including area, bedrooms, bathrooms)
   const propIds = [...new Set(data.map(r => r.property_id).filter(Boolean))];
   const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
   
   let propMap = {}, profileMap = {};
   if (propIds.length) {
-    const { data: props } = await sb.from('properties').select('id, address, suburb, area').in('id', propIds);
+    const { data: props } = await sb.from('properties').select('id, address, suburb, area, bedrooms, bathrooms').in('id', propIds);
     (props || []).forEach(p => propMap[p.id] = p);
   }
   if (userIds.length) {
@@ -1584,10 +1861,24 @@ async function loadSchedules() {
   const workerMap = {};
   allWorkers.forEach(w => workerMap[w.id] = w);
 
-  // Filter by area if selected
+  // Filter by area and worker (client-side for assigned_workers support)
   let filteredData = data;
+  
+  // Worker filter - check both assigned_worker_id and assigned_workers array
+  if (worker) {
+    filteredData = filteredData.filter(r => {
+      // Check assigned_workers JSONB array first
+      if (r.assigned_workers && Array.isArray(r.assigned_workers) && r.assigned_workers.length > 0) {
+        return r.assigned_workers.includes(worker);
+      }
+      // Fallback to assigned_worker_id
+      return r.assigned_worker_id === worker;
+    });
+  }
+  
+  // Area filter
   if (area) {
-    filteredData = data.filter(r => {
+    filteredData = filteredData.filter(r => {
       const prop = propMap[r.property_id];
       return prop?.area === area;
     });
@@ -1623,7 +1914,20 @@ async function loadSchedules() {
     const areaName = prop?.area ? getAreaName(prop.area) : '—';
     const areaClass = prop?.area ? `area-cell area-bg-${prop.area}` : 'area-cell area-bg-unknown';
     const customer = profileMap[r.user_id]?.full_name || '—';
-    const workerName = workerMap[r.assigned_worker_id]?.name || 'Unassigned';
+    
+    // Display multiple workers
+    let workerDisplay = 'Unassigned';
+    const workerIds = (r.assigned_workers && Array.isArray(r.assigned_workers) && r.assigned_workers.length > 0)
+      ? r.assigned_workers
+      : (r.assigned_worker_id ? [r.assigned_worker_id] : []);
+    
+    if (workerIds.length === 1) {
+      workerDisplay = workerMap[workerIds[0]]?.name || 'Unassigned';
+    } else if (workerIds.length > 1) {
+      const names = workerIds.map(wid => workerMap[wid]?.name || '?').filter(Boolean);
+      workerDisplay = `${names[0]} +${names.length - 1}`;
+    }
+    
     const badgeClass = r.status === 'completed' ? 'completed' : r.status === 'cancelled' ? 'cancelled' : r.status === 'pending' ? 'pending' : 'scheduled';
     
     return `<tr>
@@ -1632,7 +1936,7 @@ async function loadSchedules() {
       <td class="${areaClass}">${areaName}</td>
       <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
       <td>${customer}</td>
-      <td>${workerName}</td>
+      <td>${workerDisplay}</td>
       <td><span class="badge badge-${badgeClass}">${r.status || '—'}</span></td>
       <td class="action-cell">
         <button class="btn-action-sm" onclick="openSchedEditModal('${r.id}')">Edit</button>
@@ -1641,9 +1945,263 @@ async function loadSchedules() {
   }).join('');
 }
 
+/* ══ Admin: Calendar ═══════════════════════════════════════ */
+let calendar = null;
+let calendarData = { scheduled: [], unscheduled: [] };
+
+const AREA_COLORS = {
+  'SE_INNER': '#3F51B5', 'EAST': '#3F51B5',
+  'INNER_SOUTH': '#2196F3', 'SE_MID': '#2196F3', 'CBD': '#1976D2',
+  'SE_OUTER': '#009688', 'MELVILLE': '#00897B', 'NE_INNER': '#00796B', 'ARMADALE': '#00695C',
+  'NE_MID': '#4CAF50', 'WEST': '#43A047', 'COCKBURN': '#388E3C', 'FREMANTLE': '#2E7D32',
+  'NE_OUTER': '#FFEB3B', 'NORTH_INNER': '#FDD835',
+  'NORTH_OUTER': '#FF9800', 'ROCKINGHAM': '#F44336'
+};
+
+async function loadCalendar() {
+  if (!isAdmin) return;
+  
+  // Load workers for dropdowns
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+  
+  // Populate calendar filters
+  initAreaDropdowns();
+  const calWorkerFilter = document.getElementById('calWorkerFilter');
+  if (calWorkerFilter) {
+    calWorkerFilter.innerHTML = '<option value="">All workers</option>' + 
+      allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+  }
+  
+  // Load cleaning data
+  const { data: schedules } = await sb.from('cleaning_schedule')
+    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, user_id')
+    .order('planned_date', { ascending: true });
+  
+  if (!schedules) return;
+  
+  // Get property info
+  const propIds = [...new Set(schedules.map(s => s.property_id).filter(Boolean))];
+  let propMap = {};
+  if (propIds.length) {
+    const { data: props } = await sb.from('properties').select('id, address, suburb, area, bedrooms, bathrooms').in('id', propIds);
+    (props || []).forEach(p => propMap[p.id] = p);
+  }
+  
+  // Separate scheduled vs unscheduled
+  calendarData.scheduled = schedules.filter(s => s.planned_date && s.status !== 'pending').map(s => ({
+    ...s, prop: propMap[s.property_id] || {}
+  }));
+  calendarData.unscheduled = schedules.filter(s => !s.planned_date || s.status === 'pending').map(s => ({
+    ...s, prop: propMap[s.property_id] || {}
+  }));
+  
+  // Render unscheduled panel
+  renderUnscheduledPanel();
+  
+  // Initialize or update calendar
+  if (!calendar) {
+    initCalendar();
+  } else {
+    refreshCalendarEvents();
+  }
+}
+
+function initCalendar() {
+  const calendarEl = document.getElementById('calendarContainer');
+  
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'timeGridWeek',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    slotMinTime: '07:00:00',
+    slotMaxTime: '19:00:00',
+    slotDuration: '00:30:00',
+    allDaySlot: false,
+    weekends: true,
+    editable: true,
+    droppable: true,
+    eventDurationEditable: true,
+    selectable: true,
+    selectMirror: true,
+    nowIndicator: true,
+    events: getCalendarEvents(),
+    
+    // Event drop (reschedule)
+    eventDrop: async function(info) {
+      const schedId = info.event.id;
+      const newDate = info.event.start.toISOString().split('T')[0];
+      const newTime = info.event.start.toTimeString().slice(0,5);
+      
+      const { error } = await sb.from('cleaning_schedule').update({
+        planned_date: newDate,
+        planned_time: newTime
+      }).eq('id', schedId);
+      
+      if (error) {
+        showToast('Failed to reschedule', true);
+        info.revert();
+      } else {
+        showToast('Cleaning rescheduled');
+      }
+    },
+    
+    // Event resize (change duration)
+    eventResize: async function(info) {
+      const schedId = info.event.id;
+      const duration = (info.event.end - info.event.start) / (1000 * 60 * 60);
+      
+      const { error } = await sb.from('cleaning_schedule').update({
+        duration_hours: duration
+      }).eq('id', schedId);
+      
+      if (error) {
+        showToast('Failed to update duration', true);
+        info.revert();
+      } else {
+        showToast('Duration updated');
+      }
+    },
+    
+    // Click on event
+    eventClick: function(info) {
+      openSchedEditModal(info.event.id);
+    },
+    
+    // External drop (from unscheduled panel)
+    drop: async function(info) {
+      const schedId = info.draggedEl.dataset.schedId;
+      const newDate = info.date.toISOString().split('T')[0];
+      const newTime = info.date.toTimeString().slice(0,5);
+      
+      const { error } = await sb.from('cleaning_schedule').update({
+        planned_date: newDate,
+        planned_time: newTime,
+        status: 'scheduled'
+      }).eq('id', schedId);
+      
+      if (error) {
+        showToast('Failed to schedule', true);
+      } else {
+        showToast('Cleaning scheduled');
+        info.draggedEl.remove();
+        loadCalendar();
+      }
+    }
+  });
+  
+  calendar.render();
+  
+  // Make unscheduled items draggable
+  makeUnscheduledDraggable();
+}
+
+function getCalendarEvents() {
+  return calendarData.scheduled.map(s => {
+    const prop = s.prop || {};
+    const area = prop.area || '';
+    const color = AREA_COLORS[area] || '#999';
+    const duration = s.duration_hours || 2;
+    
+    let startTime = s.planned_time || '09:00';
+    if (startTime.length === 5) startTime += ':00';
+    
+    return {
+      id: s.id,
+      title: `${prop.address || 'Unknown'} (${prop.suburb || ''})`,
+      start: `${s.planned_date}T${startTime}`,
+      end: calculateEndTime(s.planned_date, startTime, duration),
+      backgroundColor: color,
+      borderColor: color,
+      textColor: ['NE_OUTER', 'NORTH_INNER'].includes(area) ? '#333' : '#fff',
+      extendedProps: {
+        area: area,
+        suburb: prop.suburb,
+        beds: prop.bedrooms,
+        baths: prop.bathrooms,
+        status: s.status
+      }
+    };
+  });
+}
+
+function calculateEndTime(date, startTime, durationHours) {
+  const start = new Date(`${date}T${startTime}`);
+  start.setMinutes(start.getMinutes() + (durationHours * 60));
+  return start.toISOString();
+}
+
+function refreshCalendarEvents() {
+  calendar.removeAllEvents();
+  calendar.addEventSource(getCalendarEvents());
+}
+
+function renderUnscheduledPanel() {
+  const list = document.getElementById('unscheduledList');
+  const count = document.getElementById('unschedCount');
+  
+  count.textContent = calendarData.unscheduled.length;
+  
+  if (!calendarData.unscheduled.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:20px;font-size:12px;">All cleanings scheduled! 🎉</div>';
+    return;
+  }
+  
+  list.innerHTML = calendarData.unscheduled.map(s => {
+    const prop = s.prop || {};
+    const area = prop.area || '';
+    const color = AREA_COLORS[area] || '#ccc';
+    
+    return `<div class="unscheduled-item" data-sched-id="${s.id}" style="border-left-color:${color};">
+      <div class="item-address">${prop.address || 'Unknown'}</div>
+      <div class="item-meta">${prop.suburb || ''} • ${prop.bedrooms || '?'}bd/${prop.bathrooms || '?'}ba</div>
+      ${area ? `<span class="item-area" style="background:${color};color:${['NE_OUTER','NORTH_INNER'].includes(area)?'#333':'#fff'};">${getAreaName(area)}</span>` : ''}
+    </div>`;
+  }).join('');
+  
+  makeUnscheduledDraggable();
+}
+
+function makeUnscheduledDraggable() {
+  document.querySelectorAll('.unscheduled-item').forEach(el => {
+    new FullCalendar.Draggable(el, {
+      eventData: function(eventEl) {
+        const schedId = eventEl.dataset.schedId;
+        const sched = calendarData.unscheduled.find(s => s.id === schedId);
+        const prop = sched?.prop || {};
+        const area = prop.area || '';
+        const color = AREA_COLORS[area] || '#999';
+        
+        return {
+          id: schedId,
+          title: `${prop.address || 'Unknown'}`,
+          duration: { hours: sched?.duration_hours || 2 },
+          backgroundColor: color,
+          borderColor: color,
+          create: false
+        };
+      }
+    });
+  });
+}
+
+function filterCalendarByArea() {
+  const area = document.getElementById('calAreaFilter').value;
+  // For now just reload - could optimize with client-side filtering
+  loadCalendar();
+}
+
+function filterCalendarByWorker() {
+  const worker = document.getElementById('calWorkerFilter').value;
+  // For now just reload - could optimize with client-side filtering
+  loadCalendar();
+}
+
 async function loadWorkersForDropdowns() {
   try {
-    const { data } = await sb.from('workers').select('id, name').eq('status', 'active').order('name');
+    const { data } = await sb.from('workers').select('id, name, area').eq('status', 'active').order('name');
     allWorkers = data || [];
     
     // Populate worker filter dropdown
@@ -1653,38 +2211,328 @@ async function loadWorkersForDropdowns() {
         allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
     }
     
-    // Populate modal worker dropdowns
-    ['schedEditWorker', 'jobEditWorker'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.innerHTML = '<option value="">Unassigned</option>' + 
-          allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
-      }
-    });
+    // Populate job edit modal worker dropdown
+    const jobEditWorker = document.getElementById('jobEditWorker');
+    if (jobEditWorker) {
+      jobEditWorker.innerHTML = '<option value="">Unassigned</option>' + 
+        allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+    }
   } catch(e) {
     console.warn('Workers table may not exist:', e.message);
     allWorkers = [];
   }
 }
 
-function openSchedEditModal(schedId) {
+// Selected workers for multi-assignment
+let selectedWorkerIds = [];
+let currentSchedData = null;
+let workerScheduleCache = {};
+
+async function openSchedEditModal(schedId) {
   const sched = allSchedules.find(s => s.id === schedId);
   if (!sched) return;
   
+  currentSchedData = sched;
+  
+  // Load assigned_workers from JSONB array, fallback to assigned_worker_id
+  if (sched.assigned_workers && Array.isArray(sched.assigned_workers) && sched.assigned_workers.length > 0) {
+    selectedWorkerIds = [...sched.assigned_workers];
+  } else if (sched.assigned_worker_id) {
+    selectedWorkerIds = [sched.assigned_worker_id];
+  } else {
+    selectedWorkerIds = [];
+  }
+  
+  // Reset UI
   document.getElementById('schedEditId').value = schedId;
-  document.getElementById('schedEditStatus').value = sched.status || 'pending';
-  document.getElementById('schedEditDate').value = sched.planned_date || '';
-  document.getElementById('schedEditTime').value = sched.planned_time || '';
-  document.getElementById('schedEditWorker').value = sched.assigned_worker_id || '';
-  document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
   document.getElementById('schedEditAlert').className = 'modal-alert';
   document.getElementById('schedEditAlert').textContent = '';
+  document.getElementById('schedEditConflictAlert').style.display = 'none';
+  
+  // Property Info
+  const prop = sched.prop || {};
+  document.getElementById('schedEditAddress').textContent = `${prop.address || 'Unknown'}, ${prop.suburb || ''}`;
+  
+  const areaBadge = document.getElementById('schedEditAreaBadge');
+  if (prop.area) {
+    areaBadge.textContent = getAreaName(prop.area);
+    areaBadge.className = `area-badge area-${prop.area}`;
+  } else {
+    areaBadge.textContent = 'No Area';
+    areaBadge.className = 'area-badge area-unknown';
+  }
+  
+  document.getElementById('schedEditBedBath').textContent = `${prop.bedrooms || '?'} bed / ${prop.bathrooms || '?'} bath`;
+  
+  // Customer Preferences - need to fetch from properties
+  try {
+    const { data: propData } = await sb.from('properties')
+      .select('pref_day, pref_time, pref_presence, cleaning_notes')
+      .eq('id', sched.property_id).single();
+    
+    if (propData) {
+      document.getElementById('schedEditPrefDay').textContent = propData.pref_day || 'Any';
+      document.getElementById('schedEditPrefTime').textContent = propData.pref_time ? propData.pref_time.replace('_', ' ') : 'Any';
+      document.getElementById('schedEditPrefPresence').textContent = propData.pref_presence || 'Not specified';
+      
+      const notesEl = document.getElementById('schedEditCleaningNotes');
+      if (propData.cleaning_notes) {
+        notesEl.innerHTML = `<strong>Notes:</strong> ${propData.cleaning_notes}`;
+        notesEl.style.display = 'block';
+      } else {
+        notesEl.style.display = 'none';
+      }
+    }
+  } catch(e) { console.warn('Could not load preferences:', e); }
+  
+  // Schedule
+  document.getElementById('schedEditDate').value = sched.planned_date || '';
+  document.getElementById('schedEditTime').value = sched.planned_time || '';
+  document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
+  document.getElementById('schedEditStatus').value = sched.status || 'pending';
+  
+  // Load workers with distance sorting
+  await loadWorkerSchedulesForDate(sched.planned_date);
+  renderWorkerCheckboxList(prop.area);
+  updateChCalculation();
   
   document.getElementById('schedEditModal').classList.add('open');
 }
 
+async function loadWorkerSchedulesForDate(date) {
+  if (!date) { workerScheduleCache = {}; return; }
+  
+  try {
+    const { data } = await sb.from('cleaning_schedule')
+      .select('id, assigned_worker_id, assigned_workers, planned_date, planned_time, duration_hours, properties(address)')
+      .eq('planned_date', date)
+      .in('status', ['scheduled', 'confirmed', 'in_progress']);
+    
+    workerScheduleCache = {};
+    (data || []).forEach(s => {
+      // Check assigned_workers JSONB array first, fallback to assigned_worker_id
+      const workerIds = (s.assigned_workers && Array.isArray(s.assigned_workers) && s.assigned_workers.length > 0)
+        ? s.assigned_workers
+        : (s.assigned_worker_id ? [s.assigned_worker_id] : []);
+      
+      workerIds.forEach(wid => {
+        if (!workerScheduleCache[wid]) workerScheduleCache[wid] = [];
+        workerScheduleCache[wid].push(s);
+      });
+    });
+  } catch(e) {
+    console.warn('Could not load worker schedules:', e);
+    workerScheduleCache = {};
+  }
+}
+
+function renderWorkerCheckboxList(propertyArea) {
+  const container = document.getElementById('schedEditWorkerList');
+  
+  // Sort workers by distance to property area
+  const sortedWorkers = [...allWorkers].sort((a, b) => {
+    const distA = getAreaDistance(a.area, propertyArea);
+    const distB = getAreaDistance(b.area, propertyArea);
+    return distA - distB;
+  });
+  
+  container.innerHTML = sortedWorkers.map(w => {
+    const isSelected = selectedWorkerIds.includes(w.id);
+    const distance = getAreaDistance(w.area, propertyArea);
+    const distanceText = distance === 0 ? 'Same area' : `~${distance} min`;
+    const conflict = checkWorkerConflictStatus(w.id);
+    
+    let statusClass = 'available';
+    let statusText = '✓ Available';
+    if (conflict.type === 'overlap') {
+      statusClass = 'conflict';
+      statusText = '✕ Conflict';
+    } else if (conflict.type === 'tight') {
+      statusClass = 'warning';
+      statusText = '⚠ Tight';
+    }
+    
+    const itemClass = isSelected ? (conflict.type === 'overlap' ? 'selected conflict' : conflict.type === 'tight' ? 'selected warning' : 'selected') : '';
+    
+    return `<label class="worker-checkbox-item ${itemClass}" data-worker-id="${w.id}">
+      <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleWorkerSelection('${w.id}')">
+      <div class="worker-info">
+        <div class="worker-name">${w.name}</div>
+        <div class="worker-meta">${w.area ? getAreaName(w.area) : 'No area'}</div>
+      </div>
+      <div class="worker-distance">${distanceText}</div>
+      <div class="worker-status ${statusClass}">${statusText}</div>
+    </label>`;
+  }).join('');
+}
+
+function toggleWorkerSelection(workerId) {
+  const idx = selectedWorkerIds.indexOf(workerId);
+  if (idx >= 0) {
+    selectedWorkerIds.splice(idx, 1);
+  } else {
+    selectedWorkerIds.push(workerId);
+  }
+  
+  // Update UI
+  const prop = currentSchedData?.prop || {};
+  renderWorkerCheckboxList(prop.area);
+  updateChCalculation();
+  checkWorkerConflicts();
+  
+  // Auto-update status to scheduled if workers assigned
+  if (selectedWorkerIds.length > 0) {
+    const statusEl = document.getElementById('schedEditStatus');
+    if (statusEl.value === 'pending') {
+      statusEl.value = 'scheduled';
+    }
+  }
+}
+
+function getAreaDistance(workerArea, propertyArea) {
+  if (!workerArea || !propertyArea) return 30;
+  if (workerArea === propertyArea) return 0;
+  
+  // Simplified distance matrix (minutes)
+  const distances = {
+    'SE_INNER': { 'EAST': 8, 'INNER_SOUTH': 8, 'SE_MID': 8, 'CBD': 12, 'SE_OUTER': 12, 'MELVILLE': 15, 'NE_INNER': 15, 'ARMADALE': 20 },
+    'EAST': { 'SE_INNER': 8, 'SE_MID': 10, 'CBD': 15, 'NE_INNER': 12 },
+    'NE_INNER': { 'NE_MID': 8, 'CBD': 12, 'EAST': 12, 'SE_INNER': 15, 'NE_OUTER': 15 },
+    'NE_MID': { 'NE_INNER': 8, 'NE_OUTER': 10 },
+    'CBD': { 'INNER_SOUTH': 8, 'SE_INNER': 12, 'WEST': 15, 'NE_INNER': 12 },
+    'WEST': { 'CBD': 15, 'FREMANTLE': 12, 'MELVILLE': 12 },
+    'FREMANTLE': { 'WEST': 12, 'MELVILLE': 10, 'COCKBURN': 15 },
+    'MELVILLE': { 'SE_INNER': 15, 'FREMANTLE': 10, 'COCKBURN': 12 },
+    'COCKBURN': { 'MELVILLE': 12, 'FREMANTLE': 15, 'ROCKINGHAM': 20 },
+    'ROCKINGHAM': { 'COCKBURN': 20 }
+  };
+  
+  return distances[workerArea]?.[propertyArea] || distances[propertyArea]?.[workerArea] || 25;
+}
+
+function checkWorkerConflictStatus(workerId) {
+  const schedId = document.getElementById('schedEditId').value;
+  const date = document.getElementById('schedEditDate').value;
+  const time = document.getElementById('schedEditTime').value;
+  const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
+  
+  if (!date || !time) return { type: null };
+  
+  const workerScheds = (workerScheduleCache[workerId] || []).filter(s => s.id !== schedId);
+  if (!workerScheds.length) return { type: null };
+  
+  const newStart = timeToMinutes(time);
+  const newEnd = newStart + (duration * 60);
+  
+  for (const s of workerScheds) {
+    if (!s.planned_time) continue;
+    const existStart = timeToMinutes(s.planned_time);
+    const existEnd = existStart + ((s.duration_hours || 2) * 60);
+    
+    // Calculate gap (negative = overlap, positive = gap between cleanings)
+    let gap = null;
+    if (newEnd <= existStart) {
+      // New cleaning ends before existing starts
+      gap = existStart - newEnd;
+    } else if (newStart >= existEnd) {
+      // New cleaning starts after existing ends
+      gap = newStart - existEnd;
+    } else {
+      // Overlapping - calculate how much they overlap (as negative gap)
+      gap = Math.max(newStart - existEnd, existStart - newEnd);
+    }
+    
+    // Overlap or gap < 10 min → 🔴 Conflict (cannot save)
+    if (gap !== null && gap < 10) {
+      return { type: 'overlap', sched: s, gap };
+    }
+    
+    // Gap 10-19 min → 🟠 Tight (warning, can save)
+    if (gap !== null && gap < 20) {
+      return { type: 'tight', sched: s, gap };
+    }
+  }
+  
+  return { type: null };
+}
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function minutesToTime(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+}
+
+function checkWorkerConflicts() {
+  const alertEl = document.getElementById('schedEditConflictAlert');
+  const btn = document.getElementById('btnSaveSched');
+  
+  let hasConflict = false;
+  let hasWarning = false;
+  let messages = [];
+  
+  for (const wid of selectedWorkerIds) {
+    const worker = allWorkers.find(w => w.id === wid);
+    const conflict = checkWorkerConflictStatus(wid);
+    
+    if (conflict.type === 'overlap') {
+      hasConflict = true;
+      messages.push(`🔴 ${worker?.name || 'Worker'} is already assigned to "${conflict.sched.properties?.address || 'another cleaning'}" at this time.`);
+    } else if (conflict.type === 'tight') {
+      hasWarning = true;
+      messages.push(`🟠 ${worker?.name || 'Worker'} has another cleaning with only ${conflict.gap} min gap.`);
+    }
+  }
+  
+  if (hasConflict) {
+    alertEl.innerHTML = `<div class="conflict-alert error"><span class="conflict-alert-icon">⛔</span><div>${messages.join('<br>')}<br><strong>Cannot save with conflicts.</strong></div></div>`;
+    alertEl.style.display = 'block';
+    btn.disabled = true;
+  } else if (hasWarning) {
+    alertEl.innerHTML = `<div class="conflict-alert warning"><span class="conflict-alert-icon">⚠️</span><div>${messages.join('<br>')}</div></div>`;
+    alertEl.style.display = 'block';
+    btn.disabled = false;
+  } else {
+    alertEl.style.display = 'none';
+    btn.disabled = false;
+  }
+  
+  // Re-render to update status badges
+  const prop = currentSchedData?.prop || {};
+  renderWorkerCheckboxList(prop.area);
+}
+
+function updateChCalculation() {
+  const workerCount = selectedWorkerIds.length;
+  const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
+  const time = document.getElementById('schedEditTime').value;
+  
+  document.getElementById('schedEditWorkerCount').textContent = workerCount;
+  document.getElementById('schedEditDurationDisplay').textContent = `${duration} hrs`;
+  
+  // End time
+  if (time) {
+    const startMins = timeToMinutes(time);
+    const endMins = startMins + (duration * 60);
+    document.getElementById('schedEditEndTime').textContent = minutesToTime(endMins);
+  } else {
+    document.getElementById('schedEditEndTime').textContent = '—';
+  }
+  
+  // CH calculation: workers × duration
+  const ch = workerCount * duration;
+  document.getElementById('schedEditChDeduct').textContent = `${ch} hrs`;
+}
+
 function closeSchedEditModal() {
   document.getElementById('schedEditModal').classList.remove('open');
+  currentSchedData = null;
+  selectedWorkerIds = [];
 }
 
 async function saveSchedEdit() {
@@ -1692,26 +2540,42 @@ async function saveSchedEdit() {
   const status = document.getElementById('schedEditStatus').value;
   const date = document.getElementById('schedEditDate').value;
   const time = document.getElementById('schedEditTime').value;
-  const worker = document.getElementById('schedEditWorker').value;
   const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
   const alertEl = document.getElementById('schedEditAlert');
+  
+  // Check for conflicts before saving
+  for (const wid of selectedWorkerIds) {
+    const conflict = checkWorkerConflictStatus(wid);
+    if (conflict.type === 'overlap') {
+      alertEl.textContent = 'Cannot save: Worker has conflicting schedule.';
+      alertEl.className = 'modal-alert error';
+      return;
+    }
+  }
   
   const btn = document.getElementById('btnSaveSched');
   btn.disabled = true; btn.textContent = 'Saving…';
   
   try {
+    // Save all selected workers to assigned_workers JSONB array
+    // Keep assigned_worker_id for backward compatibility (first worker)
+    const workerId = selectedWorkerIds.length > 0 ? selectedWorkerIds[0] : null;
+    const chDeducted = selectedWorkerIds.length * duration;
+    
     const { error } = await sb.from('cleaning_schedule').update({
       status,
       planned_date: date || null,
       planned_time: time || null,
-      assigned_worker_id: worker || null,
+      assigned_worker_id: workerId,
+      assigned_workers: selectedWorkerIds,  // JSONB array of all workers
       duration_hours: duration,
+      ch_deducted: chDeducted,
       updated_at: new Date().toISOString()
     }).eq('id', id);
     
     if (error) throw error;
     
-    showToast('Schedule updated successfully');
+    showToast('Cleaning updated successfully');
     closeSchedEditModal();
     loadSchedules();
   } catch(e) {
@@ -1971,6 +2835,179 @@ async function saveWorker() {
   } finally {
     btn.disabled = false; btn.textContent = 'Save Worker';
   }
+}
+
+/* ══ Admin: Dashboard ═══════════════════════════════════════ */
+async function loadDashboard() {
+  if (!isAdmin) return;
+  
+  try {
+    // Parallel fetch all data needed
+    const [
+      jobsRes,
+      subsRes,
+      propsRes,
+      cleaningsRes
+    ] = await Promise.all([
+      // Pending job requests
+      sb.from('service_requests').select('id').eq('status', 'pending'),
+      // All active/suspended subscriptions
+      sb.from('subscriptions').select('id, status, plan_type, ch_balance, user_id, property_id').in('status', ['active', 'suspended']),
+      // All properties
+      sb.from('properties').select('id, address, suburb, user_id'),
+      // Cleanings this month
+      sb.from('cleaning_schedule').select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers, ch_deducted, duration_hours')
+        .gte('planned_date', getMonthStart())
+        .lte('planned_date', getMonthEnd())
+    ]);
+    
+    const jobs = jobsRes.data || [];
+    const subs = subsRes.data || [];
+    const props = propsRes.data || [];
+    const cleanings = cleaningsRes.data || [];
+    
+    // 1. Pending Jobs
+    const pendingJobs = jobs.length;
+    document.getElementById('ctaPendingJobs').textContent = pendingJobs;
+    updateCtaCardState('cta-pending', pendingJobs);
+    
+    // 2. Payment Issues (suspended subscriptions)
+    const paymentIssues = subs.filter(s => s.status === 'suspended').length;
+    document.getElementById('ctaPaymentIssues').textContent = paymentIssues;
+    updateCtaCardState('cta-payment', paymentIssues);
+    
+    // 3. No Plan Properties
+    const propsWithPlan = new Set(subs.map(s => s.property_id).filter(Boolean));
+    const noPlanProps = props.filter(p => !propsWithPlan.has(p.id)).length;
+    document.getElementById('ctaNoPlanProps').textContent = noPlanProps;
+    updateCtaCardState('cta-noplan', noPlanProps);
+    
+    // 4. CH Low Alert (ch_balance <= 2 hrs = 1 visit left for most properties)
+    const chLowSubs = subs.filter(s => s.status === 'active' && s.ch_balance !== null && s.ch_balance <= 2).length;
+    document.getElementById('ctaChLow').textContent = chLowSubs;
+    updateCtaCardState('cta-chlow', chLowSubs);
+    
+    // 5. Revenue this month (from payments table)
+    const paymentsRes = await sb.from('payments')
+      .select('amount, stripe_fee, net_amount')
+      .eq('status', 'succeeded')
+      .gte('paid_at', getMonthStart())
+      .lte('paid_at', getMonthEnd() + 'T23:59:59');
+    
+    const payments = paymentsRes.data || [];
+    const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalFees = payments.reduce((sum, p) => sum + (p.stripe_fee || 0), 0);
+    const totalNet = payments.reduce((sum, p) => sum + (p.net_amount || 0), 0);
+    
+    // Display in dollars (amounts are in cents)
+    document.getElementById('ctaRevenueMonth').textContent = `$${(totalRevenue / 100).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    document.getElementById('ctaFeesMonth').textContent = `$${(totalFees / 100).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    document.getElementById('ctaNetMonth').textContent = `$${(totalNet / 100).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    
+    // This Month Stats
+    const completedCleanings = cleanings.filter(c => c.status === 'completed').length;
+    const totalChUsed = cleanings.filter(c => c.status === 'completed').reduce((sum, c) => sum + (c.ch_deducted || c.duration_hours || 2), 0);
+    
+    document.getElementById('dashCleaningsMonth').textContent = cleanings.length;
+    document.getElementById('dashActiveSubs').textContent = subs.filter(s => s.status === 'active').length;
+    document.getElementById('dashChUsed').textContent = `${totalChUsed.toFixed(1)} hrs`;
+    
+    // Jobs completed this month
+    const jobsMonthRes = await sb.from('service_requests').select('id')
+      .eq('status', 'completed')
+      .gte('created_at', getMonthStart())
+      .lte('created_at', getMonthEnd());
+    document.getElementById('dashJobsMonth').textContent = (jobsMonthRes.data || []).length;
+    
+    // Upcoming Cleanings (next 7 days)
+    await loadUpcomingCleanings();
+    
+  } catch(e) {
+    console.error('Dashboard load error:', e);
+  }
+}
+
+function updateCtaCardState(cardClass, value) {
+  const card = document.querySelector(`.cta-card.${cardClass}`);
+  if (!card) return;
+  
+  if (value === 0) {
+    card.classList.add('cta-ok');
+  } else {
+    card.classList.remove('cta-ok');
+  }
+}
+
+function getMonthStart() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+}
+
+function getMonthEnd() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+}
+
+async function loadUpcomingCleanings() {
+  const body = document.getElementById('dashUpcomingBody');
+  
+  const today = new Date().toISOString().split('T')[0];
+  const weekLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  
+  const { data } = await sb.from('cleaning_schedule')
+    .select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers')
+    .gte('planned_date', today)
+    .lte('planned_date', weekLater)
+    .in('status', ['pending', 'scheduled', 'confirmed'])
+    .order('planned_date', { ascending: true })
+    .order('planned_time', { ascending: true })
+    .limit(10);
+  
+  if (!data?.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state">No upcoming cleanings.</td></tr>';
+    return;
+  }
+  
+  // Get property and worker info
+  const propIds = [...new Set(data.map(c => c.property_id).filter(Boolean))];
+  let propMap = {};
+  if (propIds.length) {
+    const { data: props } = await sb.from('properties').select('id, address, suburb').in('id', propIds);
+    (props || []).forEach(p => propMap[p.id] = p);
+  }
+  
+  // Load workers if not already loaded
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+  const workerMap = {};
+  allWorkers.forEach(w => workerMap[w.id] = w);
+  
+  body.innerHTML = data.map(c => {
+    const d = c.planned_date ? new Date(c.planned_date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+    const prop = propMap[c.property_id];
+    const propLabel = prop ? `${prop.address}, ${prop.suburb}` : '—';
+    
+    // Worker display
+    const workerIds = (c.assigned_workers && Array.isArray(c.assigned_workers) && c.assigned_workers.length > 0)
+      ? c.assigned_workers
+      : (c.assigned_worker_id ? [c.assigned_worker_id] : []);
+    
+    let workerDisplay = 'Unassigned';
+    if (workerIds.length === 1) {
+      workerDisplay = workerMap[workerIds[0]]?.name || 'Unknown';
+    } else if (workerIds.length > 1) {
+      workerDisplay = `${workerMap[workerIds[0]]?.name || '?'} +${workerIds.length - 1}`;
+    }
+    
+    const badgeClass = c.status === 'pending' ? 'pending' : 'scheduled';
+    
+    return `<tr>
+      <td style="font-weight:600;">${d}</td>
+      <td>${c.planned_time || '—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
+      <td>${workerDisplay}</td>
+      <td><span class="badge badge-${badgeClass}">${c.status}</span></td>
+    </tr>`;
+  }).join('');
 }
 
 /* ══ Admin: Properties ══════════════════════════════════════ */
