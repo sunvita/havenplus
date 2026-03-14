@@ -155,11 +155,12 @@ body {
   max-width: 440px;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  display: flex;
+  display: none;
   z-index: 100;
   padding: 8px 0;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
 }
+.bottom-tabs.show { display: flex; }
 .tab-btn {
   flex: 1;
   display: flex;
@@ -807,23 +808,25 @@ body {
       </div>
     </main>
 
-    <!-- Bottom Tabs -->
-    <nav class="bottom-tabs">
-      <button class="tab-btn active" data-tab="tabHome" onclick="switchTab('tabHome')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>Home</span>
-      </button>
-      <button class="tab-btn" data-tab="tabTraining" onclick="switchTab('tabTraining')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        <span>Training</span>
-      </button>
-      <button class="tab-btn" data-tab="tabMe" onclick="switchTab('tabMe')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        <span>Me</span>
-      </button>
     </nav>
   </div>
 </div>
+
+<!-- Bottom Tabs (outside main-app for fixed positioning) -->
+<nav class="bottom-tabs" id="bottomTabs">
+  <button class="tab-btn active" data-tab="tabHome" onclick="switchTab('tabHome')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="tab-btn" data-tab="tabTraining" onclick="switchTab('tabTraining')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span>Training</span>
+  </button>
+  <button class="tab-btn" data-tab="tabMe" onclick="switchTab('tabMe')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <span>Me</span>
+  </button>
+</nav>
 
 <!-- Complete Modal -->
 <div class="modal-overlay" id="completeModal" onclick="if(event.target===this)closeCompleteModal()">
@@ -945,12 +948,14 @@ function handleLogout() {
   if (timerInterval) clearInterval(timerInterval);
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('mainApp').classList.remove('active');
+  document.getElementById('bottomTabs').classList.remove('show');
   document.getElementById('codeInput').value = '';
 }
 
 function showMainApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainApp').classList.add('active');
+  document.getElementById('bottomTabs').classList.add('show');
   
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
