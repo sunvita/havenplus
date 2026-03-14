@@ -156,6 +156,12 @@
   .badge-essential { background: #e8f0fb; color: #1B2A4A; }
   .badge-smart { background: #fff3e0; color: #e65100; }
   .badge-premium { background: #f3e5f5; color: #6a1b9a; }
+  .badge-pending { background: #fff8e1; color: #f57c00; }
+  .badge-confirmed { background: #e3f2fd; color: #1565c0; }
+  .badge-scheduled { background: #e8f5e9; color: #2e7d32; }
+  .badge-in_progress { background: #fff3e0; color: #ef6c00; }
+  .badge-completed { background: #e8f5e9; color: #1e5c3a; }
+  .badge-cancelled { background: #f0f0f0; color: #888; }
   .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 14px; }
   .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .filter-input { padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color .2s; }
@@ -164,6 +170,40 @@
   .stat-mini { background: var(--bg); border-radius: 10px; padding: 14px 16px; }
   .stat-mini-label { font-size: 11px; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
   .stat-mini-value { font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px; }
+
+  /* ── Admin Modals ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .modal-title { font-size: 18px; font-weight: 800; color: var(--navy); }
+  .modal-close { background: none; border: none; font-size: 28px; color: var(--text-light); cursor: pointer; line-height: 1; padding: 0; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 24px; }
+  .modal-form-group { margin-bottom: 16px; }
+  .modal-form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .modal-form-group input, .modal-form-group select, .modal-form-group textarea { width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text); outline: none; transition: border-color .2s; }
+  .modal-form-group input:focus, .modal-form-group select:focus, .modal-form-group textarea:focus { border-color: var(--orange); }
+  .modal-form-group textarea { min-height: 80px; resize: vertical; }
+  .modal-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .modal-btn { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; border: none; transition: all .2s; }
+  .modal-btn-primary { background: var(--navy); color: white; }
+  .modal-btn-primary:hover { background: var(--navy-light); }
+  .modal-btn-secondary { background: none; border: 2px solid var(--border); color: var(--text); }
+  .modal-btn-secondary:hover { border-color: var(--navy); color: var(--navy); }
+  .modal-btn-danger { background: var(--red); color: white; }
+  .modal-btn-danger:hover { background: #a93226; }
+  .modal-alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .modal-alert.error { background: #fee; color: var(--red); display: block; }
+  .modal-alert.success { background: var(--green-bg); color: var(--green-txt); display: block; }
+
+  /* ── Action Buttons in Tables ── */
+  .btn-action-sm { background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; color: var(--navy); }
+  .btn-action-sm:hover { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-action-sm.danger { color: var(--red); border-color: #f5c6cb; }
+  .btn-action-sm.danger:hover { background: var(--red); color: white; border-color: var(--red); }
+  .action-cell { display: flex; gap: 6px; }
 
   /* ── Toast ── */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--navy); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 9999; transition: transform .3s; white-space: nowrap; pointer-events: none; }
@@ -177,6 +217,7 @@
     .form-grid { grid-template-columns: 1fr; }
     .sub-details { grid-template-columns: 1fr 1fr; }
     .stat-row { grid-template-columns: 1fr 1fr; }
+    .modal-form-row { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
     .page { padding: 20px 16px; }
@@ -253,13 +294,29 @@
       <div id="adminNav" style="display:none;">
         <div class="sidebar-divider"></div>
         <div class="sidebar-section">Admin <span class="admin-badge">Admin</span></div>
-        <button class="sidebar-item" data-section="subscribers" onclick="switchSection('subscribers')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Subscribers
+        <button class="sidebar-item" data-section="jobrequests" onclick="switchSection('jobrequests')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Job Requests
         </button>
         <button class="sidebar-item" data-section="schedules" onclick="switchSection('schedules')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Service Schedules
+          Schedules
+        </button>
+        <button class="sidebar-item" data-section="workers" onclick="switchSection('workers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Workers
+        </button>
+        <button class="sidebar-item" data-section="subscribers" onclick="switchSection('subscribers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="14" x2="10" y2="14"/></svg>
+          Subscribers
+        </button>
+        <button class="sidebar-item" data-section="properties" onclick="switchSection('properties')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Properties
+        </button>
+        <button class="sidebar-item" data-section="customers" onclick="switchSection('customers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Customers
         </button>
         <button class="sidebar-item" data-section="hourslog" onclick="switchSection('hourslog')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -420,6 +477,88 @@
       </div>
     </section>
 
+    <!-- ═══ Admin: Job Requests ═══ -->
+    <section class="section" id="section-jobrequests">
+      <div class="section-card">
+        <div class="section-title">Job Requests <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Manage service requests from customers.</div>
+        <div class="stat-row" id="jobStats">
+          <div class="stat-mini"><div class="stat-mini-label">Pending</div><div class="stat-mini-value" id="statJobPending">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Confirmed</div><div class="stat-mini-value" id="statJobConfirmed">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">In Progress</div><div class="stat-mini-value" id="statJobInProgress">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Completed</div><div class="stat-mini-value" id="statJobCompleted">—</div></div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="jobSearch" placeholder="Search customer or description…" oninput="filterJobRequests()" style="flex:1;min-width:180px;">
+          <select class="filter-input" id="jobStatusFilter" onchange="loadJobRequests()">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Customer</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="jobsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Schedules (Enhanced) ═══ -->
+    <section class="section" id="section-schedules">
+      <div class="section-card">
+        <div class="section-title">Cleaning Schedules <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Manage cleaning visits — confirm dates and assign workers.</div>
+        <div class="stat-row" id="schedStats">
+          <div class="stat-mini"><div class="stat-mini-label">Pending</div><div class="stat-mini-value" id="statSchedPending">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Scheduled</div><div class="stat-mini-value" id="statSchedScheduled">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Completed</div><div class="stat-mini-value" id="statSchedCompleted">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">This Month</div><div class="stat-mini-value" id="statSchedThisMonth">—</div></div>
+        </div>
+        <div class="filter-bar">
+          <select class="filter-input" id="schedStatusFilter" onchange="loadSchedules()">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select class="filter-input" id="schedWorkerFilter" onchange="loadSchedules()">
+            <option value="">All workers</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Time</th><th>Property</th><th>Customer</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="schedulesBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Workers ═══ -->
+    <section class="section" id="section-workers">
+      <div class="section-card">
+        <div class="section-title">Workers <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Manage service team members.</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+          <button class="btn-save" onclick="openWorkerModal()">+ Add Worker</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="workersBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══ Admin: Subscribers ═══ -->
     <section class="section" id="section-subscribers">
       <div class="section-card">
@@ -449,24 +588,35 @@
       </div>
     </section>
 
-    <!-- ═══ Admin: Service Schedules ═══ -->
-    <section class="section" id="section-schedules">
+    <!-- ═══ Admin: Properties ═══ -->
+    <section class="section" id="section-properties">
       <div class="section-card">
-        <div class="section-title">Service Schedules <span class="admin-badge">Admin</span></div>
-        <div class="section-desc">Upcoming and past cleaning visits.</div>
+        <div class="section-title">All Properties <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">View all registered properties across customers.</div>
         <div class="filter-bar">
-          <select class="filter-input" id="schedStatusFilter" onchange="loadSchedules()">
-            <option value="">All statuses</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <input type="text" class="filter-input" id="propSearch" placeholder="Search address or suburb…" oninput="filterProperties()" style="flex:1;min-width:180px;">
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Property</th><th>Worker</th><th>Status</th></tr></thead>
-            <tbody id="schedulesBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th>Address</th><th>Suburb</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Plan</th></tr></thead>
+            <tbody id="propsBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Customers ═══ -->
+    <section class="section" id="section-customers">
+      <div class="section-card">
+        <div class="section-title">Customers <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">All registered users.</div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="custSearch" placeholder="Search name, email, or phone…" oninput="filterCustomers()" style="flex:1;min-width:180px;">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Language</th><th>Role</th><th>Joined</th></tr></thead>
+            <tbody id="customersBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -487,6 +637,170 @@
     </section>
 
   </main>
+</div>
+
+<!-- ══ Admin Modals ══════════════════════════════════════════ -->
+
+<!-- Job Request Edit Modal -->
+<div class="modal-overlay" id="jobEditModal" onclick="if(event.target===this)closeJobEditModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Edit Job Request</div>
+      <button class="modal-close" onclick="closeJobEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="jobEditAlert"></div>
+      <input type="hidden" id="jobEditId">
+      <div class="modal-form-group">
+        <label>Status</label>
+        <select id="jobEditStatus">
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Scheduled Date</label>
+          <input type="date" id="jobEditDate">
+        </div>
+        <div class="modal-form-group">
+          <label>Scheduled Time</label>
+          <input type="time" id="jobEditTime">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Assigned Worker</label>
+        <select id="jobEditWorker">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>SH Estimate</label>
+          <input type="number" id="jobEditEstimate" step="0.5" min="0.5">
+        </div>
+        <div class="modal-form-group">
+          <label>Actual SH Used</label>
+          <input type="number" id="jobEditActual" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Admin Notes</label>
+        <textarea id="jobEditNotes" placeholder="Internal notes…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeJobEditModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveJob" onclick="saveJobEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Edit Modal -->
+<div class="modal-overlay" id="schedEditModal" onclick="if(event.target===this)closeSchedEditModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Edit Schedule</div>
+      <button class="modal-close" onclick="closeSchedEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="schedEditAlert"></div>
+      <input type="hidden" id="schedEditId">
+      <div class="modal-form-group">
+        <label>Status</label>
+        <select id="schedEditStatus">
+          <option value="pending">Pending</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Confirmed Date</label>
+          <input type="date" id="schedEditDate">
+        </div>
+        <div class="modal-form-group">
+          <label>Time</label>
+          <input type="time" id="schedEditTime">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Assigned Worker</label>
+        <select id="schedEditWorker">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Duration (hours)</label>
+        <input type="number" id="schedEditDuration" step="0.5" min="0.5" value="2">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSchedEditModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveSched" onclick="saveSchedEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Add/Edit Modal -->
+<div class="modal-overlay" id="workerModal" onclick="if(event.target===this)closeWorkerModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="workerModalTitle">Add Worker</div>
+      <button class="modal-close" onclick="closeWorkerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="workerAlert"></div>
+      <input type="hidden" id="workerEditId">
+      <div class="modal-form-group">
+        <label>Full Name *</label>
+        <input type="text" id="workerName" placeholder="e.g. John Smith">
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Phone</label>
+          <input type="tel" id="workerPhone" placeholder="04XX XXX XXX">
+        </div>
+        <div class="modal-form-group">
+          <label>Email</label>
+          <input type="email" id="workerEmail" placeholder="email@example.com">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Worker Type</label>
+          <select id="workerType">
+            <option value="cleaner">Cleaner</option>
+            <option value="handyman">Handyman</option>
+            <option value="electrician">Electrician</option>
+            <option value="plumber">Plumber</option>
+            <option value="multi">Multi-skilled</option>
+          </select>
+        </div>
+        <div class="modal-form-group">
+          <label>Status</label>
+          <select id="workerStatus">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Notes</label>
+        <textarea id="workerNotes" placeholder="Internal notes about this worker…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeWorkerModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveWorker" onclick="saveWorker()">Save Worker</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -580,6 +894,10 @@ function switchSection(name) {
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'schedules')    loadSchedules();
   if (name === 'hourslog')     loadHoursLog();
+  if (name === 'jobrequests')  loadJobRequests();
+  if (name === 'workers')      loadWorkers();
+  if (name === 'properties')   loadProperties();
+  if (name === 'customers')    loadCustomers();
 }
 
 /* ── Personal Info ──────────────────────────────────────── */
@@ -952,31 +1270,529 @@ function filterSubscribers() {
   renderSubscribers(filtered);
 }
 
-/* ══ Admin: Schedules ═══════════════════════════════════ */
+/* ══ Admin: Schedules (Enhanced) ══════════════════════════ */
+let allSchedules = [], allWorkers = [];
+
 async function loadSchedules() {
   if (!isAdmin) return;
   const body   = document.getElementById('schedulesBody');
   const status = document.getElementById('schedStatusFilter').value;
-  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+  const worker = document.getElementById('schedWorkerFilter').value;
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  // Load workers for dropdown if not already loaded
+  if (!allWorkers.length) await loadWorkersForDropdowns();
 
   let q = sb.from('cleaning_schedule')
-    .select('planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id')
-    .order('planned_date', { ascending: false }).limit(50);
+    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, user_id')
+    .order('planned_date', { ascending: false }).limit(100);
   if (status) q = q.eq('status', status);
+  if (worker) q = q.eq('assigned_worker_id', worker);
   const { data } = await q;
 
-  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No schedules found.</td></tr>'; return; }
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No schedules found.</td></tr>'; return; }
+
+  // Get property and user info
+  const propIds = [...new Set(data.map(r => r.property_id).filter(Boolean))];
+  const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+  
+  let propMap = {}, profileMap = {};
+  if (propIds.length) {
+    const { data: props } = await sb.from('properties').select('id, address, suburb').in('id', propIds);
+    (props || []).forEach(p => propMap[p.id] = p);
+  }
+  if (userIds.length) {
+    const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+    (profiles || []).forEach(p => profileMap[p.id] = p);
+  }
+
+  const workerMap = {};
+  allWorkers.forEach(w => workerMap[w.id] = w);
+
+  // Stats
+  const pending = data.filter(s => s.status === 'pending').length;
+  const scheduled = data.filter(s => s.status === 'scheduled' || s.status === 'confirmed').length;
+  const completed = data.filter(s => s.status === 'completed').length;
+  const thisMonth = data.filter(s => {
+    if (!s.planned_date) return false;
+    const d = new Date(s.planned_date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  
+  document.getElementById('statSchedPending').textContent = pending;
+  document.getElementById('statSchedScheduled').textContent = scheduled;
+  document.getElementById('statSchedCompleted').textContent = completed;
+  document.getElementById('statSchedThisMonth').textContent = thisMonth;
+
+  allSchedules = data;
+
   body.innerHTML = data.map(r => {
-    const d = new Date(r.planned_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    const d = r.planned_date ? new Date(r.planned_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const prop = propMap[r.property_id];
+    const propLabel = prop ? `${prop.address}, ${prop.suburb}` : '—';
+    const customer = profileMap[r.user_id]?.full_name || '—';
+    const workerName = workerMap[r.assigned_worker_id]?.name || 'Unassigned';
+    const badgeClass = r.status === 'completed' ? 'completed' : r.status === 'cancelled' ? 'cancelled' : r.status === 'pending' ? 'pending' : 'scheduled';
+    
     return `<tr>
       <td style="font-weight:600;">${d}</td>
       <td>${r.planned_time || '—'}</td>
-      <td>${r.duration_hours ? r.duration_hours + ' hrs' : '—'}</td>
-      <td style="color:var(--text-light);font-size:12px;">${r.property_id?.slice(0,8) || '—'}…</td>
-      <td style="color:var(--text-light);font-size:12px;">${r.assigned_worker_id?.slice(0,8) || 'Unassigned'}…</td>
-      <td><span class="badge badge-${r.status === 'completed' ? 'active' : r.status === 'cancelled' ? 'inactive' : 'essential'}">${r.status || '—'}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
+      <td>${customer}</td>
+      <td>${workerName}</td>
+      <td><span class="badge badge-${badgeClass}">${r.status || '—'}</span></td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openSchedEditModal('${r.id}')">Edit</button>
+      </td>
     </tr>`;
   }).join('');
+}
+
+async function loadWorkersForDropdowns() {
+  try {
+    const { data } = await sb.from('workers').select('id, name').eq('status', 'active').order('name');
+    allWorkers = data || [];
+    
+    // Populate worker filter dropdown
+    const schedWorkerFilter = document.getElementById('schedWorkerFilter');
+    if (schedWorkerFilter) {
+      schedWorkerFilter.innerHTML = '<option value="">All workers</option>' + 
+        allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+    }
+    
+    // Populate modal worker dropdowns
+    ['schedEditWorker', 'jobEditWorker'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '<option value="">Unassigned</option>' + 
+          allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+      }
+    });
+  } catch(e) {
+    console.warn('Workers table may not exist:', e.message);
+    allWorkers = [];
+  }
+}
+
+function openSchedEditModal(schedId) {
+  const sched = allSchedules.find(s => s.id === schedId);
+  if (!sched) return;
+  
+  document.getElementById('schedEditId').value = schedId;
+  document.getElementById('schedEditStatus').value = sched.status || 'pending';
+  document.getElementById('schedEditDate').value = sched.planned_date || '';
+  document.getElementById('schedEditTime').value = sched.planned_time || '';
+  document.getElementById('schedEditWorker').value = sched.assigned_worker_id || '';
+  document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
+  document.getElementById('schedEditAlert').className = 'modal-alert';
+  document.getElementById('schedEditAlert').textContent = '';
+  
+  document.getElementById('schedEditModal').classList.add('open');
+}
+
+function closeSchedEditModal() {
+  document.getElementById('schedEditModal').classList.remove('open');
+}
+
+async function saveSchedEdit() {
+  const id = document.getElementById('schedEditId').value;
+  const status = document.getElementById('schedEditStatus').value;
+  const date = document.getElementById('schedEditDate').value;
+  const time = document.getElementById('schedEditTime').value;
+  const worker = document.getElementById('schedEditWorker').value;
+  const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
+  const alertEl = document.getElementById('schedEditAlert');
+  
+  const btn = document.getElementById('btnSaveSched');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  try {
+    const { error } = await sb.from('cleaning_schedule').update({
+      status,
+      planned_date: date || null,
+      planned_time: time || null,
+      assigned_worker_id: worker || null,
+      duration_hours: duration,
+      updated_at: new Date().toISOString()
+    }).eq('id', id);
+    
+    if (error) throw error;
+    
+    showToast('Schedule updated successfully');
+    closeSchedEditModal();
+    loadSchedules();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
+/* ══ Admin: Job Requests ════════════════════════════════════ */
+let allJobRequests = [];
+
+async function loadJobRequests() {
+  if (!isAdmin) return;
+  const body = document.getElementById('jobsBody');
+  const status = document.getElementById('jobStatusFilter').value;
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  // Load workers for dropdown if not already loaded
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+
+  let q = sb.from('service_requests')
+    .select('*')
+    .order('created_at', { ascending: false }).limit(100);
+  if (status) q = q.eq('status', status);
+  const { data } = await q;
+
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No job requests found.</td></tr>'; return; }
+
+  // Get user info
+  const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+  let profileMap = {};
+  if (userIds.length) {
+    const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+    (profiles || []).forEach(p => profileMap[p.id] = p);
+  }
+
+  // Stats
+  const pending = data.filter(j => j.status === 'pending').length;
+  const confirmed = data.filter(j => j.status === 'confirmed').length;
+  const inProgress = data.filter(j => j.status === 'in_progress').length;
+  const completed = data.filter(j => j.status === 'completed').length;
+  
+  document.getElementById('statJobPending').textContent = pending;
+  document.getElementById('statJobConfirmed').textContent = confirmed;
+  document.getElementById('statJobInProgress').textContent = inProgress;
+  document.getElementById('statJobCompleted').textContent = completed;
+
+  allJobRequests = data.map(j => ({ ...j, profile: profileMap[j.user_id] || {} }));
+  renderJobRequests(allJobRequests);
+}
+
+function renderJobRequests(list) {
+  const body = document.getElementById('jobsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  
+  body.innerHTML = list.map(j => {
+    const d = new Date(j.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+    const customer = j.profile?.full_name || '—';
+    const category = (j.category || '—').replace(/_/g, ' ');
+    const urgency = j.urgency === 'same_day' ? '⚡ Same Day' : j.urgency === 'after_hours' ? '🌙 After Hrs' : 'Standard';
+    const estimate = j.sh_estimate ? `${j.sh_estimate}${j.sh_multiplier > 1 ? '×'+j.sh_multiplier : ''}` : '—';
+    const badgeClass = j.status || 'pending';
+    
+    return `<tr>
+      <td style="color:var(--text-light);">${d}</td>
+      <td style="font-weight:600;">${customer}</td>
+      <td style="text-transform:capitalize;">${category}</td>
+      <td style="font-size:12px;">${urgency}</td>
+      <td>${estimate} SH</td>
+      <td><span class="badge badge-${badgeClass}">${j.status || 'pending'}</span></td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openJobEditModal('${j.id}')">Edit</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterJobRequests() {
+  const q = document.getElementById('jobSearch').value.toLowerCase();
+  const filtered = allJobRequests.filter(j => {
+    const name = (j.profile?.full_name || '').toLowerCase();
+    const desc = (j.description || '').toLowerCase();
+    return !q || name.includes(q) || desc.includes(q);
+  });
+  renderJobRequests(filtered);
+}
+
+function openJobEditModal(jobId) {
+  const job = allJobRequests.find(j => j.id === jobId);
+  if (!job) return;
+  
+  document.getElementById('jobEditId').value = jobId;
+  document.getElementById('jobEditStatus').value = job.status || 'pending';
+  document.getElementById('jobEditDate').value = job.scheduled_date || job.preferred_date || '';
+  document.getElementById('jobEditTime').value = job.scheduled_time || '';
+  document.getElementById('jobEditWorker').value = job.assigned_worker_id || '';
+  document.getElementById('jobEditEstimate').value = job.sh_estimate || 1;
+  document.getElementById('jobEditActual').value = job.sh_used || '';
+  document.getElementById('jobEditNotes').value = job.admin_notes || '';
+  document.getElementById('jobEditAlert').className = 'modal-alert';
+  document.getElementById('jobEditAlert').textContent = '';
+  
+  document.getElementById('jobEditModal').classList.add('open');
+}
+
+function closeJobEditModal() {
+  document.getElementById('jobEditModal').classList.remove('open');
+}
+
+async function saveJobEdit() {
+  const id = document.getElementById('jobEditId').value;
+  const status = document.getElementById('jobEditStatus').value;
+  const date = document.getElementById('jobEditDate').value;
+  const time = document.getElementById('jobEditTime').value;
+  const worker = document.getElementById('jobEditWorker').value;
+  const estimate = parseFloat(document.getElementById('jobEditEstimate').value) || 1;
+  const actual = parseFloat(document.getElementById('jobEditActual').value) || null;
+  const notes = document.getElementById('jobEditNotes').value.trim();
+  const alertEl = document.getElementById('jobEditAlert');
+  
+  const btn = document.getElementById('btnSaveJob');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  try {
+    const { error } = await sb.from('service_requests').update({
+      status,
+      scheduled_date: date || null,
+      scheduled_time: time || null,
+      assigned_worker_id: worker || null,
+      sh_estimate: estimate,
+      sh_used: actual,
+      admin_notes: notes || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', id);
+    
+    if (error) throw error;
+    
+    showToast('Job request updated successfully');
+    closeJobEditModal();
+    loadJobRequests();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
+/* ══ Admin: Workers ═════════════════════════════════════════ */
+let allWorkersData = [];
+
+async function loadWorkers() {
+  if (!isAdmin) return;
+  const body = document.getElementById('workersBody');
+  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+
+  try {
+    const { data, error } = await sb.from('workers').select('*').order('name');
+    if (error) throw error;
+    
+    if (!data?.length) { 
+      body.innerHTML = '<tr><td colspan="6" class="empty-state">No workers found. Add your first worker above.</td></tr>'; 
+      return; 
+    }
+    
+    allWorkersData = data;
+    
+    body.innerHTML = data.map(w => {
+      const statusBadge = w.status === 'active' ? 'active' : 'inactive';
+      const typeBadge = w.worker_type || 'cleaner';
+      return `<tr>
+        <td style="font-weight:600;">${w.name || '—'}</td>
+        <td>${w.phone || '—'}</td>
+        <td style="color:var(--text-light);">${w.email || '—'}</td>
+        <td style="text-transform:capitalize;">${typeBadge}</td>
+        <td><span class="badge badge-${statusBadge}">${w.status || 'active'}</span></td>
+        <td class="action-cell">
+          <button class="btn-action-sm" onclick="openWorkerModal('${w.id}')">Edit</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-state">Workers table not available. Please create it first.</td></tr>';
+    console.warn('Workers load error:', e.message);
+  }
+}
+
+function openWorkerModal(workerId = null) {
+  const worker = workerId ? allWorkersData.find(w => w.id === workerId) : null;
+  
+  document.getElementById('workerModalTitle').textContent = worker ? 'Edit Worker' : 'Add Worker';
+  document.getElementById('workerEditId').value = workerId || '';
+  document.getElementById('workerName').value = worker?.name || '';
+  document.getElementById('workerPhone').value = worker?.phone || '';
+  document.getElementById('workerEmail').value = worker?.email || '';
+  document.getElementById('workerType').value = worker?.worker_type || 'cleaner';
+  document.getElementById('workerStatus').value = worker?.status || 'active';
+  document.getElementById('workerNotes').value = worker?.notes || '';
+  document.getElementById('workerAlert').className = 'modal-alert';
+  document.getElementById('workerAlert').textContent = '';
+  
+  document.getElementById('workerModal').classList.add('open');
+}
+
+function closeWorkerModal() {
+  document.getElementById('workerModal').classList.remove('open');
+}
+
+async function saveWorker() {
+  const id = document.getElementById('workerEditId').value;
+  const name = document.getElementById('workerName').value.trim();
+  const phone = document.getElementById('workerPhone').value.trim();
+  const email = document.getElementById('workerEmail').value.trim();
+  const type = document.getElementById('workerType').value;
+  const status = document.getElementById('workerStatus').value;
+  const notes = document.getElementById('workerNotes').value.trim();
+  const alertEl = document.getElementById('workerAlert');
+  
+  if (!name) {
+    alertEl.textContent = 'Worker name is required';
+    alertEl.className = 'modal-alert error';
+    return;
+  }
+  
+  const btn = document.getElementById('btnSaveWorker');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  try {
+    const payload = {
+      name,
+      phone: phone || null,
+      email: email || null,
+      worker_type: type,
+      status,
+      notes: notes || null,
+      updated_at: new Date().toISOString()
+    };
+    
+    let error;
+    if (id) {
+      ({ error } = await sb.from('workers').update(payload).eq('id', id));
+    } else {
+      ({ error } = await sb.from('workers').insert(payload));
+    }
+    
+    if (error) throw error;
+    
+    showToast(id ? 'Worker updated' : 'Worker added');
+    closeWorkerModal();
+    loadWorkers();
+    allWorkers = []; // Reset to force reload in dropdowns
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Worker';
+  }
+}
+
+/* ══ Admin: Properties ══════════════════════════════════════ */
+let allPropertiesData = [];
+
+async function loadProperties() {
+  if (!isAdmin) return;
+  const body = document.getElementById('propsBody');
+  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+
+  const { data } = await sb.from('properties')
+    .select('id, address, suburb, property_type, bedrooms, bathrooms, user_id')
+    .order('created_at', { ascending: false }).limit(200);
+    
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No properties found.</td></tr>'; return; }
+
+  // Get owners and subscriptions
+  const userIds = [...new Set(data.map(p => p.user_id).filter(Boolean))];
+  let profileMap = {}, subMap = {};
+  
+  if (userIds.length) {
+    const [profilesRes, subsRes] = await Promise.all([
+      sb.from('profiles').select('id, full_name').in('id', userIds),
+      sb.from('subscriptions').select('user_id, plan_type, property_id').eq('status', 'active')
+    ]);
+    (profilesRes.data || []).forEach(p => profileMap[p.id] = p);
+    (subsRes.data || []).forEach(s => { if(s.property_id) subMap[s.property_id] = s; });
+  }
+
+  allPropertiesData = data.map(p => ({
+    ...p,
+    owner: profileMap[p.user_id]?.full_name || '—',
+    plan: subMap[p.id]?.plan_type || null
+  }));
+  
+  renderProperties(allPropertiesData);
+}
+
+function renderProperties(list) {
+  const body = document.getElementById('propsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No results.</td></tr>'; return; }
+  
+  body.innerHTML = list.map(p => {
+    const planBadge = p.plan ? `<span class="badge badge-${p.plan}">${p.plan}</span>` : '<span style="color:#888;">No plan</span>';
+    return `<tr>
+      <td style="font-weight:600;">${p.address || '—'}</td>
+      <td>${p.suburb || '—'}</td>
+      <td style="text-transform:capitalize;">${(p.property_type || '—').replace(/_/g, ' ')}</td>
+      <td>${p.bedrooms || '—'} / ${p.bathrooms || '—'}</td>
+      <td>${p.owner}</td>
+      <td>${planBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterProperties() {
+  const q = document.getElementById('propSearch').value.toLowerCase();
+  const filtered = allPropertiesData.filter(p => {
+    const addr = (p.address || '').toLowerCase();
+    const suburb = (p.suburb || '').toLowerCase();
+    return !q || addr.includes(q) || suburb.includes(q);
+  });
+  renderProperties(filtered);
+}
+
+/* ══ Admin: Customers ═══════════════════════════════════════ */
+let allCustomersData = [];
+
+async function loadCustomers() {
+  if (!isAdmin) return;
+  const body = document.getElementById('customersBody');
+  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+
+  const { data } = await sb.from('profiles')
+    .select('id, full_name, phone, preferred_language, role, created_at')
+    .order('created_at', { ascending: false }).limit(200);
+    
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>'; return; }
+
+  // Get emails from auth (we store email in profiles or fetch via user lookup)
+  // Since we can't directly query auth.users, we rely on profiles data
+  // The email might need to be added to profiles table if not there
+  
+  allCustomersData = data;
+  renderCustomers(allCustomersData);
+}
+
+function renderCustomers(list) {
+  const body = document.getElementById('customersBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No results.</td></tr>'; return; }
+  
+  body.innerHTML = list.map(c => {
+    const joined = c.created_at ? new Date(c.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const roleBadge = c.role === 'admin' ? '<span class="admin-badge">Admin</span>' : '';
+    const lang = c.preferred_language === 'ko' ? '한국어' : 'English';
+    return `<tr>
+      <td style="font-weight:600;">${c.full_name || '—'}</td>
+      <td style="color:var(--text-light);">—</td>
+      <td>${c.phone || '—'}</td>
+      <td>${lang}</td>
+      <td>${roleBadge || 'Customer'}</td>
+      <td style="color:var(--text-light);">${joined}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterCustomers() {
+  const q = document.getElementById('custSearch').value.toLowerCase();
+  const filtered = allCustomersData.filter(c => {
+    const name = (c.full_name || '').toLowerCase();
+    const phone = (c.phone || '').toLowerCase();
+    return !q || name.includes(q) || phone.includes(q);
+  });
+  renderCustomers(filtered);
 }
 
 /* ══ Admin: Hours Log ═══════════════════════════════════ */
@@ -1017,6 +1833,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (document.getElementById('pwForm').classList.contains('open')) togglePwForm();
     if (document.getElementById('emailForm').classList.contains('open')) toggleEmailForm();
+    closeJobEditModal();
+    closeSchedEditModal();
+    closeWorkerModal();
   }
 });
 
