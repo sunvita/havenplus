@@ -995,18 +995,45 @@ async function loadTodayJobs() {
   try {
     const today = new Date().toISOString().split('T')[0];
     
-    const { data, error } = await sb.from('cleaning_schedule')
+    // Fetch cleaning schedules
+    const { data: cleaningData, error: cleaningError } = await sb.from('cleaning_schedule')
       .select('*, properties(address, suburb, area, bedrooms, bathrooms)')
       .eq('planned_date', today)
       .in('status', ['scheduled', 'confirmed', 'in_progress'])
       .order('planned_time');
     
-    if (error) throw error;
+    if (cleaningError) throw cleaningError;
     
-    todayJobs = (data || []).filter(job => {
+    // Fetch service requests
+    const { data: serviceData, error: serviceError } = await sb.from('service_requests')
+      .select('*, properties(address, suburb, area)')
+      .eq('scheduled_date', today)
+      .in('status', ['scheduled', 'confirmed', 'in_progress']);
+    
+    if (serviceError) console.warn('Service requests error:', serviceError);
+    
+    // Filter cleaning jobs for this worker
+    const myCleaningJobs = (cleaningData || []).filter(job => {
       if (job.assigned_workers?.includes(currentWorker.id)) return true;
       if (job.assigned_worker_id === currentWorker.id) return true;
       return false;
+    }).map(job => ({ ...job, job_type: 'cleaning' }));
+    
+    // Filter service jobs for this worker
+    const myServiceJobs = (serviceData || []).filter(job => {
+      return job.assigned_worker_id === currentWorker.id;
+    }).map(job => ({ 
+      ...job, 
+      job_type: 'service',
+      planned_time: job.scheduled_time,
+      duration_hours: job.sh_estimate || 1
+    }));
+    
+    // Combine and sort by time
+    todayJobs = [...myCleaningJobs, ...myServiceJobs].sort((a, b) => {
+      const timeA = a.planned_time || '99:99';
+      const timeB = b.planned_time || '99:99';
+      return timeA.localeCompare(timeB);
     });
     
     const rate = currentWorker.cleaning_rate || HOURLY_RATE;
@@ -1045,21 +1072,48 @@ async function loadWeekData() {
     const today = new Date();
     const weekEnd = new Date(today);
     weekEnd.setDate(weekEnd.getDate() + 7);
+    const todayStr = today.toISOString().split('T')[0];
+    const weekEndStr = weekEnd.toISOString().split('T')[0];
     
-    const { data, error } = await sb.from('cleaning_schedule')
+    // Fetch cleaning schedules
+    const { data: cleaningData, error: cleaningError } = await sb.from('cleaning_schedule')
       .select('*, properties(address, suburb)')
-      .gte('planned_date', today.toISOString().split('T')[0])
-      .lte('planned_date', weekEnd.toISOString().split('T')[0])
+      .gte('planned_date', todayStr)
+      .lte('planned_date', weekEndStr)
       .order('planned_date')
       .order('planned_time');
     
-    if (error) throw error;
+    if (cleaningError) throw cleaningError;
     
-    weekJobs = (data || []).filter(job => {
+    // Fetch service requests
+    const { data: serviceData, error: serviceError } = await sb.from('service_requests')
+      .select('*, properties(address, suburb)')
+      .gte('scheduled_date', todayStr)
+      .lte('scheduled_date', weekEndStr)
+      .order('scheduled_date');
+    
+    if (serviceError) console.warn('Service requests error:', serviceError);
+    
+    // Filter cleaning jobs for this worker
+    const myCleaningJobs = (cleaningData || []).filter(job => {
       if (job.assigned_workers?.includes(currentWorker.id)) return true;
       if (job.assigned_worker_id === currentWorker.id) return true;
       return false;
-    });
+    }).map(job => ({ ...job, job_type: 'cleaning' }));
+    
+    // Filter service jobs for this worker
+    const myServiceJobs = (serviceData || []).filter(job => {
+      return job.assigned_worker_id === currentWorker.id;
+    }).map(job => ({ 
+      ...job, 
+      job_type: 'service',
+      planned_date: job.scheduled_date,
+      planned_time: job.scheduled_time,
+      duration_hours: job.sh_estimate || 1
+    }));
+    
+    // Combine all jobs
+    weekJobs = [...myCleaningJobs, ...myServiceJobs];
     
     const rate = currentWorker.cleaning_rate || HOURLY_RATE;
     const completed = weekJobs.filter(j => j.status === 'completed');
@@ -1072,7 +1126,6 @@ async function loadWeekData() {
     document.getElementById('weekPotential').textContent = '$' + potentialEarnings;
     
     // Group upcoming by date
-    const todayStr = today.toISOString().split('T')[0];
     const grouped = {};
     upcoming.filter(j => j.planned_date !== todayStr).forEach(job => {
       if (!grouped[job.planned_date]) grouped[job.planned_date] = [];
@@ -1115,6 +1168,12 @@ function renderJobCard(job, isNext = false) {
   const cardClass = isInProgress ? 'in-progress' : (isNext ? 'next-up' : '');
   const badge = isInProgress ? '<span class="job-badge progress">In Progress</span>' : (isNext ? '<span class="job-badge next">Next</span>' : '');
   
+  // Job type indicator
+  const isService = job.job_type === 'service';
+  const typeIcon = isService ? '🔧' : '🧹';
+  const typeLabel = isService ? 'Service' : 'Cleaning';
+  const categoryLabel = isService && job.category ? ` · ${job.category.replace(/_/g, ' ')}` : '';
+  
   let actions = '';
   if (isInProgress) {
     actions = `
@@ -1123,7 +1182,7 @@ function renderJobCard(job, isNext = false) {
         <span class="job-timer-value" id="timer-${job.id}">00:00:00</span>
       </div>
       <div class="job-actions">
-        <button class="job-btn job-btn-complete" onclick="openCompleteModal('${job.id}')">
+        <button class="job-btn job-btn-complete" onclick="openCompleteModal('${job.id}', '${job.job_type || 'cleaning'}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Complete Job
         </button>
@@ -1135,12 +1194,17 @@ function renderJobCard(job, isNext = false) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           Navigate
         </button>
-        <button class="job-btn job-btn-primary" onclick="startJob('${job.id}')">
+        <button class="job-btn job-btn-primary" onclick="startJob('${job.id}', '${job.job_type || 'cleaning'}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           Start
         </button>
       </div>`;
   }
+  
+  // Different meta info based on job type
+  const metaInfo = isService 
+    ? `<span>${typeIcon} ${typeLabel}${categoryLabel}</span><span>⏱ ${job.duration_hours || 1}h</span>`
+    : `<span>🛏 ${prop.bedrooms || '?'}</span><span>🚿 ${prop.bathrooms || '?'}</span><span>⏱ ${job.duration_hours || 2}h</span>`;
   
   return `
     <div class="job-card ${cardClass}">
@@ -1151,9 +1215,7 @@ function renderJobCard(job, isNext = false) {
       <div class="job-address">${prop.address || 'Unknown'}</div>
       <div class="job-suburb">${prop.suburb || ''}</div>
       <div class="job-meta">
-        <span>🛏 ${prop.bedrooms || '?'}</span>
-        <span>🚿 ${prop.bathrooms || '?'}</span>
-        <span>⏱ ${job.duration_hours || 2}h</span>
+        ${metaInfo}
       </div>
       <div class="job-earning">$${earnings}</div>
       ${actions}
@@ -1165,17 +1227,41 @@ async function loadMeTab() {
   try {
     const monthStart = new Date();
     monthStart.setDate(1);
+    const monthStartStr = monthStart.toISOString().split('T')[0];
     
-    const { data } = await sb.from('cleaning_schedule')
-      .select('id, planned_date, duration_hours, properties(address)')
+    // Fetch cleaning jobs
+    const { data: cleaningData } = await sb.from('cleaning_schedule')
+      .select('id, planned_date, duration_hours, assigned_worker_id, assigned_workers, properties(address)')
       .eq('status', 'completed')
-      .gte('planned_date', monthStart.toISOString().split('T')[0]);
+      .gte('planned_date', monthStartStr);
     
-    const myJobs = (data || []).filter(job => {
+    // Fetch service jobs
+    const { data: serviceData } = await sb.from('service_requests')
+      .select('id, scheduled_date, sh_used, assigned_worker_id, properties(address)')
+      .eq('status', 'completed')
+      .gte('scheduled_date', monthStartStr);
+    
+    // Filter cleaning jobs for this worker
+    const myCleaningJobs = (cleaningData || []).filter(job => {
       if (job.assigned_workers?.includes(currentWorker.id)) return true;
       if (job.assigned_worker_id === currentWorker.id) return true;
-      return true; // For now, show all
-    });
+      return false;
+    }).map(job => ({ ...job, job_type: 'cleaning' }));
+    
+    // Filter service jobs for this worker
+    const myServiceJobs = (serviceData || []).filter(job => {
+      return job.assigned_worker_id === currentWorker.id;
+    }).map(job => ({ 
+      ...job, 
+      job_type: 'service',
+      planned_date: job.scheduled_date,
+      duration_hours: job.sh_used || 1
+    }));
+    
+    // Combine all jobs
+    const myJobs = [...myCleaningJobs, ...myServiceJobs].sort((a, b) => 
+      new Date(b.planned_date) - new Date(a.planned_date)
+    );
     
     document.getElementById('statMonth').textContent = myJobs.length;
     
@@ -1191,10 +1277,11 @@ async function loadMeTab() {
       const d = new Date(job.planned_date);
       const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
       const earnings = (job.duration_hours || 2) * rate;
+      const typeIcon = job.job_type === 'service' ? '🔧' : '🧹';
       
       return `<div class="recent-item">
         <div>
-          <div class="recent-date">${dateStr}</div>
+          <div class="recent-date">${typeIcon} ${dateStr}</div>
           <div class="recent-address">${job.properties?.address || 'Unknown'}</div>
         </div>
         <div class="recent-amount">$${earnings}</div>
@@ -1206,10 +1293,14 @@ async function loadMeTab() {
 }
 
 // ═══ Job Actions ═══
-async function startJob(jobId) {
+let activeJobType = 'cleaning';
+
+async function startJob(jobId, jobType = 'cleaning') {
   try {
     const now = new Date().toISOString();
-    const { error } = await sb.from('cleaning_schedule').update({
+    const table = jobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+    
+    const { error } = await sb.from(table).update({
       status: 'in_progress',
       actual_start: now
     }).eq('id', jobId);
@@ -1217,6 +1308,7 @@ async function startJob(jobId) {
     if (error) throw error;
     
     activeJobId = jobId;
+    activeJobType = jobType;
     jobStartTime = new Date();
     startTimer();
     showToast('Job started! 🚀', 'success');
@@ -1241,8 +1333,9 @@ function startTimer() {
   }, 1000);
 }
 
-function openCompleteModal(jobId) {
+function openCompleteModal(jobId, jobType = 'cleaning') {
   activeJobId = jobId;
+  activeJobType = jobType;
   photos = [];
   updatePhotoGrid();
   document.getElementById('completeModal').classList.add('open');
@@ -1296,17 +1389,29 @@ async function confirmComplete() {
     const now = new Date().toISOString();
     const duration = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : null;
     
-    const { error } = await sb.from('cleaning_schedule').update({
-      status: 'completed',
-      actual_end: now,
-      actual_duration: duration,
-      after_photos: photos
-    }).eq('id', activeJobId);
+    const table = activeJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+    
+    const updateData = activeJobType === 'service' 
+      ? {
+          status: 'completed',
+          actual_end: now,
+          sh_used: duration,
+          after_photos: photos
+        }
+      : {
+          status: 'completed',
+          actual_end: now,
+          actual_duration: duration,
+          after_photos: photos
+        };
+    
+    const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     
     if (error) throw error;
     
     if (timerInterval) clearInterval(timerInterval);
     activeJobId = null;
+    activeJobType = 'cleaning';
     jobStartTime = null;
     
     closeCompleteModal();
