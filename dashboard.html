@@ -276,8 +276,9 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .start-month-desc { font-size: 13px; color: var(--text-light); margin-bottom: 14px; line-height: 1.5; }
 .start-month-options { display: flex; gap: 8px; flex-wrap: wrap; }
 .start-month-btn { padding: 8px 18px; border: 2px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 700; background: white; color: var(--navy); cursor: pointer; font-family: inherit; transition: all .15s; }
-.start-month-btn:hover { border-color: var(--orange); color: var(--orange); }
+.start-month-btn:hover:not(:disabled) { border-color: var(--orange); color: var(--orange); }
 .start-month-btn.selected { border-color: var(--orange); background: var(--orange); color: white; }
+.start-month-btn:disabled, .start-month-btn.disabled { background: #f0f0f0; color: #aaa; border-color: #e0e0e0; cursor: not-allowed; }
 
 /* No-plan property card */
 .prop-hub-noplan { padding: 16px 24px 20px; background: #fafafa; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -323,45 +324,45 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 <div class="dash-main" id="dashContent" style="display:none">
 
   <div class="welcome-section">
-    <div class="welcome-title" id="welcomeTitle">Welcome!</div>
-    <div class="welcome-sub" id="welcomeSub">Managing your property with Haven Plus.</div>
+    <div class="welcome-title" id="welcomeTitle"><span class="lang-en">Welcome!</span><span class="lang-ko" style="display:none;">환영합니다!</span></div>
+    <div class="welcome-sub" id="welcomeSub"><span class="lang-en">Managing your property with Haven Plus.</span><span class="lang-ko" style="display:none;">Haven Plus와 함께 부동산을 관리하세요.</span></div>
   </div>
 
   <!-- ── STATE A: ONBOARDING ───────────────────────── -->
   <div id="stateOnboard">
     <div class="progress-section">
-      <div class="progress-label">ONBOARDING PROGRESS</div>
+      <div class="progress-label"><span class="lang-en">ONBOARDING PROGRESS</span><span class="lang-ko" style="display:none;">온보딩 진행</span></div>
       <div class="progress-steps">
-        <div class="progress-step done"><div class="progress-dot">✓</div><span>Sign Up</span></div>
+        <div class="progress-step done"><div class="progress-dot">✓</div><span><span class="lang-en">Sign Up</span><span class="lang-ko" style="display:none;">가입</span></span></div>
         <div class="progress-line done"></div>
-        <div class="progress-step" id="pStep2"><div class="progress-dot" id="pDot2">2</div><span>Property</span></div>
+        <div class="progress-step" id="pStep2"><div class="progress-dot" id="pDot2">2</div><span><span class="lang-en">Property</span><span class="lang-ko" style="display:none;">부동산</span></span></div>
         <div class="progress-line" id="pLine2"></div>
-        <div class="progress-step" id="pStep3"><div class="progress-dot" id="pDot3">3</div><span>Plan</span></div>
+        <div class="progress-step" id="pStep3"><div class="progress-dot" id="pDot3">3</div><span><span class="lang-en">Plan</span><span class="lang-ko" style="display:none;">플랜</span></span></div>
         <div class="progress-line" id="pLine3"></div>
-        <div class="progress-step" id="pStep4"><div class="progress-dot">4</div><span>Payment</span></div>
+        <div class="progress-step" id="pStep4"><div class="progress-dot">4</div><span><span class="lang-en">Payment</span><span class="lang-ko" style="display:none;">결제</span></span></div>
       </div>
     </div>
 
     <div class="action-grid">
       <div class="action-card" id="cardProperty" onclick="openAddPropertyModal()">
         <div class="action-icon" style="font-size:28px;color:var(--navy)"><svg viewBox="0 0 16 16" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg></div>
-        <div class="action-title">Register Property</div>
-        <div class="action-desc">Add your property address, type, and access details</div>
-        <div class="action-badge badge-todo" id="badgeProperty">TO DO</div>
+        <div class="action-title"><span class="lang-en">Register Property</span><span class="lang-ko" style="display:none;">부동산 등록</span></div>
+        <div class="action-desc"><span class="lang-en">Add your property address, type, and access details</span><span class="lang-ko" style="display:none;">부동산 주소, 유형, 접근 정보 추가</span></div>
+        <div class="action-badge badge-todo" id="badgeProperty"><span class="lang-en">TO DO</span><span class="lang-ko" style="display:none;">할 일</span></div>
       </div>
       <div class="action-card disabled" id="cardPlan" onclick="handleChoosePlan()">
         <div class="action-icon" style="font-size:28px;color:var(--navy)"><svg viewBox="0 0 16 16" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="1" width="10" height="14" rx="1.5"/><line x1="6" y1="5" x2="11" y2="5"/><line x1="6" y1="8" x2="11" y2="8"/><line x1="6" y1="11" x2="9" y2="11"/></svg></div>
-        <div class="action-title">Choose a Plan</div>
-        <div class="action-desc">Select a subscription or purchase Service Hours</div>
-        <div class="action-badge badge-locked" id="badgePlan">Register property first</div>
+        <div class="action-title"><span class="lang-en">Choose a Plan</span><span class="lang-ko" style="display:none;">플랜 선택</span></div>
+        <div class="action-desc"><span class="lang-en">Select a subscription or purchase Service Hours</span><span class="lang-ko" style="display:none;">구독 선택 또는 Service Hours 구매</span></div>
+        <div class="action-badge badge-locked" id="badgePlan"><span class="lang-en">Register property first</span><span class="lang-ko" style="display:none;">먼저 부동산 등록</span></div>
       </div>
     </div>
 
     <!-- Property list (shown after first registration) -->
     <div class="info-section" id="propInfoSection" style="display:none">
-      <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> My Properties</div>
+      <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> <span class="lang-en">My Properties</span><span class="lang-ko" style="display:none;">내 부동산</span></div>
       <div id="propertyList"></div>
-      <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
+      <button class="btn-add-property" onclick="openAddPropertyModal()"><span class="lang-en">+ Add Another Property</span><span class="lang-ko" style="display:none;">+ 부동산 추가</span></button>
     </div>
   </div>
 
@@ -370,62 +371,62 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
     <!-- Overview stats -->
     <div class="stat-grid" id="overviewStats">
       <div class="stat-card hl">
-        <div class="stat-label">Properties</div>
+        <div class="stat-label"><span class="lang-en">Properties</span><span class="lang-ko" style="display:none;">부동산</span></div>
         <div class="stat-value" id="ovPropCount">0</div>
         <div class="stat-sub" id="ovPropSub">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Cleaning Hours</div>
+        <div class="stat-label"><span class="lang-en">Cleaning Hours</span><span class="lang-ko" style="display:none;">청소 시간</span></div>
         <div class="stat-value" id="ovCleanRem">0</div>
-        <div class="stat-sub" id="ovCleanSub">total remaining</div>
+        <div class="stat-sub" id="ovCleanSub"><span class="lang-en">total remaining</span><span class="lang-ko" style="display:none;">총 잔여</span></div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Service Hours</div>
         <div class="stat-value" id="ovSHRem">0</div>
-        <div class="stat-sub" id="ovSHSub">voucher + purchased</div>
+        <div class="stat-sub" id="ovSHSub"><span class="lang-en">voucher + purchased</span><span class="lang-ko" style="display:none;">바우처 + 구매</span></div>
       </div>
     </div>
 
     <div class="action-row">
-      <a href="plans.html?mode=sh" class="btn-action btn-primary">+ Add Service Hours</a>
-      <button class="btn-action btn-secondary" onclick="openShRequestModal()">🔧 Book a Job</button>
+      <a href="plans.html?mode=sh" class="btn-action btn-primary"><span class="lang-en">+ Add Service Hours</span><span class="lang-ko" style="display:none;">+ Service Hours 추가</span></a>
+      <button class="btn-action btn-secondary" onclick="openShRequestModal()"><span class="lang-en">🔧 Book a Job</span><span class="lang-ko" style="display:none;">🔧 작업 예약</span></button>
     </div>
 
     <!-- Property hub cards rendered here -->
     <div id="propertyHubList"></div>
 
-    <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
+    <button class="btn-add-property" onclick="openAddPropertyModal()"><span class="lang-en">+ Add Another Property</span><span class="lang-ko" style="display:none;">+ 부동산 추가</span></button>
   </div>
 
   <!-- ── STATE C: SH ONLY ──────────────────────────── -->
   <div id="stateSHOnly">
     <div class="info-section">
-      <div class="info-title">⏱ Service Hours Balance</div>
-      <div style="font-size:28px;font-weight:900;color:var(--navy);margin-bottom:12px"><span id="shOnlyTotal">0</span> hrs</div>
+      <div class="info-title"><span class="lang-en">⏱ Service Hours Balance</span><span class="lang-ko" style="display:none;">⏱ Service Hours 잔액</span></div>
+      <div style="font-size:28px;font-weight:900;color:var(--navy);margin-bottom:12px"><span id="shOnlyTotal">0</span> <span class="lang-en">hrs</span><span class="lang-ko" style="display:none;">시간</span></div>
       <div class="sh-bal-grid">
         <div class="sh-bal-item">
-          <div class="sh-bal-item-label">Purchased bundles</div>
-          <div class="sh-bal-item-val"><span id="shOnlyPurchased">0</span><span class="u">hrs</span></div>
+          <div class="sh-bal-item-label"><span class="lang-en">Purchased bundles</span><span class="lang-ko" style="display:none;">구매한 번들</span></div>
+          <div class="sh-bal-item-val"><span id="shOnlyPurchased">0</span><span class="u"><span class="lang-en">hrs</span><span class="lang-ko" style="display:none;">시간</span></span></div>
         </div>
         <div class="sh-bal-item">
-          <div class="sh-bal-item-label">Call-out fee</div>
-          <div class="sh-bal-item-val" style="font-size:16px;font-weight:700;color:var(--success)">$0 Always</div>
+          <div class="sh-bal-item-label"><span class="lang-en">Call-out fee</span><span class="lang-ko" style="display:none;">출장비</span></div>
+          <div class="sh-bal-item-val" style="font-size:16px;font-weight:700;color:var(--success)"><span class="lang-en">$0 Always</span><span class="lang-ko" style="display:none;">항상 $0</span></div>
         </div>
       </div>
     </div>
     <div class="action-row" style="margin-bottom:20px">
-      <a href="plans.html?mode=sh" class="btn-action btn-primary">+ Add Service Hours</a>
-      <button class="btn-action btn-secondary" onclick="openShRequestModal()">🔧 Book a Job</button>
+      <a href="plans.html?mode=sh" class="btn-action btn-primary"><span class="lang-en">+ Add Service Hours</span><span class="lang-ko" style="display:none;">+ Service Hours 추가</span></a>
+      <button class="btn-action btn-secondary" onclick="openShRequestModal()"><span class="lang-en">🔧 Book a Job</span><span class="lang-ko" style="display:none;">🔧 작업 예약</span></button>
     </div>
     <div class="nudge">
-      <div class="nudge-title">Add regular cleaning to your plan</div>
-      <div class="nudge-sub">Subscribe to get quarterly or monthly professional cleans, repair checkups, and smoke alarm servicing — plus annual Service Hour vouchers included.</div>
-      <a href="plans.html" class="btn-nudge">View Subscription Plans →</a>
+      <div class="nudge-title"><span class="lang-en">Add regular cleaning to your plan</span><span class="lang-ko" style="display:none;">정기 청소를 플랜에 추가하세요</span></div>
+      <div class="nudge-sub"><span class="lang-en">Subscribe to get quarterly or monthly professional cleans, repair checkups, and smoke alarm servicing — plus annual Service Hour vouchers included.</span><span class="lang-ko" style="display:none;">구독하시면 분기/월별 전문 청소, 수리 점검, 화재경보기 서비스 — 연간 Service Hour 바우처까지 제공됩니다.</span></div>
+      <a href="plans.html" class="btn-nudge"><span class="lang-en">View Subscription Plans →</span><span class="lang-ko" style="display:none;">구독 플랜 보기 →</span></a>
     </div>
     <div class="info-section" id="propInfoSH" style="display:none">
-      <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> My Properties</div>
+      <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> <span class="lang-en">My Properties</span><span class="lang-ko" style="display:none;">내 부동산</span></div>
       <div id="propertyListSH"></div>
-      <button class="btn-add-property" onclick="openAddPropertyModal()">+ Add Another Property</button>
+      <button class="btn-add-property" onclick="openAddPropertyModal()"><span class="lang-en">+ Add Another Property</span><span class="lang-ko" style="display:none;">+ 부동산 추가</span></button>
     </div>
   </div>
 
@@ -435,7 +436,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 <div class="modal-overlay" id="propertyModal" onclick="if(event.target===this)closePropertyModal()">
   <div class="modal-box">
     <div class="modal-header">
-      <div class="modal-title" id="propModalTitle">Register Your Property</div>
+      <div class="modal-title" id="propModalTitle"><span class="lang-en">Register Your Property</span><span class="lang-ko" style="display:none;">부동산 등록</span></div>
       <button class="modal-close" onclick="closePropertyModal()">×</button>
     </div>
     <div class="modal-body">
@@ -443,12 +444,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <div class="form-success" id="propSuccess"></div>
       <input type="hidden" id="propEditId">
       <div id="propLockHint" style="display:none;background:#fff8f0;border:1px solid #fde0c0;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#92600a;line-height:1.5;">
-        <svg style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:3px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg> Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>. You can update property manager/key holder and access instructions below.
+        <svg style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:3px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg> <span class="lang-en">Address, property type, and room layout are locked after subscription. To change, contact <strong>hi&#64;havenpluscare.com</strong>. You can update property manager/key holder and access instructions below.</span><span class="lang-ko" style="display:none;">구독 후에는 주소, 부동산 유형, 방 구성이 잠깁니다. 변경하려면 <strong>hi&#64;havenpluscare.com</strong>으로 연락해 주세요. 아래에서 관리자/키 보유자 및 접근 안내를 업데이트할 수 있습니다.</span>
       </div>
       <div class="form-group">
-        <label class="form-label">Address *</label>
+        <label class="form-label"><span class="lang-en">Address *</span><span class="lang-ko" style="display:none;">주소 *</span></label>
         <input type="text" class="form-input" id="propAddress" placeholder="Start typing your address..." autocomplete="off">
-        <div class="form-hint">Select from suggestions to auto-fill suburb &amp; postcode</div>
+        <div class="form-hint"><span class="lang-en">Select from suggestions to auto-fill suburb &amp; postcode</span><span class="lang-ko" style="display:none;">제안 항목을 선택하면 suburb와 우편번호가 자동 입력됩니다</span></div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -457,15 +458,15 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
           <div class="suburb-auto" id="suburbAuto"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">Postcode *</label>
+          <label class="form-label"><span class="lang-en">Postcode *</span><span class="lang-ko" style="display:none;">우편번호 *</span></label>
           <input type="text" class="form-input" id="propPostcode" placeholder="Auto-filled" maxlength="4"
             oninput="this.value=this.value.replace(/\D/g,'');manualPostcodeLookup()">
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Property Type *</label>
+        <label class="form-label"><span class="lang-en">Property Type *</span><span class="lang-ko" style="display:none;">부동산 유형 *</span></label>
         <select class="form-select" id="propType">
-          <option value="">Select type</option>
+          <option value=""><span class="lang-en">Select type</span></option>
           <option value="house">House</option>
           <option value="apartment">Apartment / Unit</option>
           <option value="townhouse">Townhouse</option>
@@ -474,7 +475,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       </div>
       <div class="form-row-half" id="bedroomBathroomRow">
         <div class="form-group">
-          <label class="form-label">Bedrooms</label>
+          <label class="form-label"><span class="lang-en">Bedrooms</span><span class="lang-ko" style="display:none;">침실</span></label>
           <div class="spinner-wrap" id="spinBedrooms">
             <button type="button" class="spinner-btn" onclick="spinValue('propBedrooms',-1)">−</button>
             <input type="text" class="spinner-value" id="propBedrooms" value="0" readonly>
@@ -482,7 +483,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Bathrooms</label>
+          <label class="form-label"><span class="lang-en">Bathrooms</span><span class="lang-ko" style="display:none;">욕실</span></label>
           <div class="spinner-wrap" id="spinBathrooms">
             <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',-1)">−</button>
             <input type="text" class="spinner-value" id="propBathrooms" value="0" readonly>
@@ -491,7 +492,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Property Manager or Key Holder</label>
+        <label class="form-label"><span class="lang-en">Property Manager or Key Holder</span><span class="lang-ko" style="display:none;">부동산 관리자 또는 키 보유자</span></label>
         <div class="form-row-half">
           <div class="form-group" style="margin-bottom:0">
             <input type="text" class="form-input" id="propKeyName"
@@ -502,35 +503,35 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
               placeholder="Phone or email">
           </div>
         </div>
-        <div class="form-hint">Who holds the keys or manages the property? Leave blank if not applicable.</div>
+        <div class="form-hint"><span class="lang-en">Who holds the keys or manages the property? Leave blank if not applicable.</span><span class="lang-ko" style="display:none;">키 보유자 또는 부동산 관리자가 누구인가요? 해당 없으면 비워두세요.</span></div>
       </div>
       <div class="form-group">
-        <label class="form-label">Access Instructions</label>
+        <label class="form-label"><span class="lang-en">Access Instructions</span><span class="lang-ko" style="display:none;">접근 안내</span></label>
         <textarea class="form-textarea" id="propAccess"
           placeholder="e.g. Key under pot near front door, gate code 1234, lockbox on fence..."></textarea>
-        <div class="form-hint">How should our team access the property? This information is securely stored.</div>
+        <div class="form-hint"><span class="lang-en">How should our team access the property? This information is securely stored.</span><span class="lang-ko" style="display:none;">저희 팀이 부동산에 어떻게 접근하면 되나요? 이 정보는 안전하게 보관됩니다.</span></div>
       </div>
 
       <!-- Cleaning Preferences -->
       <div style="border-top:1px solid var(--border);margin:20px 0 18px;padding-top:18px">
-        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">🧹 Cleaning Visit Preferences <span style="font-size:11px;font-weight:400;color:var(--text-light)">(optional)</span></div>
-        <div class="form-hint" style="margin-bottom:14px">Helps us schedule visits without extra back-and-forth.</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px"><span class="lang-en">🧹 Cleaning Visit Preferences</span><span class="lang-ko" style="display:none;">🧹 청소 방문 선호 설정</span> <span style="font-size:11px;font-weight:400;color:var(--text-light)"><span class="lang-en">(optional)</span><span class="lang-ko" style="display:none;">(선택)</span></span></div>
+        <div class="form-hint" style="margin-bottom:14px"><span class="lang-en">Helps us schedule visits without extra back-and-forth.</span><span class="lang-ko" style="display:none;">추가 연락 없이 방문 일정을 잡는 데 도움이 됩니다.</span></div>
       </div>
       <div class="form-group">
-        <label class="form-label">Preferred Day(s)</label>
+        <label class="form-label"><span class="lang-en">Preferred Day(s)</span><span class="lang-ko" style="display:none;">선호 요일</span></label>
         <div id="prefDaysWrap" style="display:flex;gap:6px;flex-wrap:wrap">
-          <label class="pref-chip"><input type="checkbox" value="mon" class="pref-day-cb"> Mon</label>
-          <label class="pref-chip"><input type="checkbox" value="tue" class="pref-day-cb"> Tue</label>
-          <label class="pref-chip"><input type="checkbox" value="wed" class="pref-day-cb"> Wed</label>
-          <label class="pref-chip"><input type="checkbox" value="thu" class="pref-day-cb"> Thu</label>
-          <label class="pref-chip"><input type="checkbox" value="fri" class="pref-day-cb"> Fri</label>
-          <label class="pref-chip"><input type="checkbox" value="sat" class="pref-day-cb"> Sat</label>
-          <label class="pref-chip"><input type="checkbox" value="sun" class="pref-day-cb"> Sun</label>
+          <label class="pref-chip"><input type="checkbox" value="mon" class="pref-day-cb"> <span class="lang-en">Mon</span><span class="lang-ko" style="display:none;">월</span></label>
+          <label class="pref-chip"><input type="checkbox" value="tue" class="pref-day-cb"> <span class="lang-en">Tue</span><span class="lang-ko" style="display:none;">화</span></label>
+          <label class="pref-chip"><input type="checkbox" value="wed" class="pref-day-cb"> <span class="lang-en">Wed</span><span class="lang-ko" style="display:none;">수</span></label>
+          <label class="pref-chip"><input type="checkbox" value="thu" class="pref-day-cb"> <span class="lang-en">Thu</span><span class="lang-ko" style="display:none;">목</span></label>
+          <label class="pref-chip"><input type="checkbox" value="fri" class="pref-day-cb"> <span class="lang-en">Fri</span><span class="lang-ko" style="display:none;">금</span></label>
+          <label class="pref-chip"><input type="checkbox" value="sat" class="pref-day-cb"> <span class="lang-en">Sat</span><span class="lang-ko" style="display:none;">토</span></label>
+          <label class="pref-chip"><input type="checkbox" value="sun" class="pref-day-cb"> <span class="lang-en">Sun</span><span class="lang-ko" style="display:none;">일</span></label>
         </div>
       </div>
       <div class="form-row-half">
         <div class="form-group">
-          <label class="form-label">Preferred Time</label>
+          <label class="form-label"><span class="lang-en">Preferred Time</span><span class="lang-ko" style="display:none;">선호 시간</span></label>
           <select class="form-select" id="propPrefTime">
             <option value="">No preference</option>
             <option value="morning">Morning (8 AM – 12 PM)</option>
@@ -538,7 +539,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Presence Required?</label>
+          <label class="form-label"><span class="lang-en">Presence Required?</span><span class="lang-ko" style="display:none;">입회 필요 여부</span></label>
           <select class="form-select" id="propPresence">
             <option value="">No preference</option>
             <option value="absent_ok">Visit OK when absent</option>
@@ -547,11 +548,11 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Special Notes</label>
+        <label class="form-label"><span class="lang-en">Special Notes</span><span class="lang-ko" style="display:none;">특별 참고사항</span></label>
         <input type="text" class="form-input" id="propCleanNotes" placeholder="e.g. Wednesday unavailable, morning only, pets at home...">
       </div>
 
-      <button class="btn-submit" id="btnSaveProperty" onclick="saveProperty()">Save Property</button>
+      <button class="btn-submit" id="btnSaveProperty" onclick="saveProperty()"><span class="lang-en">Save Property</span><span class="lang-ko" style="display:none;">부동산 저장</span></button>
     </div>
   </div>
 </div>
@@ -679,16 +680,17 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       </div>
       <div class="form-row-half">
         <div class="form-group">
-          <label class="form-label">Preferred Date</label>
-          <input type="date" class="form-input" id="shReqDate" onchange="updateShEstimate()">
-        </div>
-        <div class="form-group">
           <label class="form-label">Urgency</label>
-          <select class="form-select" id="shReqUrgency" onchange="updateShEstimate()">
+          <select class="form-select" id="shReqUrgency" onchange="onUrgencyChange()">
             <option value="standard">Standard (24–48 hrs)</option>
             <option value="same_day">Same Day (1.5× SH)</option>
             <option value="after_hours">After Hours (2× SH)</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preferred Date</label>
+          <input type="date" class="form-input" id="shReqDate" onchange="updateShEstimate()">
+          <div class="form-hint" id="shReqDateHint" style="font-size:11px;color:var(--text-light);margin-top:4px;"></div>
         </div>
       </div>
       <div style="background:#f5f8fa;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
@@ -1036,11 +1038,46 @@ function pickMonth(subId, val, btnEl) {
   pendingMonth[subId] = val;
   btnEl.closest('.start-month-options').querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
   btnEl.classList.add('selected');
-  document.getElementById('weekPicker_' + subId).style.display = 'block';
+  
+  const weekPicker = document.getElementById('weekPicker_' + subId);
+  weekPicker.style.display = 'block';
+  
   // Reset week selection
   pendingWeek[subId] = null;
-  document.getElementById('weekPicker_' + subId).querySelectorAll('.start-month-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('confirmStart_' + subId).style.display = 'none';
+  
+  // Apply week availability based on selected month and today's date
+  updateWeekAvailability(subId, val);
+}
+
+function updateWeekAvailability(subId, selectedMonth) {
+  const weekPicker = document.getElementById('weekPicker_' + subId);
+  const weekBtns = weekPicker.querySelectorAll('.start-month-btn');
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const [year, month] = selectedMonth.split('-').map(Number);
+  
+  // Week end dates: 7, 14, 21, last day of month
+  const lastDay = new Date(year, month, 0).getDate(); // last day of the month
+  const weekEndDates = [7, 14, 21, lastDay];
+  
+  weekBtns.forEach((btn, index) => {
+    const weekEndDay = weekEndDates[index];
+    const weekEndDate = new Date(year, month - 1, weekEndDay);
+    weekEndDate.setHours(23, 59, 59, 999);
+    
+    // Disable if today >= week end date
+    if (today >= weekEndDate) {
+      btn.disabled = true;
+      btn.classList.add('disabled');
+      btn.classList.remove('selected');
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+    }
+  });
 }
 
 function pickWeek(subId, week, btnEl) {
@@ -1605,8 +1642,8 @@ function openShRequestModal() {
   document.getElementById('shReqSuccess').style.display = 'none';
   document.getElementById('shReqCategory').value = '';
   document.getElementById('shReqDesc').value = '';
-  document.getElementById('shReqDate').value = '';
   document.getElementById('shReqUrgency').value = 'standard';
+  document.getElementById('shReqDate').value = '';
   document.getElementById('emergencyNotice').style.display = 'none';
   document.getElementById('shReqEstimate').textContent = '1 SH~';
 
@@ -1616,9 +1653,48 @@ function openShRequestModal() {
     `<option value="${p.id}">${p.address}, ${p.suburb} ${p.postcode}</option>`
   ).join('');
 
+  // Set initial date restrictions (standard = 2 days out minimum)
+  applyDateRestriction('standard');
+
   document.getElementById('shRequestModal').classList.add('active');
 }
 function closeShRequestModal() { document.getElementById('shRequestModal').classList.remove('active'); }
+
+function onUrgencyChange() {
+  const urg = document.getElementById('shReqUrgency').value;
+  applyDateRestriction(urg);
+  updateShEstimate();
+}
+
+function applyDateRestriction(urgency) {
+  const dateInput = document.getElementById('shReqDate');
+  const hintEl = document.getElementById('shReqDateHint');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let minDate;
+  let hintText = '';
+  
+  if (urgency === 'same_day' || urgency === 'after_hours') {
+    // Urgent: today or tomorrow allowed
+    minDate = today;
+    hintText = 'Today or tomorrow available for urgent requests';
+  } else {
+    // Standard: minimum 2 days from now
+    minDate = new Date(today);
+    minDate.setDate(minDate.getDate() + 2);
+    hintText = 'Standard requests: 2+ days advance booking';
+  }
+  
+  const minDateStr = minDate.toISOString().split('T')[0];
+  dateInput.min = minDateStr;
+  hintEl.textContent = hintText;
+  
+  // Clear date if current selection is now invalid
+  if (dateInput.value && dateInput.value < minDateStr) {
+    dateInput.value = '';
+  }
+}
 
 function updateShEstimate() {
   const cat = document.getElementById('shReqCategory').value;
@@ -1715,7 +1791,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ── Language Toggle (placeholder — translation logic TBD) ── */
+/* ── Language Toggle ── */
 let currentLang = localStorage.getItem('hp_lang') || 'en';
 function toggleLang(lang) {
   currentLang = lang;
@@ -1723,7 +1799,14 @@ function toggleLang(lang) {
   document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
   const el = document.getElementById('lang-' + lang);
   if (el) el.classList.add('active');
-  // TODO: apply translations
+  
+  // Toggle lang-en / lang-ko elements
+  document.querySelectorAll('.lang-en').forEach(el => {
+    el.style.display = lang === 'en' ? '' : 'none';
+  });
+  document.querySelectorAll('.lang-ko').forEach(el => {
+    el.style.display = lang === 'ko' ? '' : 'none';
+  });
 }
 (function initLang() {
   const lang = localStorage.getItem('hp_lang') || 'en';
@@ -1731,6 +1814,14 @@ function toggleLang(lang) {
   document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
   const el = document.getElementById('lang-' + lang);
   if (el) el.classList.add('active');
+  
+  // Initial toggle
+  document.querySelectorAll('.lang-en').forEach(el => {
+    el.style.display = lang === 'en' ? '' : 'none';
+  });
+  document.querySelectorAll('.lang-ko').forEach(el => {
+    el.style.display = lang === 'ko' ? '' : 'none';
+  });
 })();
 </script>
 </body>
