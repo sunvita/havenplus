@@ -152,40 +152,37 @@
   .cta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
   @media (max-width: 900px) { .cta-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 500px) { .cta-grid { grid-template-columns: 1fr; } }
-  .cta-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 16px; cursor: pointer; transition: all .25s ease; border: 1px solid rgba(0,0,0,.06); backdrop-filter: blur(8px); }
-  .cta-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
-  .cta-icon { font-size: 28px; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,.1)); }
-  .cta-content { flex: 1; }
-  .cta-value { font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-  .cta-label { font-size: 12px; font-weight: 600; opacity: .7; margin-top: 4px; text-transform: uppercase; letter-spacing: .03em; }
-  .cta-arrow { font-size: 18px; opacity: .4; transition: all .25s; }
-  .cta-card:hover .cta-arrow { opacity: 1; transform: translateX(3px); }
+  .cta-card { position: relative; display: flex; flex-direction: column; padding: 16px 18px; border-radius: 14px; cursor: pointer; transition: all .25s ease; border: 1px solid rgba(0,0,0,.08); min-height: 100px; }
+  .cta-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .cta-icon { position: absolute; top: 12px; left: 14px; width: 20px; height: 20px; opacity: .5; }
+  .cta-icon svg { width: 100%; height: 100%; }
+  .cta-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding-top: 8px; }
+  .cta-value { font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .cta-label { font-size: 11px; font-weight: 600; opacity: .7; margin-top: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .cta-arrow { position: absolute; top: 12px; right: 14px; font-size: 16px; opacity: .3; transition: all .25s; }
+  .cta-card:hover .cta-arrow { opacity: .7; transform: translateX(2px); }
   
-  /* Row 1: Action Items - Subtle flat colors */
-  .cta-pending { background: #fffbeb; border-color: #fcd34d; }
-  .cta-pending .cta-value { color: #b45309; }
-  .cta-pending .cta-label { color: #92400e; }
-  .cta-payment { background: #fef2f2; border-color: #fca5a5; }
-  .cta-payment .cta-value { color: #dc2626; }
-  .cta-payment .cta-label { color: #991b1b; }
-  .cta-noplan { background: #eef2ff; border-color: #a5b4fc; }
-  .cta-noplan .cta-value { color: #4f46e5; }
-  .cta-noplan .cta-label { color: #3730a3; }
-  .cta-chlow { background: #fff7ed; border-color: #fdba74; }
-  .cta-chlow .cta-value { color: #ea580c; }
-  .cta-chlow .cta-label { color: #9a3412; }
+  /* Row 1: Action Items - Red (has issues) */
+  .cta-pending, .cta-payment, .cta-noplan, .cta-chlow { background: #fef2f2; border-color: #fca5a5; }
+  .cta-pending .cta-icon, .cta-payment .cta-icon, .cta-noplan .cta-icon, .cta-chlow .cta-icon { color: #dc2626; }
+  .cta-pending .cta-value, .cta-payment .cta-value, .cta-noplan .cta-value, .cta-chlow .cta-value { color: #dc2626; }
+  .cta-pending .cta-label, .cta-payment .cta-label, .cta-noplan .cta-label, .cta-chlow .cta-label { color: #991b1b; }
+  
+  /* Row 1: Green when value is 0 (no issues) */
   .cta-card.cta-ok { background: #ecfdf5; border-color: #6ee7b7; }
+  .cta-card.cta-ok .cta-icon { color: #059669; }
   .cta-card.cta-ok .cta-value { color: #059669; }
   .cta-card.cta-ok .cta-label { color: #047857; }
   
-  /* Row 2: Revenue - More vibrant */
-  .cta-revenue { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #34d399; }
-  .cta-revenue .cta-value { color: #047857; }
+  /* Row 2: Revenue - Ivory/Cream background */
+  .cta-revenue, .cta-fees, .cta-net { background: #fdfbf7; border-color: #e8e4dc; }
+  .cta-revenue .cta-icon { color: #059669; }
+  .cta-revenue .cta-value { color: #059669; }
   .cta-revenue .cta-label { color: #065f46; }
-  .cta-fees { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #fbbf24; }
-  .cta-fees .cta-value { color: #b45309; }
-  .cta-fees .cta-label { color: #92400e; }
-  .cta-net { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #60a5fa; }
+  .cta-fees .cta-icon { color: #dc2626; }
+  .cta-fees .cta-value { color: #dc2626; }
+  .cta-fees .cta-label { color: #991b1b; }
+  .cta-net .cta-icon { color: #1d4ed8; }
   .cta-net .cta-value { color: #1d4ed8; }
   .cta-net .cta-label { color: #1e3a8a; }
   
@@ -633,13 +630,13 @@
     <!-- ═══ Admin: Dashboard ═══ -->
     <section class="section" id="section-dashboard">
       <div class="section-card">
-        <div class="section-title">Admin Dashboard <span class="admin-badge">Admin</span></div>
+        <div class="section-title">Dashboard <span class="admin-badge">Admin</span></div>
         <div class="section-desc">Quick overview of items requiring attention.</div>
         
         <!-- CTA Cards Row 1: Action Items -->
         <div class="cta-grid" id="ctaCards">
           <div class="cta-card cta-pending" onclick="switchSection('jobrequests')">
-            <div class="cta-icon">📋</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaPendingJobs">—</div>
               <div class="cta-label">Pending Jobs</div>
@@ -647,7 +644,7 @@
             <div class="cta-arrow">→</div>
           </div>
           <div class="cta-card cta-payment" onclick="switchSection('subscribers')">
-            <div class="cta-icon">💳</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaPaymentIssues">—</div>
               <div class="cta-label">Payment Issues</div>
@@ -655,7 +652,7 @@
             <div class="cta-arrow">→</div>
           </div>
           <div class="cta-card cta-noplan" onclick="switchSection('properties')">
-            <div class="cta-icon">🏠</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaNoPlanProps">—</div>
               <div class="cta-label">No Plan Properties</div>
@@ -663,7 +660,7 @@
             <div class="cta-arrow">→</div>
           </div>
           <div class="cta-card cta-chlow" onclick="switchSection('subscribers')">
-            <div class="cta-icon">⏰</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaChLow">—</div>
               <div class="cta-label">CH Low Alert</div>
@@ -675,21 +672,21 @@
         <!-- CTA Cards Row 2: Revenue -->
         <div class="cta-grid" style="margin-top:16px;grid-template-columns:repeat(3, 1fr);">
           <div class="cta-card cta-revenue">
-            <div class="cta-icon">💰</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaRevenueMonth">—</div>
               <div class="cta-label">This Month Revenue</div>
             </div>
           </div>
           <div class="cta-card cta-fees">
-            <div class="cta-icon">💳</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaFeesMonth">—</div>
               <div class="cta-label">Stripe Fees</div>
             </div>
           </div>
           <div class="cta-card cta-net">
-            <div class="cta-icon">✨</div>
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaNetMonth">—</div>
               <div class="cta-label">Net Revenue</div>
@@ -2219,7 +2216,7 @@ function filterCalendarByWorker() {
 
 async function loadWorkersForDropdowns() {
   try {
-    const { data } = await sb.from('workers').select('id, full_name, area').eq('status', 'active').order('full_name');
+    const { data } = await sb.from('workers').select('id, full_name, area').eq('is_active', true).order('full_name');
     allWorkers = data || [];
     
     // Populate worker filter dropdown
@@ -2688,9 +2685,12 @@ function filterJobRequests() {
   renderJobRequests(filtered);
 }
 
-function openJobEditModal(jobId) {
+async function openJobEditModal(jobId) {
   const job = allJobRequests.find(j => j.id === jobId);
   if (!job) return;
+  
+  // Ensure workers are loaded for dropdown
+  if (!allWorkers.length) await loadWorkersForDropdowns();
   
   document.getElementById('jobEditId').value = jobId;
   document.getElementById('jobEditStatus').value = job.status || 'pending';
@@ -2779,8 +2779,9 @@ async function loadWorkers() {
         <td>${areaLabel}</td>
         <td style="text-transform:capitalize;">${typeLabel}</td>
         <td><span class="badge badge-${statusBadge}">${w.is_active ? 'Active' : 'Inactive'}</span></td>
-        <td class="action-cell">
+        <td class="action-cell" style="white-space:nowrap;">
           <button class="btn-action-sm" onclick="openWorkerModal('${w.id}')">Edit</button>
+          <button class="btn-action-sm danger" onclick="deleteWorker('${w.id}', '${(w.full_name || '').replace(/'/g, "\\'")}')">Remove</button>
         </td>
       </tr>`;
     }).join('');
@@ -2869,6 +2870,21 @@ async function saveWorker() {
     alertEl.className = 'modal-alert error';
   } finally {
     btn.disabled = false; btn.textContent = 'Save Worker';
+  }
+}
+
+async function deleteWorker(workerId, workerName) {
+  if (!confirm(`Remove worker "${workerName}"?\n\nThis will permanently delete this worker record.`)) return;
+  
+  try {
+    const { error } = await sb.from('workers').delete().eq('id', workerId);
+    if (error) throw error;
+    
+    showToast('Worker removed');
+    loadWorkers();
+    allWorkers = []; // Reset to force reload in dropdowns
+  } catch(e) {
+    showToast(e.message || 'Failed to remove worker', true);
   }
 }
 
