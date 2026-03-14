@@ -455,7 +455,7 @@
         </button>
         <button class="sidebar-item" data-section="workers" onclick="switchSection('workers')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Workers
+          Haven+ Team
         </button>
         <button class="sidebar-item" data-section="subscribers" onclick="switchSection('subscribers')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="14" x2="10" y2="14"/></svg>
@@ -714,7 +714,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Date</th><th>Time</th><th>Property</th><th>Worker</th><th>Status</th></tr></thead>
+              <thead><tr><th>Date</th><th>Time</th><th>Property</th><th>Team</th><th>Status</th></tr></thead>
               <tbody id="dashUpcomingBody"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
             </table>
           </div>
@@ -758,7 +758,7 @@
     <section class="section" id="section-cleanings">
       <div class="section-card">
         <div class="section-title">Cleanings <span class="admin-badge">Admin</span></div>
-        <div class="section-desc">Manage cleaning visits — confirm dates and assign workers.</div>
+        <div class="section-desc">Manage cleaning visits — confirm dates and assign team.</div>
         <div class="stat-row" id="schedStats">
           <div class="stat-mini"><div class="stat-mini-label">Pending</div><div class="stat-mini-value" id="statSchedPending">—</div></div>
           <div class="stat-mini"><div class="stat-mini-label">Scheduled</div><div class="stat-mini-value" id="statSchedScheduled">—</div></div>
@@ -786,12 +786,12 @@
             <option value="">All areas</option>
           </select>
           <select class="filter-input" id="schedWorkerFilter" onchange="loadSchedules()">
-            <option value="">All workers</option>
+            <option value="">All team</option>
           </select>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Team</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="schedulesBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -811,7 +811,7 @@
               <option value="">All areas</option>
             </select>
             <select class="filter-input" id="calWorkerFilter" onchange="filterCalendarByWorker()">
-              <option value="">All workers</option>
+              <option value="">All team</option>
             </select>
           </div>
         </div>
@@ -846,10 +846,10 @@
     <!-- ═══ Admin: Workers ═══ -->
     <section class="section" id="section-workers">
       <div class="section-card">
-        <div class="section-title">Workers <span class="admin-badge">Admin</span></div>
+        <div class="section-title">Haven+ Team <span class="admin-badge">Admin</span></div>
         <div class="section-desc">Manage service team members.</div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-          <button class="btn-save" onclick="openWorkerModal()">+ Add Worker</button>
+          <button class="btn-save" onclick="openWorkerModal()">+ Add Member</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -978,7 +978,7 @@
         </div>
       </div>
       <div class="modal-form-group">
-        <label>Assigned Worker</label>
+        <label>Assigned Team</label>
         <select id="jobEditWorker">
           <option value="">Unassigned</option>
         </select>
@@ -1057,7 +1057,7 @@
       
       <!-- Worker Assignment -->
       <div style="margin-bottom:16px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">👷 Assign Workers</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">👷 Assign Haven+ Team</div>
         <div id="schedEditWorkerList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;">
           <!-- Workers will be populated here -->
         </div>
@@ -1068,7 +1068,7 @@
       <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📊 Summary</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
-          <div>Workers: <strong id="schedEditWorkerCount">0</strong></div>
+          <div>Team: <strong id="schedEditWorkerCount">0</strong></div>
           <div>Duration: <strong id="schedEditDurationDisplay">2 hrs</strong></div>
           <div>End Time: <strong id="schedEditEndTime">—</strong></div>
           <div>CH to deduct: <strong id="schedEditChDeduct">0 hrs</strong></div>
@@ -1086,7 +1086,7 @@
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </select>
-        <div style="font-size:11px;color:var(--text-light);margin-top:4px;">💡 Status auto-updates to "Scheduled" when worker is assigned.</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px;">💡 Status auto-updates to "Scheduled" when team is assigned.</div>
       </div>
       
       <div class="modal-actions">
@@ -1101,7 +1101,7 @@
 <div class="modal-overlay" id="workerModal" onclick="if(event.target===this)closeWorkerModal()">
   <div class="modal-box">
     <div class="modal-header">
-      <div class="modal-title" id="workerModalTitle">Add Worker</div>
+      <div class="modal-title" id="workerModalTitle">Add Team Member</div>
       <button class="modal-close" onclick="closeWorkerModal()">×</button>
     </div>
     <div class="modal-body">
@@ -1122,14 +1122,19 @@
         </div>
       </div>
       <div class="modal-form-row">
-        <div class="modal-form-group">
-          <label>Area</label>
-          <select id="workerArea">
-            <option value="">— Select Area —</option>
-          </select>
+        <div class="modal-form-group" style="flex:2;">
+          <label>Address</label>
+          <input type="text" id="workerAddress" placeholder="e.g. 123 Main St, Armadale WA 6112" oninput="matchWorkerArea()">
         </div>
+        <div class="modal-form-group" style="flex:1;">
+          <label>Area <span id="workerAreaBadge" style="font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px;"></span></label>
+          <input type="text" id="workerAreaDisplay" readonly style="background:#f5f7fa;cursor:not-allowed;" placeholder="Auto-detected">
+          <input type="hidden" id="workerArea">
+        </div>
+      </div>
+      <div class="modal-form-row">
         <div class="modal-form-group">
-          <label>Worker Type</label>
+          <label>Member Type</label>
           <select id="workerType">
             <option value="cleaner">Cleaner</option>
             <option value="handyman">Handyman</option>
@@ -1148,11 +1153,11 @@
       </div>
       <div class="modal-form-group">
         <label>Notes</label>
-        <textarea id="workerNotes" placeholder="Internal notes about this worker…"></textarea>
+        <textarea id="workerNotes" placeholder="Internal notes about this team member…"></textarea>
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeWorkerModal()">Cancel</button>
-        <button class="modal-btn modal-btn-primary" id="btnSaveWorker" onclick="saveWorker()">Save Worker</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveWorker" onclick="saveWorker()">Save</button>
       </div>
     </div>
   </div>
@@ -2763,7 +2768,7 @@ async function loadWorkers() {
     if (error) throw error;
     
     if (!data?.length) { 
-      body.innerHTML = '<tr><td colspan="5" class="empty-state">No workers found. Add your first worker above.</td></tr>'; 
+      body.innerHTML = '<tr><td colspan="7" class="empty-state">No team members found. Add your first member above.</td></tr>'; 
       return; 
     }
     
@@ -2787,7 +2792,7 @@ async function loadWorkers() {
       </tr>`;
     }).join('');
   } catch(e) {
-    body.innerHTML = '<tr><td colspan="7" class="empty-state">Workers table not available. Please create it first.</td></tr>';
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">Haven+ Team table not available. Please create it first.</td></tr>';
     console.warn('Workers load error:', e.message);
   }
 }
@@ -2795,25 +2800,66 @@ async function loadWorkers() {
 function openWorkerModal(workerId = null) {
   const worker = workerId ? allWorkersData.find(w => w.id === workerId) : null;
   
-  document.getElementById('workerModalTitle').textContent = worker ? 'Edit Worker' : 'Add Worker';
+  document.getElementById('workerModalTitle').textContent = worker ? 'Edit Team Member' : 'Add Team Member';
   document.getElementById('workerEditId').value = workerId || '';
   document.getElementById('workerName').value = worker?.full_name || '';
   document.getElementById('workerPhone').value = worker?.phone || '';
   document.getElementById('workerEmail').value = worker?.email || '';
+  document.getElementById('workerAddress').value = worker?.address || '';
   document.getElementById('workerType').value = worker?.worker_type || 'cleaner';
   document.getElementById('workerStatus').value = worker?.is_active ? 'active' : 'inactive';
   document.getElementById('workerNotes').value = worker?.notes || '';
   document.getElementById('workerAlert').className = 'modal-alert';
   document.getElementById('workerAlert').textContent = '';
   
-  // Populate area dropdown
-  const areaSelect = document.getElementById('workerArea');
-  areaSelect.innerHTML = '<option value="">— Select Area —</option>' + 
-    Object.entries(PERTH_AREAS).map(([code, data]) => 
-      `<option value="${code}" ${worker?.area === code ? 'selected' : ''}>${data.name}</option>`
-    ).join('');
+  // Set area from existing data or match from address
+  document.getElementById('workerArea').value = worker?.area || '';
+  document.getElementById('workerAreaDisplay').value = worker?.area ? getAreaName(worker.area) : '';
+  updateWorkerAreaBadge(worker?.area);
   
   document.getElementById('workerModal').classList.add('open');
+}
+
+function matchWorkerArea() {
+  const address = document.getElementById('workerAddress').value;
+  // Extract suburb from address (last part before state/postcode)
+  const parts = address.split(',').map(p => p.trim());
+  let suburb = '';
+  
+  if (parts.length >= 2) {
+    // Try second-to-last part (usually suburb + state + postcode)
+    const suburbPart = parts[parts.length - 1].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
+    suburb = suburbPart || parts[parts.length - 2];
+  } else if (parts.length === 1) {
+    suburb = parts[0].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
+  }
+  
+  const result = suggestAreaForSuburb(suburb);
+  document.getElementById('workerArea').value = result.area || '';
+  document.getElementById('workerAreaDisplay').value = result.area ? getAreaName(result.area) : '';
+  updateWorkerAreaBadge(result.area, result.confidence);
+}
+
+function updateWorkerAreaBadge(area, confidence = 'high') {
+  const badge = document.getElementById('workerAreaBadge');
+  if (!area) {
+    badge.textContent = '';
+    badge.style.background = '';
+    return;
+  }
+  
+  if (confidence === 'high') {
+    badge.textContent = '✓ Matched';
+    badge.style.background = '#dcfce7';
+    badge.style.color = '#166534';
+  } else if (confidence === 'medium') {
+    badge.textContent = '~ Partial';
+    badge.style.background = '#fef3c7';
+    badge.style.color = '#92400e';
+  } else {
+    badge.textContent = '';
+    badge.style.background = '';
+  }
 }
 
 function closeWorkerModal() {
@@ -2825,6 +2871,7 @@ async function saveWorker() {
   const name = document.getElementById('workerName').value.trim();
   const phone = document.getElementById('workerPhone').value.trim();
   const email = document.getElementById('workerEmail').value.trim();
+  const address = document.getElementById('workerAddress').value.trim();
   const area = document.getElementById('workerArea')?.value || null;
   const workerType = document.getElementById('workerType').value;
   const status = document.getElementById('workerStatus').value;
@@ -2832,7 +2879,7 @@ async function saveWorker() {
   const alertEl = document.getElementById('workerAlert');
   
   if (!name) {
-    alertEl.textContent = 'Worker name is required';
+    alertEl.textContent = 'Name is required';
     alertEl.className = 'modal-alert error';
     return;
   }
@@ -2845,6 +2892,7 @@ async function saveWorker() {
       full_name: name,
       phone: phone || null,
       email: email || null,
+      address: address || null,
       area: area,
       worker_type: workerType,
       is_active: status === 'active',
@@ -2862,7 +2910,7 @@ async function saveWorker() {
     
     if (error) throw error;
     
-    showToast(id ? 'Worker updated' : 'Worker added');
+    showToast(id ? 'Team member updated' : 'Team member added');
     closeWorkerModal();
     loadWorkers();
     allWorkers = []; // Reset to force reload in dropdowns
@@ -2870,7 +2918,7 @@ async function saveWorker() {
     alertEl.textContent = e.message || 'Failed to save';
     alertEl.className = 'modal-alert error';
   } finally {
-    btn.disabled = false; btn.textContent = 'Save Worker';
+    btn.disabled = false; btn.textContent = 'Save';
   }
 }
 
