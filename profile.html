@@ -189,7 +189,8 @@
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 10px 12px; background: var(--bg); color: var(--text-light); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid var(--border); }
-  td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; white-space: nowrap; }
+  td.wrap { white-space: normal; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: #fafbfc; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -206,7 +207,7 @@
   .badge-cancelled { background: #f0f0f0; color: #888; }
   
   /* ── Area Cell Backgrounds (Color-coded by distance from SE_INNER) ── */
-  .area-cell { font-size: 12px; font-weight: 600; text-align: center; }
+  .area-cell { font-size: 11px; font-weight: 600; text-align: center; white-space: nowrap; padding: 4px 8px; }
   /* Group A: Indigo/Blue (≤12분) */
   .area-bg-SE_INNER    { background: #3F51B5; color: #fff; }
   .area-bg-EAST        { background: #3F51B5; color: #fff; }
@@ -2773,12 +2774,12 @@ async function loadWorkers() {
       const areaLabel = w.area ? (PERTH_AREAS[w.area]?.name || w.area) : '—';
       const typeLabel = w.worker_type ? w.worker_type.charAt(0).toUpperCase() + w.worker_type.slice(1) : 'Cleaner';
       return `<tr>
-        <td><code style="background:#e8f0fb;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:700;color:var(--navy);">${w.worker_code || '—'}</code></td>
-        <td style="font-weight:600;">${w.full_name || '—'}</td>
-        <td>${w.phone || '—'}</td>
-        <td>${areaLabel}</td>
-        <td style="text-transform:capitalize;">${typeLabel}</td>
-        <td><span class="badge badge-${statusBadge}">${w.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td><code style="background:#e8f0fb;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:var(--navy);white-space:nowrap;">${w.worker_code || '—'}</code></td>
+        <td style="font-weight:600;white-space:nowrap;">${w.full_name || '—'}</td>
+        <td style="white-space:nowrap;">${w.phone || '—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${areaLabel}</td>
+        <td style="text-transform:capitalize;white-space:nowrap;">${typeLabel}</td>
+        <td style="white-space:nowrap;"><span class="badge badge-${statusBadge}">${w.is_active ? 'Active' : 'Inactive'}</span></td>
         <td class="action-cell" style="white-space:nowrap;">
           <button class="btn-action-sm" onclick="openWorkerModal('${w.id}')">Edit</button>
           <button class="btn-action-sm danger" onclick="deleteWorker('${w.id}', '${(w.full_name || '').replace(/'/g, "\\'")}')">Remove</button>
