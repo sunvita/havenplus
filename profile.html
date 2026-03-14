@@ -843,8 +843,8 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="workersBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Area</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="workersBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1113,6 +1113,12 @@
       </div>
       <div class="modal-form-row">
         <div class="modal-form-group">
+          <label>Area</label>
+          <select id="workerArea">
+            <option value="">— Select Area —</option>
+          </select>
+        </div>
+        <div class="modal-form-group">
           <label>Worker Type</label>
           <select id="workerType">
             <option value="cleaner">Cleaner</option>
@@ -1122,13 +1128,13 @@
             <option value="multi">Multi-skilled</option>
           </select>
         </div>
-        <div class="modal-form-group">
-          <label>Status</label>
-          <select id="workerStatus">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Status</label>
+        <select id="workerStatus" style="max-width:200px;">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
       <div class="modal-form-group">
         <label>Notes</label>
@@ -1922,9 +1928,9 @@ async function loadSchedules() {
       : (r.assigned_worker_id ? [r.assigned_worker_id] : []);
     
     if (workerIds.length === 1) {
-      workerDisplay = workerMap[workerIds[0]]?.name || 'Unassigned';
+      workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unassigned';
     } else if (workerIds.length > 1) {
-      const names = workerIds.map(wid => workerMap[wid]?.name || '?').filter(Boolean);
+      const names = workerIds.map(wid => workerMap[wid]?.full_name || '?'?').filter(Boolean);
       workerDisplay = `${names[0]} +${names.length - 1}`;
     }
     
@@ -1969,7 +1975,7 @@ async function loadCalendar() {
   const calWorkerFilter = document.getElementById('calWorkerFilter');
   if (calWorkerFilter) {
     calWorkerFilter.innerHTML = '<option value="">All workers</option>' + 
-      allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+      allWorkers.map(w => `<option value="${w.id}">${w.full_name}</option>`).join('');
   }
   
   // Load cleaning data
@@ -2201,21 +2207,21 @@ function filterCalendarByWorker() {
 
 async function loadWorkersForDropdowns() {
   try {
-    const { data } = await sb.from('workers').select('id, name, area').eq('status', 'active').order('name');
+    const { data } = await sb.from('workers').select('id, full_name, area').eq('status', 'active').order('full_name');
     allWorkers = data || [];
     
     // Populate worker filter dropdown
     const schedWorkerFilter = document.getElementById('schedWorkerFilter');
     if (schedWorkerFilter) {
       schedWorkerFilter.innerHTML = '<option value="">All workers</option>' + 
-        allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+        allWorkers.map(w => `<option value="${w.id}">${w.full_name}</option>`).join('');
     }
     
     // Populate job edit modal worker dropdown
     const jobEditWorker = document.getElementById('jobEditWorker');
     if (jobEditWorker) {
       jobEditWorker.innerHTML = '<option value="">Unassigned</option>' + 
-        allWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+        allWorkers.map(w => `<option value="${w.id}">${w.full_name}</option>`).join('');
     }
   } catch(e) {
     console.warn('Workers table may not exist:', e.message);
@@ -2482,10 +2488,10 @@ function checkWorkerConflicts() {
     
     if (conflict.type === 'overlap') {
       hasConflict = true;
-      messages.push(`🔴 ${worker?.name || 'Worker'} is already assigned to "${conflict.sched.properties?.address || 'another cleaning'}" at this time.`);
+      messages.push(`🔴 ${worker?.full_name || ''?'Worker'} is already assigned to "${conflict.sched.properties?.address || 'another cleaning'}" at this time.`);
     } else if (conflict.type === 'tight') {
       hasWarning = true;
-      messages.push(`🟠 ${worker?.name || 'Worker'} has another cleaning with only ${conflict.gap} min gap.`);
+      messages.push(`🟠 ${worker?.full_name || ''?'Worker'} has another cleaning with only ${conflict.gap} min gap.`);
     }
   }
   
@@ -2732,35 +2738,37 @@ let allWorkersData = [];
 async function loadWorkers() {
   if (!isAdmin) return;
   const body = document.getElementById('workersBody');
-  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Loading…</td></tr>';
 
   try {
-    const { data, error } = await sb.from('workers').select('*').order('name');
+    const { data, error } = await sb.from('workers').select('*').order('full_name');
     if (error) throw error;
     
     if (!data?.length) { 
-      body.innerHTML = '<tr><td colspan="6" class="empty-state">No workers found. Add your first worker above.</td></tr>'; 
+      body.innerHTML = '<tr><td colspan="5" class="empty-state">No workers found. Add your first worker above.</td></tr>'; 
       return; 
     }
     
     allWorkersData = data;
     
     body.innerHTML = data.map(w => {
-      const statusBadge = w.status === 'active' ? 'active' : 'inactive';
-      const typeBadge = w.worker_type || 'cleaner';
+      const statusBadge = w.is_active ? 'active' : 'inactive';
+      const areaLabel = w.area ? (AREA_DATA[w.area]?.name || w.area) : '—';
+      const typeLabel = w.worker_type ? w.worker_type.charAt(0).toUpperCase() + w.worker_type.slice(1) : 'Cleaner';
       return `<tr>
-        <td style="font-weight:600;">${w.name || '—'}</td>
+        <td style="font-weight:600;">${w.full_name || '—'}</td>
         <td>${w.phone || '—'}</td>
         <td style="color:var(--text-light);">${w.email || '—'}</td>
-        <td style="text-transform:capitalize;">${typeBadge}</td>
-        <td><span class="badge badge-${statusBadge}">${w.status || 'active'}</span></td>
+        <td>${areaLabel}</td>
+        <td style="text-transform:capitalize;">${typeLabel}</td>
+        <td><span class="badge badge-${statusBadge}">${w.is_active ? 'Active' : 'Inactive'}</span></td>
         <td class="action-cell">
           <button class="btn-action-sm" onclick="openWorkerModal('${w.id}')">Edit</button>
         </td>
       </tr>`;
     }).join('');
   } catch(e) {
-    body.innerHTML = '<tr><td colspan="6" class="empty-state">Workers table not available. Please create it first.</td></tr>';
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">Workers table not available. Please create it first.</td></tr>';
     console.warn('Workers load error:', e.message);
   }
 }
@@ -2770,14 +2778,21 @@ function openWorkerModal(workerId = null) {
   
   document.getElementById('workerModalTitle').textContent = worker ? 'Edit Worker' : 'Add Worker';
   document.getElementById('workerEditId').value = workerId || '';
-  document.getElementById('workerName').value = worker?.name || '';
+  document.getElementById('workerName').value = worker?.full_name || '';
   document.getElementById('workerPhone').value = worker?.phone || '';
   document.getElementById('workerEmail').value = worker?.email || '';
   document.getElementById('workerType').value = worker?.worker_type || 'cleaner';
-  document.getElementById('workerStatus').value = worker?.status || 'active';
+  document.getElementById('workerStatus').value = worker?.is_active ? 'active' : 'inactive';
   document.getElementById('workerNotes').value = worker?.notes || '';
   document.getElementById('workerAlert').className = 'modal-alert';
   document.getElementById('workerAlert').textContent = '';
+  
+  // Populate area dropdown
+  const areaSelect = document.getElementById('workerArea');
+  areaSelect.innerHTML = '<option value="">— Select Area —</option>' + 
+    Object.entries(AREA_DATA).map(([code, data]) => 
+      `<option value="${code}" ${worker?.area === code ? 'selected' : ''}>${data.name}</option>`
+    ).join('');
   
   document.getElementById('workerModal').classList.add('open');
 }
@@ -2791,7 +2806,8 @@ async function saveWorker() {
   const name = document.getElementById('workerName').value.trim();
   const phone = document.getElementById('workerPhone').value.trim();
   const email = document.getElementById('workerEmail').value.trim();
-  const type = document.getElementById('workerType').value;
+  const area = document.getElementById('workerArea')?.value || null;
+  const workerType = document.getElementById('workerType').value;
   const status = document.getElementById('workerStatus').value;
   const notes = document.getElementById('workerNotes').value.trim();
   const alertEl = document.getElementById('workerAlert');
@@ -2807,11 +2823,12 @@ async function saveWorker() {
   
   try {
     const payload = {
-      name,
+      full_name: name,
       phone: phone || null,
       email: email || null,
-      worker_type: type,
-      status,
+      area: area,
+      worker_type: workerType,
+      is_active: status === 'active',
       notes: notes || null,
       updated_at: new Date().toISOString()
     };
@@ -2993,9 +3010,9 @@ async function loadUpcomingCleanings() {
     
     let workerDisplay = 'Unassigned';
     if (workerIds.length === 1) {
-      workerDisplay = workerMap[workerIds[0]]?.name || 'Unknown';
+      workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unknown';
     } else if (workerIds.length > 1) {
-      workerDisplay = `${workerMap[workerIds[0]]?.name || '?'} +${workerIds.length - 1}`;
+      workerDisplay = `${workerMap[workerIds[0]]?.full_name || '?'?'} +${workerIds.length - 1}`;
     }
     
     const badgeClass = c.status === 'pending' ? 'pending' : 'scheduled';
