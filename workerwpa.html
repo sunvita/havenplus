@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Haven Plus — Worker App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B2A4A; --navy-light: #2a3f6a;
+    --orange: #ff6b35; --bg: #f5f6fa;
+    --surface: #ffffff; --border: #e8eaed;
+    --text: #1a1a1a; --text-light: #666;
+    --green: #27ae60; --green-bg: #e8f5e9;
+    --red: #c0392b; --red-bg: #fee;
+    --yellow: #f39c12; --yellow-bg: #fff8e1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+  
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--surface); display: flex; flex-direction: column; }
+  
+  /* Header */
+  .header { background: linear-gradient(135deg, var(--navy), var(--navy-light)); color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .header-logo svg { width: 32px; height: 32px; }
+  .header-brand { font-size: 16px; font-weight: 900; letter-spacing: 1px; }
+  .header-brand span { font-weight: 300; opacity: .6; }
+  .header-user { text-align: right; }
+  .header-user-name { font-size: 14px; font-weight: 600; }
+  .header-user-id { font-size: 11px; opacity: .7; }
+  .btn-logout { background: rgba(255,255,255,.15); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .btn-logout:hover { background: rgba(255,255,255,.25); }
+  
+  /* Login */
+  .login-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+  .login-logo { margin-bottom: 32px; }
+  .login-logo svg { width: 80px; height: 80px; }
+  .login-title { font-size: 24px; font-weight: 900; color: var(--navy); margin-bottom: 8px; }
+  .login-subtitle { font-size: 14px; color: var(--text-light); margin-bottom: 32px; }
+  .login-form { width: 100%; max-width: 300px; }
+  .login-input { width: 100%; padding: 14px 16px; font-size: 18px; font-family: inherit; font-weight: 700; text-align: center; letter-spacing: 4px; text-transform: uppercase; border: 2px solid var(--border); border-radius: 12px; outline: none; transition: border-color .2s; }
+  .login-input:focus { border-color: var(--orange); }
+  .login-input::placeholder { letter-spacing: 0; font-weight: 400; }
+  .login-btn { width: 100%; padding: 14px; margin-top: 16px; background: var(--navy); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s; }
+  .login-btn:hover { background: var(--navy-light); }
+  .login-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .login-error { margin-top: 16px; padding: 12px; background: var(--red-bg); color: var(--red); border-radius: 8px; font-size: 13px; text-align: center; display: none; }
+  .login-error.show { display: block; }
+  
+  /* Main */
+  .main { flex: 1; padding: 20px; }
+  .date-section { margin-bottom: 24px; }
+  .date-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .date-label { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .date-value { font-size: 13px; color: var(--text-light); }
+  
+  /* Job Card */
+  .job-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+  .job-card.in-progress { border-color: var(--orange); border-width: 2px; background: #fff9f5; }
+  .job-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .job-time { font-size: 18px; font-weight: 800; color: var(--navy); }
+  .job-area { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+  .job-address { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .job-meta { font-size: 13px; color: var(--text-light); margin-bottom: 12px; }
+  .job-meta span { margin-right: 12px; }
+  .job-timer { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--orange); color: white; border-radius: 10px; margin-bottom: 12px; font-size: 16px; font-weight: 700; }
+  .job-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .2s; }
+  .job-btn-start { background: var(--green); color: white; }
+  .job-btn-start:hover { background: #219a52; }
+  .job-btn-complete { background: var(--orange); color: white; }
+  .job-btn-complete:hover { background: #e55a2b; }
+  .job-btn:disabled { background: #ccc; cursor: not-allowed; }
+  
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state-text { font-size: 15px; }
+  
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: white; width: 100%; max-width: 480px; max-height: 90vh; border-radius: 20px 20px 0 0; overflow-y: auto; animation: slideUp .3s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; }
+  .modal-title { font-size: 18px; font-weight: 800; color: var(--navy); }
+  .modal-close { background: none; border: none; font-size: 28px; color: var(--text-light); cursor: pointer; padding: 0; line-height: 1; }
+  .modal-body { padding: 20px; }
+  
+  .confirm-box { background: var(--yellow-bg); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .confirm-box-title { font-size: 14px; font-weight: 700; color: var(--yellow); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .confirm-box-text { font-size: 13px; color: var(--text); }
+  .confirm-checks { margin: 20px 0; }
+  .confirm-check { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+  .confirm-check input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--green); }
+  .confirm-check label { font-size: 14px; cursor: pointer; }
+  
+  .photo-section { margin-bottom: 20px; }
+  .photo-section-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+  .photo-hint { font-size: 12px; color: var(--text-light); margin-bottom: 12px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .photo-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; }
+  .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-item-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0,0,0,.6); color: white; border: none; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .photo-add { aspect-ratio: 1; border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; background: var(--bg); }
+  .photo-add:hover { border-color: var(--navy); background: #eef1f5; }
+  .photo-add-icon { font-size: 24px; color: var(--text-light); }
+  .photo-add-text { font-size: 10px; color: var(--text-light); margin-top: 4px; }
+  .photo-count { font-size: 12px; color: var(--text-light); margin-top: 8px; }
+  .photo-count.valid { color: var(--green); font-weight: 600; }
+  .photo-count.invalid { color: var(--red); }
+  
+  .access-info { background: var(--bg); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .access-info-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .access-info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .access-info-label { color: var(--text-light); }
+  .access-info-value { font-weight: 600; color: var(--navy); }
+  
+  .duration-input { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 20px 0; }
+  .duration-field { display: flex; flex-direction: column; align-items: center; }
+  .duration-field input { width: 60px; height: 50px; font-size: 24px; font-weight: 700; text-align: center; border: 2px solid var(--border); border-radius: 10px; font-family: inherit; outline: none; }
+  .duration-field input:focus { border-color: var(--orange); }
+  .duration-field label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .duration-sep { font-size: 24px; font-weight: 700; color: var(--text-light); }
+  .duration-auto { font-size: 12px; color: var(--text-light); text-align: center; padding: 8px; background: var(--bg); border-radius: 8px; }
+  
+  .notes-input { width: 100%; min-height: 80px; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; resize: vertical; outline: none; }
+  .notes-input:focus { border-color: var(--orange); }
+  
+  .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+  .modal-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .2s; }
+  .modal-btn-primary { background: var(--navy); color: white; }
+  .modal-btn-primary:hover { background: var(--navy-light); }
+  .modal-btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+  .modal-btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .modal-btn-secondary:hover { background: #e8eaed; }
+  
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--navy); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 300; transition: transform .3s; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+  .toast.success { background: var(--green); }
+  
+  /* Area Colors */
+  .area-bg-SE_INNER, .area-bg-EAST { background: #3F51B5; color: #fff; }
+  .area-bg-INNER_SOUTH, .area-bg-SE_MID { background: #2196F3; color: #fff; }
+  .area-bg-CBD { background: #1976D2; color: #fff; }
+  .area-bg-SE_OUTER { background: #009688; color: #fff; }
+  .area-bg-MELVILLE { background: #00897B; color: #fff; }
+  .area-bg-NE_INNER { background: #00796B; color: #fff; }
+  .area-bg-ARMADALE { background: #00695C; color: #fff; }
+  .area-bg-NE_MID { background: #4CAF50; color: #fff; }
+  .area-bg-WEST { background: #43A047; color: #fff; }
+  .area-bg-COCKBURN { background: #388E3C; color: #fff; }
+  .area-bg-FREMANTLE { background: #2E7D32; color: #fff; }
+  .area-bg-NE_OUTER { background: #FFEB3B; color: #333; }
+  .area-bg-NORTH_INNER { background: #FDD835; color: #333; }
+  .area-bg-NORTH_OUTER { background: #FF9800; color: #fff; }
+  .area-bg-ROCKINGHAM { background: #F44336; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="#1B2A4A" stroke-width="4" fill="none"/>
+        <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="#1B2A4A"/>
+        <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"/>
+        <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"/>
+      </svg>
+    </div>
+    <h1 class="login-title">Worker App</h1>
+    <p class="login-subtitle">Enter your Worker ID to sign in</p>
+    <div class="login-form">
+      <input type="text" class="login-input" id="workerCodeInput" placeholder="e.g. K7X2M9P" maxlength="7" autocomplete="off">
+      <button class="login-btn" id="loginBtn" onclick="handleLogin()">Sign In</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="mainApp" style="display:none;">
+    <header class="header">
+      <div class="header-logo">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"/>
+          <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="rgba(255,255,255,0.95)"/>
+          <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"/>
+          <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"/>
+        </svg>
+        <span class="header-brand">HAVEN<span>PLUS</span></span>
+      </div>
+      <div class="header-user">
+        <div class="header-user-name" id="workerName">—</div>
+        <div class="header-user-id" id="workerCode">—</div>
+        <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </header>
+    <main class="main" id="mainContent">
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">Loading...</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Start Job Modal -->
+<div class="modal-overlay" id="startModal" onclick="if(event.target===this)closeStartModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Start Cleaning</span>
+      <button class="modal-close" onclick="closeStartModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-box">
+        <div class="confirm-box-title">⚠️ Confirm Start</div>
+        <div class="confirm-box-text">You are about to start this cleaning job.<br><strong>Time will be counted from this moment.</strong></div>
+      </div>
+      <div class="access-info" id="startAccessInfo">
+        <div class="access-info-title">Access Information</div>
+        <div class="access-info-row"><span class="access-info-label">Presence:</span><span class="access-info-value" id="startPresence">—</span></div>
+        <div class="access-info-row"><span class="access-info-label">Notes:</span><span class="access-info-value" id="startNotes">—</span></div>
+      </div>
+      <div class="confirm-checks">
+        <div class="confirm-check"><input type="checkbox" id="checkLocation"><label for="checkLocation">I am at the property location</label></div>
+        <div class="confirm-check"><input type="checkbox" id="checkReady"><label for="checkReady">I am ready to begin cleaning</label></div>
+      </div>
+      <div class="photo-section">
+        <div class="photo-section-title">📸 Before Photos Required</div>
+        <div class="photo-hint">Take 3-10 photos of the property BEFORE cleaning.</div>
+        <div class="photo-grid" id="beforePhotosGrid">
+          <div class="photo-add" onclick="document.getElementById('beforePhotoInput').click()"><span class="photo-add-icon">+</span><span class="photo-add-text">Add</span></div>
+        </div>
+        <input type="file" id="beforePhotoInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleBeforePhotos(this)">
+        <div class="photo-count" id="beforePhotoCount">0/10 photos (min 3 required)</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeStartModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnStartCleaning" onclick="startCleaning()" disabled>Start Cleaning</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Job Modal -->
+<div class="modal-overlay" id="completeModal" onclick="if(event.target===this)closeCompleteModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Complete Cleaning</span>
+      <button class="modal-close" onclick="closeCompleteModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-section">
+        <div class="photo-section-title">📸 Completion Photos Required</div>
+        <div class="photo-hint">Take 5-20 photos showing the completed work.</div>
+        <div class="photo-grid" id="afterPhotosGrid">
+          <div class="photo-add" onclick="document.getElementById('afterPhotoInput').click()"><span class="photo-add-icon">+</span><span class="photo-add-text">Add</span></div>
+        </div>
+        <input type="file" id="afterPhotoInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleAfterPhotos(this)">
+        <div class="photo-count" id="afterPhotoCount">0/20 photos (min 5 required)</div>
+      </div>
+      <div class="photo-section">
+        <div class="photo-section-title">⏱️ Actual Duration</div>
+        <div class="duration-input">
+          <div class="duration-field"><input type="number" id="durationHours" value="1" min="0" max="12"><label>hours</label></div>
+          <span class="duration-sep">:</span>
+          <div class="duration-field"><input type="number" id="durationMins" value="30" min="0" max="59" step="5"><label>mins</label></div>
+        </div>
+        <div class="duration-auto" id="durationAuto">Auto-calculated: — (from start time)</div>
+      </div>
+      <div class="photo-section">
+        <div class="photo-section-title">📝 Notes (optional)</div>
+        <textarea class="notes-input" id="workerNotes" placeholder="Any notes about the job..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeCompleteModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnCompleteCleaning" onclick="completeCleaning()" disabled>Submit & Complete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://rtkgnlcgepromqtoelre.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentWorker = null, currentJob = null, currentJobData = null;
+let beforePhotos = [], afterPhotos = [];
+let jobStartTime = null, timerInterval = null;
+
+const AREA_NAMES = {
+  'CBD': 'CBD', 'INNER_SOUTH': 'Inner South', 'WEST': 'West', 'FREMANTLE': 'Fremantle',
+  'MELVILLE': 'Melville', 'NORTH_INNER': 'North Inner', 'NORTH_OUTER': 'North Outer',
+  'NE_INNER': 'NE Inner', 'NE_MID': 'NE Mid', 'NE_OUTER': 'NE Outer', 'EAST': 'East',
+  'SE_INNER': 'SE Inner', 'SE_MID': 'SE Mid', 'SE_OUTER': 'SE Outer',
+  'ARMADALE': 'Armadale', 'COCKBURN': 'Cockburn', 'ROCKINGHAM': 'Rockingham'
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('hp_worker');
+  if (saved) {
+    try { currentWorker = JSON.parse(saved); showMainApp(); loadSchedule(); } catch(e) { localStorage.removeItem('hp_worker'); }
+  }
+  document.getElementById('workerCodeInput').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  document.getElementById('checkLocation').addEventListener('change', updateStartButton);
+  document.getElementById('checkReady').addEventListener('change', updateStartButton);
+});
+
+async function handleLogin() {
+  const code = document.getElementById('workerCodeInput').value.trim().toUpperCase();
+  const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  if (code.length !== 7) { errorEl.textContent = 'Worker ID must be 7 characters'; errorEl.classList.add('show'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in...'; errorEl.classList.remove('show');
+  try {
+    const { data, error } = await sb.from('workers').select('id, full_name, worker_code, area, is_active').eq('worker_code', code).maybeSingle();
+    if (error) throw error;
+    if (!data) { errorEl.textContent = 'Invalid Worker ID.'; errorEl.classList.add('show'); return; }
+    if (!data.is_active) { errorEl.textContent = 'Account inactive. Contact admin.'; errorEl.classList.add('show'); return; }
+    currentWorker = data; localStorage.setItem('hp_worker', JSON.stringify(data)); showMainApp(); loadSchedule();
+  } catch(e) { errorEl.textContent = 'Connection error.'; errorEl.classList.add('show'); console.error(e);
+  } finally { btn.disabled = false; btn.textContent = 'Sign In'; }
+}
+
+function handleLogout() { currentWorker = null; localStorage.removeItem('hp_worker'); document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none'; document.getElementById('workerCodeInput').value = ''; if (timerInterval) clearInterval(timerInterval); }
+function showMainApp() { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('mainApp').style.display = 'flex'; document.getElementById('workerName').textContent = currentWorker.full_name; document.getElementById('workerCode').textContent = currentWorker.worker_code; }
+
+async function loadSchedule() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-text">Loading...</div></div>';
+  try {
+    const today = new Date(), tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayStr = today.toISOString().split('T')[0], tomorrowStr = tomorrow.toISOString().split('T')[0];
+    // Fetch all cleanings for today/tomorrow, then filter client-side for assigned_workers support
+    const { data: allCleanings, error } = await sb.from('cleaning_schedule')
+      .select('*, properties(id, address, suburb, area, bedrooms, bathrooms, pref_presence, cleaning_notes)')
+      .in('planned_date', [todayStr, tomorrowStr])
+      .in('status', ['scheduled', 'confirmed', 'in_progress']).order('planned_date').order('planned_time');
+    if (error) throw error;
+    // Filter for this worker (check both assigned_worker_id and assigned_workers array)
+    const cleanings = (allCleanings || []).filter(c => {
+      if (c.assigned_workers && Array.isArray(c.assigned_workers) && c.assigned_workers.includes(currentWorker.id)) return true;
+      if (c.assigned_worker_id === currentWorker.id) return true;
+      return false;
+    });
+    if (!cleanings?.length) { main.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎉</div><div class="empty-state-text">No cleanings scheduled!</div></div>'; return; }
+    const todayJobs = cleanings.filter(c => c.planned_date === todayStr), tomorrowJobs = cleanings.filter(c => c.planned_date === tomorrowStr);
+    let html = '';
+    if (todayJobs.length) html += renderDateSection('Today', formatDate(today), todayJobs);
+    if (tomorrowJobs.length) html += renderDateSection('Tomorrow', formatDate(tomorrow), tomorrowJobs);
+    main.innerHTML = html;
+    // Resume timer for in-progress jobs
+    const inProgress = cleanings.find(c => c.status === 'in_progress');
+    if (inProgress?.actual_start) { jobStartTime = new Date(inProgress.actual_start); startTimer(inProgress.id); }
+  } catch(e) { main.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Failed to load. Pull to refresh.</div></div>'; console.error(e); }
+}
+
+function renderDateSection(label, dateStr, jobs) {
+  return `<div class="date-section"><div class="date-header"><span class="date-label">📅 ${label}</span><span class="date-value">— ${dateStr}</span></div>${jobs.map(renderJobCard).join('')}</div>`;
+}
+
+function renderJobCard(job) {
+  const prop = job.properties || {}, area = prop.area || '', areaClass = area ? `area-bg-${area}` : '', areaName = AREA_NAMES[area] || '—', isInProgress = job.status === 'in_progress';
+  return `<div class="job-card ${isInProgress ? 'in-progress' : ''}" id="job-${job.id}">
+    <div class="job-card-header"><span class="job-time">${job.planned_time?.slice(0,5) || '—'}</span><span class="job-area ${areaClass}">${areaName}</span></div>
+    <div class="job-address">${prop.address || 'Unknown'}</div>
+    <div class="job-meta"><span>${prop.suburb || ''}</span><span>${prop.bedrooms || '?'}bd / ${prop.bathrooms || '?'}ba</span><span>${job.duration_hours || 2}hrs</span></div>
+    ${isInProgress ? `<div class="job-timer"><span>⏱️</span><span id="timer-display-${job.id}">00:00:00</span></div><button class="job-btn job-btn-complete" onclick="openCompleteModal('${job.id}')">Complete Cleaning</button>` 
+    : `<button class="job-btn job-btn-start" onclick="openStartModal('${job.id}')">Start Job →</button>`}</div>`;
+}
+
+function formatDate(d) { return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }); }
+
+/* Start Modal */
+async function openStartModal(jobId) {
+  currentJob = jobId; beforePhotos = [];
+  document.getElementById('checkLocation').checked = false;
+  document.getElementById('checkReady').checked = false;
+  document.getElementById('beforePhotosGrid').innerHTML = '<div class="photo-add" onclick="document.getElementById(\'beforePhotoInput\').click()"><span class="photo-add-icon">+</span><span class="photo-add-text">Add</span></div>';
+  updateBeforePhotoCount(); updateStartButton();
+  // Load access info
+  try {
+    const { data } = await sb.from('cleaning_schedule').select('*, properties(pref_presence, cleaning_notes)').eq('id', jobId).single();
+    if (data) {
+      currentJobData = data;
+      document.getElementById('startPresence').textContent = data.properties?.pref_presence || 'Not specified';
+      document.getElementById('startNotes').textContent = data.properties?.cleaning_notes || 'None';
+    }
+  } catch(e) { console.error(e); }
+  document.getElementById('startModal').classList.add('open');
+}
+function closeStartModal() { document.getElementById('startModal').classList.remove('open'); currentJob = null; }
+
+function handleBeforePhotos(input) {
+  const files = Array.from(input.files).slice(0, 10 - beforePhotos.length);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => { beforePhotos.push({ file, preview: e.target.result }); renderBeforePhotos(); updateStartButton(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+function renderBeforePhotos() {
+  const grid = document.getElementById('beforePhotosGrid');
+  grid.innerHTML = beforePhotos.map((p,i) => `<div class="photo-item"><img src="${p.preview}"><button class="photo-item-remove" onclick="removeBeforePhoto(${i})">×</button></div>`).join('') +
+    (beforePhotos.length < 10 ? '<div class="photo-add" onclick="document.getElementById(\'beforePhotoInput\').click()"><span class="photo-add-icon">+</span><span class="photo-add-text">Add</span></div>' : '');
+  updateBeforePhotoCount();
+}
+function removeBeforePhoto(i) { beforePhotos.splice(i, 1); renderBeforePhotos(); updateStartButton(); }
+function updateBeforePhotoCount() { const el = document.getElementById('beforePhotoCount'); el.textContent = `${beforePhotos.length}/10 photos (min 3 required)`; el.className = 'photo-count ' + (beforePhotos.length >= 3 ? 'valid' : 'invalid'); }
+function updateStartButton() { document.getElementById('btnStartCleaning').disabled = !(document.getElementById('checkLocation').checked && document.getElementById('checkReady').checked && beforePhotos.length >= 3); }
+
+async function startCleaning() {
+  const btn = document.getElementById('btnStartCleaning'); btn.disabled = true; btn.textContent = 'Starting...';
+  try {
+    const photoUrls = [];
+    for (const photo of beforePhotos) {
+      const fileName = `${currentJob}/before_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+      const { data, error } = await sb.storage.from('cleaning-photos').upload(fileName, photo.file);
+      if (!error && data) photoUrls.push(sb.storage.from('cleaning-photos').getPublicUrl(data.path).data.publicUrl);
+    }
+    const now = new Date();
+    const { error } = await sb.from('cleaning_schedule').update({ status: 'in_progress', actual_start: now.toISOString(), before_photos: photoUrls }).eq('id', currentJob);
+    if (error) throw error;
+    showToast('Cleaning started!', 'success'); closeStartModal(); loadSchedule();
+    jobStartTime = now; startTimer(currentJob);
+  } catch(e) { showToast('Failed to start.', 'error'); console.error(e); btn.disabled = false; btn.textContent = 'Start Cleaning'; }
+}
+
+function startTimer(jobId) {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const el = document.getElementById(`timer-display-${jobId}`);
+    if (!el) { clearInterval(timerInterval); return; }
+    const elapsed = Math.floor((Date.now() - jobStartTime.getTime()) / 1000);
+    const h = Math.floor(elapsed / 3600), m = Math.floor((elapsed % 3600) / 60), s = elapsed % 60;
+    el.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+
+/* Complete Modal */
+async function openCompleteModal(jobId) {
+  currentJob = jobId; afterPhotos = [];
+  document.getElementById('afterPhotosGrid').innerHTML = '<div class="photo-add" onclick="document.getElementById(\'afterPhotoInput\').click()"><span class="photo-add-icon">+</span><span class="photo-add-text">Add</span></div>';
+  document.getElementById('workerNotes').value = ''; updateAfterPhotoCount(); updateCompleteButton();
+  try {
+    const { data } = await sb.from('cleaning_schedule').select('actual_start').eq('id', jobId).single();
+    if (data?.actual_start) {
+      const start = new Date(data.actual_start), diffMins = Math.round((Date.now() - start) / 60000);
+      const h = Math.floor(diffMins / 60), m = Math.round((diffMins % 60) / 5) * 5;
+      document.getElementById('durationHours').value = h;
+      document.getElementById('durationMins').value = m;
+      document.getElementById('durationAuto').textContent = `Auto-calculated: ${h}h ${m}m`;
+    }
+  } catch(e) { console.error(e); }
+  document.getElementById('completeModal').classList.add('open');
+}
+function closeCompleteModal() { document.getElementById('completeModal').classList.remove('open'); currentJob = null; }
+
+function handleAfterPhotos(input) {
+  const files = Array.from(input.files).slice(0, 20 - afterPhotos.length);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => { afterPhotos.push({ file, preview: e.target.result }); renderAfterPhotos(); updateCompleteButton(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+function renderAfterPhotos() {
+  const grid = document.getElementById('afterPhotosGrid');
+  grid.innerHTML = afterPhotos.map((p,i) => `<div class="photo-item"><img src="${p.preview}"><button class="photo-item-remove" onclick="removeAfterPhoto(${i})">×</button></div>`).join('') +
+    (afterPhotos.length < 20 ? '<div class="photo-add" onclick="document.getElementById(\'afterPhotoInput\').click()"><span class="photo-add-icon">+</span><span class="photo-add-text">Add</span></div>' : '');
+  updateAfterPhotoCount();
+}
+function removeAfterPhoto(i) { afterPhotos.splice(i, 1); renderAfterPhotos(); updateCompleteButton(); }
+function updateAfterPhotoCount() { const el = document.getElementById('afterPhotoCount'); el.textContent = `${afterPhotos.length}/20 photos (min 5 required)`; el.className = 'photo-count ' + (afterPhotos.length >= 5 ? 'valid' : 'invalid'); }
+function updateCompleteButton() { document.getElementById('btnCompleteCleaning').disabled = afterPhotos.length < 5; }
+
+async function completeCleaning() {
+  const btn = document.getElementById('btnCompleteCleaning'); btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    const photoUrls = [];
+    for (const photo of afterPhotos) {
+      const fileName = `${currentJob}/after_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+      const { data, error } = await sb.storage.from('cleaning-photos').upload(fileName, photo.file);
+      if (!error && data) photoUrls.push(sb.storage.from('cleaning-photos').getPublicUrl(data.path).data.publicUrl);
+    }
+    const hrs = parseInt(document.getElementById('durationHours').value) || 0;
+    const mins = parseInt(document.getElementById('durationMins').value) || 0;
+    const totalHours = hrs + (mins / 60);
+    const { error } = await sb.from('cleaning_schedule').update({
+      status: 'completed', actual_end: new Date().toISOString(), actual_duration: totalHours,
+      after_photos: photoUrls, worker_notes: document.getElementById('workerNotes').value.trim() || null, ch_deducted: totalHours
+    }).eq('id', currentJob);
+    if (error) throw error;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    showToast('Completed! Great work 🎉', 'success'); closeCompleteModal(); loadSchedule();
+  } catch(e) { showToast('Failed to submit.', 'error'); console.error(e); btn.disabled = false; btn.textContent = 'Submit & Complete'; }
+}
+
+function showToast(msg, type = '') { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast ' + type; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+// Pull to refresh
+let touchStartY = 0;
+document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; });
+document.addEventListener('touchend', e => { if (document.documentElement.scrollTop === 0 && e.changedTouches[0].clientY - touchStartY > 100 && currentWorker) { showToast('Refreshing...'); loadSchedule(); } });
+</script>
+</body>
+</html>
