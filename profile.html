@@ -436,7 +436,7 @@
       <!-- Admin sections (hidden by default) -->
       <div id="adminNav" style="display:none;">
         <div class="sidebar-divider"></div>
-        <div class="sidebar-section">Admin <span class="admin-badge">Admin</span></div>
+        <div class="sidebar-section">Admin</div>
         <button class="sidebar-item" data-section="dashboard" onclick="switchSection('dashboard')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
@@ -2917,6 +2917,9 @@ async function loadDashboard() {
     const subs = subsRes.data || [];
     const props = propsRes.data || [];
     const cleanings = cleaningsRes.data || [];
+    
+    console.log('Dashboard subs:', subs.length, subs);
+    console.log('Active subs:', subs.filter(s => s.status === 'active').length);
     
     // 1. Pending Jobs
     const pendingJobs = jobs.length;
