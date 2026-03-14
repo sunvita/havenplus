@@ -152,30 +152,42 @@
   .cta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
   @media (max-width: 900px) { .cta-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 500px) { .cta-grid { grid-template-columns: 1fr; } }
-  .cta-card { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 14px; cursor: pointer; transition: all .2s; border: 2px solid transparent; }
-  .cta-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
-  .cta-icon { font-size: 24px; flex-shrink: 0; }
+  .cta-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 16px; cursor: pointer; transition: all .25s ease; border: 1px solid rgba(0,0,0,.06); backdrop-filter: blur(8px); }
+  .cta-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+  .cta-icon { font-size: 28px; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,.1)); }
   .cta-content { flex: 1; }
-  .cta-value { font-size: 28px; font-weight: 800; line-height: 1.1; }
-  .cta-label { font-size: 12px; font-weight: 600; opacity: .8; margin-top: 2px; }
-  .cta-arrow { font-size: 18px; opacity: .5; transition: opacity .2s; }
-  .cta-card:hover .cta-arrow { opacity: 1; }
-  .cta-pending { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); color: #b7791f; }
-  .cta-pending .cta-value { color: #d97706; }
-  .cta-payment { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; }
+  .cta-value { font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .cta-label { font-size: 12px; font-weight: 600; opacity: .7; margin-top: 4px; text-transform: uppercase; letter-spacing: .03em; }
+  .cta-arrow { font-size: 18px; opacity: .4; transition: all .25s; }
+  .cta-card:hover .cta-arrow { opacity: 1; transform: translateX(3px); }
+  
+  /* Row 1: Action Items - Subtle flat colors */
+  .cta-pending { background: #fffbeb; border-color: #fcd34d; }
+  .cta-pending .cta-value { color: #b45309; }
+  .cta-pending .cta-label { color: #92400e; }
+  .cta-payment { background: #fef2f2; border-color: #fca5a5; }
   .cta-payment .cta-value { color: #dc2626; }
-  .cta-noplan { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #3730a3; }
+  .cta-payment .cta-label { color: #991b1b; }
+  .cta-noplan { background: #eef2ff; border-color: #a5b4fc; }
   .cta-noplan .cta-value { color: #4f46e5; }
-  .cta-chlow { background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412; }
+  .cta-noplan .cta-label { color: #3730a3; }
+  .cta-chlow { background: #fff7ed; border-color: #fdba74; }
   .cta-chlow .cta-value { color: #ea580c; }
-  .cta-card.cta-ok { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; }
+  .cta-chlow .cta-label { color: #9a3412; }
+  .cta-card.cta-ok { background: #ecfdf5; border-color: #6ee7b7; }
   .cta-card.cta-ok .cta-value { color: #059669; }
-  .cta-revenue { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46; }
-  .cta-revenue .cta-value { color: #059669; }
-  .cta-fees { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; }
-  .cta-fees .cta-value { color: #d97706; }
-  .cta-net { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; }
+  .cta-card.cta-ok .cta-label { color: #047857; }
+  
+  /* Row 2: Revenue - Clean minimal */
+  .cta-revenue { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #86efac; }
+  .cta-revenue .cta-value { color: #16a34a; }
+  .cta-revenue .cta-label { color: #166534; }
+  .cta-fees { background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-color: #fde047; }
+  .cta-fees .cta-value { color: #ca8a04; }
+  .cta-fees .cta-label { color: #854d0e; }
+  .cta-net { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #93c5fd; }
   .cta-net .cta-value { color: #2563eb; }
+  .cta-net .cta-label { color: #1e40af; }
   
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1040,7 +1052,7 @@
           </div>
         </div>
         <div class="modal-form-group">
-          <label>Duration (hours)</label>
+          <label>Estimated cleaning duration (hours)</label>
           <input type="number" id="schedEditDuration" step="0.5" min="0.5" value="2" onchange="updateChCalculation();checkWorkerConflicts()">
         </div>
       </div>
@@ -1930,7 +1942,7 @@ async function loadSchedules() {
     if (workerIds.length === 1) {
       workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unassigned';
     } else if (workerIds.length > 1) {
-      const names = workerIds.map(wid => workerMap[wid]?.full_name || '?'?').filter(Boolean);
+      const names = workerIds.map(wid => workerMap[wid]?.full_name || '?').filter(Boolean);
       workerDisplay = `${names[0]} +${names.length - 1}`;
     }
     
@@ -2335,6 +2347,11 @@ async function loadWorkerSchedulesForDate(date) {
 function renderWorkerCheckboxList(propertyArea) {
   const container = document.getElementById('schedEditWorkerList');
   
+  if (!allWorkers.length) {
+    container.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-light);">No workers available. Add workers first.</div>';
+    return;
+  }
+  
   // Sort workers by distance to property area
   const sortedWorkers = [...allWorkers].sort((a, b) => {
     const distA = getAreaDistance(a.area, propertyArea);
@@ -2363,7 +2380,7 @@ function renderWorkerCheckboxList(propertyArea) {
     return `<label class="worker-checkbox-item ${itemClass}" data-worker-id="${w.id}">
       <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleWorkerSelection('${w.id}')">
       <div class="worker-info">
-        <div class="worker-name">${w.name}</div>
+        <div class="worker-name">${w.full_name || w.name || '?'}</div>
         <div class="worker-meta">${w.area ? getAreaName(w.area) : 'No area'}</div>
       </div>
       <div class="worker-distance">${distanceText}</div>
@@ -2488,10 +2505,10 @@ function checkWorkerConflicts() {
     
     if (conflict.type === 'overlap') {
       hasConflict = true;
-      messages.push(`🔴 ${worker?.full_name || ''?'Worker'} is already assigned to "${conflict.sched.properties?.address || 'another cleaning'}" at this time.`);
+      messages.push(`🔴 ${worker?.full_name || 'Worker'} is already assigned to "${conflict.sched.properties?.address || 'another cleaning'}" at this time.`);
     } else if (conflict.type === 'tight') {
       hasWarning = true;
-      messages.push(`🟠 ${worker?.full_name || ''?'Worker'} has another cleaning with only ${conflict.gap} min gap.`);
+      messages.push(`🟠 ${worker?.full_name || 'Worker'} has another cleaning with only ${conflict.gap} min gap.`);
     }
   }
   
@@ -2753,7 +2770,7 @@ async function loadWorkers() {
     
     body.innerHTML = data.map(w => {
       const statusBadge = w.is_active ? 'active' : 'inactive';
-      const areaLabel = w.area ? (AREA_DATA[w.area]?.name || w.area) : '—';
+      const areaLabel = w.area ? (PERTH_AREAS[w.area]?.name || w.area) : '—';
       const typeLabel = w.worker_type ? w.worker_type.charAt(0).toUpperCase() + w.worker_type.slice(1) : 'Cleaner';
       return `<tr>
         <td style="font-weight:600;">${w.full_name || '—'}</td>
@@ -2790,7 +2807,7 @@ function openWorkerModal(workerId = null) {
   // Populate area dropdown
   const areaSelect = document.getElementById('workerArea');
   areaSelect.innerHTML = '<option value="">— Select Area —</option>' + 
-    Object.entries(AREA_DATA).map(([code, data]) => 
+    Object.entries(PERTH_AREAS).map(([code, data]) => 
       `<option value="${code}" ${worker?.area === code ? 'selected' : ''}>${data.name}</option>`
     ).join('');
   
@@ -3012,7 +3029,7 @@ async function loadUpcomingCleanings() {
     if (workerIds.length === 1) {
       workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unknown';
     } else if (workerIds.length > 1) {
-      workerDisplay = `${workerMap[workerIds[0]]?.full_name || '?'?'} +${workerIds.length - 1}`;
+      workerDisplay = `${workerMap[workerIds[0]]?.full_name || '?'} +${workerIds.length - 1}`;
     }
     
     const badgeClass = c.status === 'pending' ? 'pending' : 'scheduled';
