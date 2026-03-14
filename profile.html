@@ -671,38 +671,55 @@
         </div>
         
         <!-- CTA Cards Row 2: Revenue -->
-        <div class="cta-grid" style="margin-top:16px;grid-template-columns:repeat(3, 1fr);">
-          <div class="cta-card cta-revenue">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaRevenueMonth">—</div>
-              <div class="cta-label">This Month Revenue</div>
+        <!-- This Month Overview (Financial + Operations) -->
+        <div style="margin-top:24px; background:#fff; border:1px solid var(--border); border-radius:14px; padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:16px;">📊 This Month Overview</div>
+          
+          <!-- Financial -->
+          <div style="background:#f8f9fa; border-radius:10px; padding:16px; margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Financial</div>
+            <div style="display:flex; align-items:stretch;">
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:#059669;" id="ctaRevenueMonth">$0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Revenue</div>
+              </div>
+              <div style="width:1.5px; background:var(--border);"></div>
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:#dc2626;" id="ctaFeesMonth">$0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Fees</div>
+              </div>
+              <div style="width:1.5px; background:var(--border);"></div>
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:#1d4ed8;" id="ctaNetMonth">$0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Net</div>
+              </div>
             </div>
           </div>
-          <div class="cta-card cta-fees">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaFeesMonth">—</div>
-              <div class="cta-label">Stripe Fees</div>
+          
+          <!-- Operations -->
+          <div style="background:#f8f9fa; border-radius:10px; padding:16px;">
+            <div style="font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Operations</div>
+            <div style="display:flex; align-items:stretch;">
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:var(--navy);" id="dashCleaningsMonth">0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Cleanings</div>
+              </div>
+              <div style="width:1.5px; background:var(--border);"></div>
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:var(--navy);" id="dashJobsMonth">0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Jobs</div>
+              </div>
+              <div style="width:1.5px; background:var(--border);"></div>
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:var(--navy);" id="dashActiveSubs">0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Subs</div>
+              </div>
+              <div style="width:1.5px; background:var(--border);"></div>
+              <div style="flex:1; text-align:center; padding:8px 0;">
+                <div style="font-size:24px;font-weight:700;color:var(--navy);" id="dashChUsed">0.0</div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:4px;">CH used</div>
+              </div>
             </div>
-          </div>
-          <div class="cta-card cta-net">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaNetMonth">—</div>
-              <div class="cta-label">Net Revenue</div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Quick Stats -->
-        <div style="margin-top:24px;">
-          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">📊 This Month Overview</div>
-          <div class="stat-row">
-            <div class="stat-mini"><div class="stat-mini-label">Cleanings</div><div class="stat-mini-value" id="dashCleaningsMonth">—</div></div>
-            <div class="stat-mini"><div class="stat-mini-label">Jobs Completed</div><div class="stat-mini-value" id="dashJobsMonth">—</div></div>
-            <div class="stat-mini"><div class="stat-mini-label">Active Subs</div><div class="stat-mini-value" id="dashActiveSubs">—</div></div>
-            <div class="stat-mini"><div class="stat-mini-label">Total CH Used</div><div class="stat-mini-value" id="dashChUsed">—</div></div>
           </div>
         </div>
         
