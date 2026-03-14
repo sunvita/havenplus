@@ -162,6 +162,55 @@
   .badge-in_progress { background: #fff3e0; color: #ef6c00; }
   .badge-completed { background: #e8f5e9; color: #1e5c3a; }
   .badge-cancelled { background: #f0f0f0; color: #888; }
+  
+  /* ── Area Cell Backgrounds (Color-coded by distance from SE_INNER) ── */
+  .area-cell { font-size: 12px; font-weight: 600; text-align: center; }
+  /* Group A: Indigo/Blue (≤12분) */
+  .area-bg-SE_INNER    { background: #3F51B5; color: #fff; }
+  .area-bg-EAST        { background: #3F51B5; color: #fff; }
+  .area-bg-INNER_SOUTH { background: #2196F3; color: #fff; }
+  .area-bg-SE_MID      { background: #2196F3; color: #fff; }
+  .area-bg-CBD         { background: #1976D2; color: #fff; }
+  /* Group B: Teal (12~20분) */
+  .area-bg-SE_OUTER    { background: #009688; color: #fff; }
+  .area-bg-MELVILLE    { background: #00897B; color: #fff; }
+  .area-bg-NE_INNER    { background: #00796B; color: #fff; }
+  .area-bg-ARMADALE    { background: #00695C; color: #fff; }
+  /* Group C: Green (18~22분) */
+  .area-bg-NE_MID      { background: #4CAF50; color: #fff; }
+  .area-bg-WEST        { background: #43A047; color: #fff; }
+  .area-bg-COCKBURN    { background: #388E3C; color: #fff; }
+  .area-bg-FREMANTLE   { background: #2E7D32; color: #fff; }
+  /* Group D: Yellow (22분+) */
+  .area-bg-NE_OUTER    { background: #FFEB3B; color: #333; }
+  .area-bg-NORTH_INNER { background: #FDD835; color: #333; }
+  /* Group E: Orange/Red (30분+) */
+  .area-bg-NORTH_OUTER { background: #FF9800; color: #fff; }
+  .area-bg-ROCKINGHAM  { background: #F44336; color: #fff; }
+  /* Unassigned */
+  .area-bg-unknown     { background: #f5f5f5; color: #999; }
+  
+  /* Area Badges (for inline use) */
+  .area-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .area-SE_INNER    { background: #3F51B5; color: #fff; }
+  .area-EAST        { background: #3F51B5; color: #fff; }
+  .area-INNER_SOUTH { background: #2196F3; color: #fff; }
+  .area-SE_MID      { background: #2196F3; color: #fff; }
+  .area-CBD         { background: #1976D2; color: #fff; }
+  .area-SE_OUTER    { background: #009688; color: #fff; }
+  .area-MELVILLE    { background: #00897B; color: #fff; }
+  .area-NE_INNER    { background: #00796B; color: #fff; }
+  .area-ARMADALE    { background: #00695C; color: #fff; }
+  .area-NE_MID      { background: #4CAF50; color: #fff; }
+  .area-WEST        { background: #43A047; color: #fff; }
+  .area-COCKBURN    { background: #388E3C; color: #fff; }
+  .area-FREMANTLE   { background: #2E7D32; color: #fff; }
+  .area-NE_OUTER    { background: #FFEB3B; color: #333; }
+  .area-NORTH_INNER { background: #FDD835; color: #333; }
+  .area-NORTH_OUTER { background: #FF9800; color: #fff; }
+  .area-ROCKINGHAM  { background: #F44336; color: #fff; }
+  .area-unknown     { background: #e0e0e0; color: #666; }
+  
   .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 14px; }
   .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
   .filter-input { padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color .2s; }
@@ -294,13 +343,13 @@
       <div id="adminNav" style="display:none;">
         <div class="sidebar-divider"></div>
         <div class="sidebar-section">Admin <span class="admin-badge">Admin</span></div>
+        <button class="sidebar-item" data-section="cleanings" onclick="switchSection('cleanings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Cleanings
+        </button>
         <button class="sidebar-item" data-section="jobrequests" onclick="switchSection('jobrequests')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           Job Requests
-        </button>
-        <button class="sidebar-item" data-section="schedules" onclick="switchSection('schedules')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Schedules
         </button>
         <button class="sidebar-item" data-section="workers" onclick="switchSection('workers')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -509,10 +558,10 @@
       </div>
     </section>
 
-    <!-- ═══ Admin: Schedules (Enhanced) ═══ -->
-    <section class="section" id="section-schedules">
+    <!-- ═══ Admin: Cleanings ═══ -->
+    <section class="section" id="section-cleanings">
       <div class="section-card">
-        <div class="section-title">Cleaning Schedules <span class="admin-badge">Admin</span></div>
+        <div class="section-title">Cleanings <span class="admin-badge">Admin</span></div>
         <div class="section-desc">Manage cleaning visits — confirm dates and assign workers.</div>
         <div class="stat-row" id="schedStats">
           <div class="stat-mini"><div class="stat-mini-label">Pending</div><div class="stat-mini-value" id="statSchedPending">—</div></div>
@@ -521,6 +570,14 @@
           <div class="stat-mini"><div class="stat-mini-label">This Month</div><div class="stat-mini-value" id="statSchedThisMonth">—</div></div>
         </div>
         <div class="filter-bar">
+          <select class="filter-input" id="schedPeriodFilter" onchange="handlePeriodChange()">
+            <option value="1m">Next 1 month</option>
+            <option value="2m">Next 2 months</option>
+            <option value="all">All (past & future)</option>
+            <option value="custom">Custom range</option>
+          </select>
+          <input type="date" class="filter-input" id="schedDateFrom" style="display:none;" onchange="loadSchedules()">
+          <input type="date" class="filter-input" id="schedDateTo" style="display:none;" onchange="loadSchedules()">
           <select class="filter-input" id="schedStatusFilter" onchange="loadSchedules()">
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
@@ -529,14 +586,17 @@
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <select class="filter-input" id="schedAreaFilter" onchange="loadSchedules()">
+            <option value="">All areas</option>
+          </select>
           <select class="filter-input" id="schedWorkerFilter" onchange="loadSchedules()">
             <option value="">All workers</option>
           </select>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Time</th><th>Property</th><th>Customer</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="schedulesBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="schedulesBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -592,14 +652,18 @@
     <section class="section" id="section-properties">
       <div class="section-card">
         <div class="section-title">All Properties <span class="admin-badge">Admin</span></div>
-        <div class="section-desc">View all registered properties across customers.</div>
+        <div class="section-desc">View all registered properties and manage area assignments.</div>
         <div class="filter-bar">
           <input type="text" class="filter-input" id="propSearch" placeholder="Search address or suburb…" oninput="filterProperties()" style="flex:1;min-width:180px;">
+          <select class="filter-input" id="propAreaFilter" onchange="filterProperties()">
+            <option value="">All areas</option>
+          </select>
+          <button class="btn-save" onclick="autoAssignAllAreas()" style="white-space:nowrap;">Auto-assign Areas</button>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Address</th><th>Suburb</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Plan</th></tr></thead>
-            <tbody id="propsBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th>Address</th><th>Suburb</th><th>Area</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Actions</th></tr></thead>
+            <tbody id="propsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -803,6 +867,39 @@
   </div>
 </div>
 
+<!-- Property Area Edit Modal -->
+<div class="modal-overlay" id="propAreaModal" onclick="if(event.target===this)closePropAreaModal()">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">Edit Property Area</div>
+      <button class="modal-close" onclick="closePropAreaModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="propAreaAlert"></div>
+      <input type="hidden" id="propAreaEditId">
+      <div class="modal-form-group">
+        <label>Address</label>
+        <input type="text" id="propAreaAddress" disabled style="background:#f5f5f5;">
+      </div>
+      <div class="modal-form-group">
+        <label>Suburb</label>
+        <input type="text" id="propAreaSuburb" disabled style="background:#f5f5f5;">
+      </div>
+      <div class="modal-form-group">
+        <label>Area</label>
+        <select id="propAreaSelect">
+          <option value="">— Select Area —</option>
+        </select>
+      </div>
+      <div id="propAreaSuggestion" style="font-size:12px;color:var(--text-light);margin-top:-8px;margin-bottom:16px;"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closePropAreaModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSavePropArea" onclick="savePropArea()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -821,6 +918,107 @@ const PLAN_META = {
   smart:     { name:'Smart Care',     price:'$75/mo', visits:'6× per year', hours:'12 hrs', vouchers:'3 / year' },
   premium:   { name:'Premium Care',   price:'$150/mo',visits:'12× per year',hours:'24 hrs', vouchers:'6 / year' },
 };
+
+/* ═══ Perth Area Definitions ═══════════════════════════════════ */
+const PERTH_AREAS = {
+  'CBD': {
+    name: 'CBD & Inner',
+    suburbs: ['Perth', 'West Perth', 'East Perth', 'Northbridge', 'Highgate', 'Mount Lawley', 'Leederville']
+  },
+  'INNER_SOUTH': {
+    name: 'Inner South',
+    suburbs: ['South Perth', 'Victoria Park', 'East Victoria Park', 'Carlisle', 'Kensington', 'Como', 'Manning']
+  },
+  'WEST': {
+    name: 'Western Suburbs',
+    suburbs: ['Cottesloe', 'Claremont', 'Nedlands', 'Dalkeith', 'Peppermint Grove', 'Mosman Park', 'Swanbourne', 'Subiaco']
+  },
+  'FREMANTLE': {
+    name: 'Fremantle',
+    suburbs: ['Fremantle', 'North Fremantle', 'East Fremantle', 'Beaconsfield', 'South Fremantle', 'White Gum Valley']
+  },
+  'MELVILLE': {
+    name: 'Melville',
+    suburbs: ['Melville', 'Palmyra', 'Bicton', 'Attadale', 'Alfred Cove', 'Myaree', 'Booragoon', 'Applecross']
+  },
+  'NORTH_INNER': {
+    name: 'North Inner',
+    suburbs: ['Scarborough', 'Innaloo', 'Karrinyup', 'Stirling', 'Doubleview', 'Woodlands', 'Gwelup', 'Trigg']
+  },
+  'NORTH_OUTER': {
+    name: 'North Outer',
+    suburbs: ['Joondalup', 'Wanneroo', 'Clarkson', 'Mindarie', 'Currambine', 'Kinross', 'Butler', 'Alkimos']
+  },
+  'NE_INNER': {
+    name: 'North East Inner',
+    suburbs: ['Morley', 'Dianella', 'Yokine', 'Coolbinia', 'Menora', 'Inglewood', 'Bedford', 'Bayswater']
+  },
+  'NE_MID': {
+    name: 'North East Mid',
+    suburbs: ['Noranda', 'Beechboro', 'Kiara', 'Lockridge', 'Eden Hill', 'Bassendean', 'Ashfield', 'Embleton']
+  },
+  'NE_OUTER': {
+    name: 'North East Outer',
+    suburbs: ['Midland', 'Guildford', 'Woodbridge', 'Midvale', 'Swan View', 'Stratton', 'Jane Brook', 'Helena Valley']
+  },
+  'EAST': {
+    name: 'East (Airport)',
+    suburbs: ['Belmont', 'Redcliffe', 'Cloverdale', 'Kewdale', 'Rivervale', 'Ascot', 'Perth Airport']
+  },
+  'SE_INNER': {
+    name: 'South East Inner',
+    suburbs: ['Bentley', 'East Cannington', 'Cannington', 'Queens Park', 'Riverton', 'Willetton', 'St James']
+  },
+  'SE_MID': {
+    name: 'South East Mid',
+    suburbs: ['Maddington', 'Kenwick', 'Thornlie', 'Langford', 'Lynwood', 'Parkwood', 'Ferndale', 'Beckenham']
+  },
+  'SE_OUTER': {
+    name: 'South East Outer',
+    suburbs: ['Gosnells', 'Southern River', 'Huntingdale', 'Canning Vale', 'Piara Waters', 'Harrisdale']
+  },
+  'ARMADALE': {
+    name: 'Armadale',
+    suburbs: ['Armadale', 'Kelmscott', 'Roleystone', 'Mount Nasura', 'Camillo', 'Champion Lakes', 'Seville Grove']
+  },
+  'COCKBURN': {
+    name: 'Cockburn',
+    suburbs: ['Cockburn Central', 'Success', 'Aubin Grove', 'Hammond Park', 'Atwell', 'Jandakot', 'Bibra Lake', 'Yangebup']
+  },
+  'ROCKINGHAM': {
+    name: 'Rockingham',
+    suburbs: ['Rockingham', 'Baldivis', 'Waikiki', 'Safety Bay', 'Warnbro', 'Port Kennedy', 'Secret Harbour']
+  }
+};
+
+function suggestAreaForSuburb(suburb) {
+  if (!suburb) return { area: null, confidence: 'none' };
+  const normalized = suburb.trim();
+  
+  // Exact match
+  for (const [code, data] of Object.entries(PERTH_AREAS)) {
+    if (data.suburbs.some(s => s.toLowerCase() === normalized.toLowerCase())) {
+      return { area: code, confidence: 'high', name: data.name };
+    }
+  }
+  
+  // Partial match (e.g., "East Cannington" matches "Cannington")
+  const baseName = normalized.replace(/^(East|West|North|South)\s+/i, '');
+  for (const [code, data] of Object.entries(PERTH_AREAS)) {
+    if (data.suburbs.some(s => 
+      s.toLowerCase().includes(baseName.toLowerCase()) || 
+      baseName.toLowerCase().includes(s.toLowerCase())
+    )) {
+      return { area: code, confidence: 'medium', name: data.name };
+    }
+  }
+  
+  return { area: null, confidence: 'none' };
+}
+
+function getAreaName(code) {
+  return PERTH_AREAS[code]?.name || code || '—';
+}
 
 let sb, currentUser, isAdmin = false;
 let allSubscribers = [];
@@ -892,7 +1090,7 @@ function switchSection(name) {
 
   if (name === 'subscription') loadSubscription();
   if (name === 'subscribers')  loadSubscribers();
-  if (name === 'schedules')    loadSchedules();
+  if (name === 'cleanings')    loadSchedules();
   if (name === 'hourslog')     loadHoursLog();
   if (name === 'jobrequests')  loadJobRequests();
   if (name === 'workers')      loadWorkers();
@@ -1015,7 +1213,8 @@ async function loadSubscription() {
 
     if (shBal) {
       const shPurchRem = (shBal.purchased_total || 0) - (shBal.purchased_used || 0);
-      if (shPurchRem > 0) {
+      const shPurchUsed = shBal.purchased_used || 0;
+      if (shPurchRem > 0 || shPurchUsed > 0) {
         html += `
           <div class="sub-card" style="margin-top:12px;">
             <div class="sub-card-header">
@@ -1024,8 +1223,8 @@ async function loadSubscription() {
               </div>
             </div>
             <div class="sub-details" style="grid-template-columns:1fr 1fr;">
-              <div class="sub-detail-item">SH purchased remaining<strong>${shPurchRem} hrs</strong></div>
-              <div class="sub-detail-item">Call-out fee<strong>$0 Always</strong></div>
+              <div class="sub-detail-item">SH remaining<strong>${shPurchRem} hrs</strong></div>
+              <div class="sub-detail-item">SH used<strong>${shPurchUsed} hrs</strong></div>
             </div>
           </div>`;
       }
@@ -1273,32 +1472,108 @@ function filterSubscribers() {
 /* ══ Admin: Schedules (Enhanced) ══════════════════════════ */
 let allSchedules = [], allWorkers = [];
 
+function handlePeriodChange() {
+  const period = document.getElementById('schedPeriodFilter').value;
+  const fromEl = document.getElementById('schedDateFrom');
+  const toEl = document.getElementById('schedDateTo');
+  
+  if (period === 'custom') {
+    fromEl.style.display = 'block';
+    toEl.style.display = 'block';
+    // Set default range: today to 1 month ahead
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    fromEl.value = today.toISOString().split('T')[0];
+    toEl.value = nextMonth.toISOString().split('T')[0];
+  } else {
+    fromEl.style.display = 'none';
+    toEl.style.display = 'none';
+  }
+  loadSchedules();
+}
+
+function initAreaDropdowns() {
+  const areaOptions = '<option value="">All areas</option>' + 
+    Object.entries(PERTH_AREAS).map(([code, data]) => 
+      `<option value="${code}">${data.name}</option>`
+    ).join('');
+  
+  ['schedAreaFilter', 'propAreaFilter', 'propAreaSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'propAreaSelect') {
+        el.innerHTML = '<option value="">— Select Area —</option>' + 
+          Object.entries(PERTH_AREAS).map(([code, data]) => 
+            `<option value="${code}">${data.name}</option>`
+          ).join('');
+      } else {
+        el.innerHTML = areaOptions;
+      }
+    }
+  });
+}
+
 async function loadSchedules() {
   if (!isAdmin) return;
-  const body   = document.getElementById('schedulesBody');
+  const body = document.getElementById('schedulesBody');
   const status = document.getElementById('schedStatusFilter').value;
   const worker = document.getElementById('schedWorkerFilter').value;
-  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+  const area = document.getElementById('schedAreaFilter').value;
+  const period = document.getElementById('schedPeriodFilter').value;
+  
+  body.innerHTML = '<tr><td colspan="8" class="empty-state">Loading…</td></tr>';
 
   // Load workers for dropdown if not already loaded
   if (!allWorkers.length) await loadWorkersForDropdowns();
+  
+  // Initialize area dropdowns
+  initAreaDropdowns();
+
+  // Calculate date range
+  let dateFrom = null, dateTo = null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (period === '1m') {
+    dateFrom = today;
+    dateTo = new Date(today);
+    dateTo.setMonth(dateTo.getMonth() + 1);
+  } else if (period === '2m') {
+    dateFrom = today;
+    dateTo = new Date(today);
+    dateTo.setMonth(dateTo.getMonth() + 2);
+  } else if (period === 'custom') {
+    const fromVal = document.getElementById('schedDateFrom').value;
+    const toVal = document.getElementById('schedDateTo').value;
+    if (fromVal) dateFrom = new Date(fromVal);
+    if (toVal) dateTo = new Date(toVal);
+  }
+  // 'all' = no date filter
 
   let q = sb.from('cleaning_schedule')
     .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, user_id')
-    .order('planned_date', { ascending: false }).limit(100);
+    .order('planned_date', { ascending: true }).limit(200);
+  
   if (status) q = q.eq('status', status);
   if (worker) q = q.eq('assigned_worker_id', worker);
+  if (dateFrom) q = q.gte('planned_date', dateFrom.toISOString().split('T')[0]);
+  if (dateTo) q = q.lte('planned_date', dateTo.toISOString().split('T')[0]);
+  
   const { data } = await q;
 
-  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No schedules found.</td></tr>'; return; }
+  if (!data?.length) { 
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">No schedules found for this period.</td></tr>'; 
+    return; 
+  }
 
-  // Get property and user info
+  // Get property info (including area)
   const propIds = [...new Set(data.map(r => r.property_id).filter(Boolean))];
   const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
   
   let propMap = {}, profileMap = {};
   if (propIds.length) {
-    const { data: props } = await sb.from('properties').select('id, address, suburb').in('id', propIds);
+    const { data: props } = await sb.from('properties').select('id, address, suburb, area').in('id', propIds);
     (props || []).forEach(p => propMap[p.id] = p);
   }
   if (userIds.length) {
@@ -1309,11 +1584,20 @@ async function loadSchedules() {
   const workerMap = {};
   allWorkers.forEach(w => workerMap[w.id] = w);
 
-  // Stats
-  const pending = data.filter(s => s.status === 'pending').length;
-  const scheduled = data.filter(s => s.status === 'scheduled' || s.status === 'confirmed').length;
-  const completed = data.filter(s => s.status === 'completed').length;
-  const thisMonth = data.filter(s => {
+  // Filter by area if selected
+  let filteredData = data;
+  if (area) {
+    filteredData = data.filter(r => {
+      const prop = propMap[r.property_id];
+      return prop?.area === area;
+    });
+  }
+
+  // Stats (based on filtered data)
+  const pending = filteredData.filter(s => s.status === 'pending').length;
+  const scheduled = filteredData.filter(s => s.status === 'scheduled' || s.status === 'confirmed').length;
+  const completed = filteredData.filter(s => s.status === 'completed').length;
+  const thisMonth = filteredData.filter(s => {
     if (!s.planned_date) return false;
     const d = new Date(s.planned_date);
     const now = new Date();
@@ -1325,12 +1609,19 @@ async function loadSchedules() {
   document.getElementById('statSchedCompleted').textContent = completed;
   document.getElementById('statSchedThisMonth').textContent = thisMonth;
 
-  allSchedules = data;
+  allSchedules = data.map(r => ({ ...r, prop: propMap[r.property_id] }));
 
-  body.innerHTML = data.map(r => {
+  if (!filteredData.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">No schedules found for selected filters.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = filteredData.map(r => {
     const d = r.planned_date ? new Date(r.planned_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
     const prop = propMap[r.property_id];
     const propLabel = prop ? `${prop.address}, ${prop.suburb}` : '—';
+    const areaName = prop?.area ? getAreaName(prop.area) : '—';
+    const areaClass = prop?.area ? `area-cell area-bg-${prop.area}` : 'area-cell area-bg-unknown';
     const customer = profileMap[r.user_id]?.full_name || '—';
     const workerName = workerMap[r.assigned_worker_id]?.name || 'Unassigned';
     const badgeClass = r.status === 'completed' ? 'completed' : r.status === 'cancelled' ? 'cancelled' : r.status === 'pending' ? 'pending' : 'scheduled';
@@ -1338,7 +1629,8 @@ async function loadSchedules() {
     return `<tr>
       <td style="font-weight:600;">${d}</td>
       <td>${r.planned_time || '—'}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
+      <td class="${areaClass}">${areaName}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
       <td>${customer}</td>
       <td>${workerName}</td>
       <td><span class="badge badge-${badgeClass}">${r.status || '—'}</span></td>
@@ -1687,13 +1979,16 @@ let allPropertiesData = [];
 async function loadProperties() {
   if (!isAdmin) return;
   const body = document.getElementById('propsBody');
-  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+  
+  // Initialize area dropdowns
+  initAreaDropdowns();
 
   const { data } = await sb.from('properties')
-    .select('id, address, suburb, property_type, bedrooms, bathrooms, user_id')
+    .select('id, address, suburb, area, property_type, bedrooms, bathrooms, user_id')
     .order('created_at', { ascending: false }).limit(200);
     
-  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No properties found.</td></tr>'; return; }
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No properties found.</td></tr>'; return; }
 
   // Get owners and subscriptions
   const userIds = [...new Set(data.map(p => p.user_id).filter(Boolean))];
@@ -1719,29 +2014,121 @@ async function loadProperties() {
 
 function renderProperties(list) {
   const body = document.getElementById('propsBody');
-  if (!list.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No results.</td></tr>'; return; }
+  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
   
   body.innerHTML = list.map(p => {
-    const planBadge = p.plan ? `<span class="badge badge-${p.plan}">${p.plan}</span>` : '<span style="color:#888;">No plan</span>';
+    const areaCode = p.area || '';
+    const areaName = p.area ? getAreaName(p.area) : 'Not set';
+    const areaClass = p.area ? `area-cell area-bg-${p.area}` : 'area-cell area-bg-unknown';
+    const suggestion = !p.area ? suggestAreaForSuburb(p.suburb) : null;
+    const suggestionHint = suggestion?.area ? ` <span style="font-size:10px;color:#888;">(→ ${suggestion.name})</span>` : '';
+    
     return `<tr>
       <td style="font-weight:600;">${p.address || '—'}</td>
-      <td>${p.suburb || '—'}</td>
+      <td>${p.suburb || '—'}${suggestionHint}</td>
+      <td class="${areaClass}">${areaName}</td>
       <td style="text-transform:capitalize;">${(p.property_type || '—').replace(/_/g, ' ')}</td>
       <td>${p.bedrooms || '—'} / ${p.bathrooms || '—'}</td>
       <td>${p.owner}</td>
-      <td>${planBadge}</td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openPropAreaModal('${p.id}')">Edit Area</button>
+      </td>
     </tr>`;
   }).join('');
 }
 
 function filterProperties() {
   const q = document.getElementById('propSearch').value.toLowerCase();
+  const area = document.getElementById('propAreaFilter').value;
   const filtered = allPropertiesData.filter(p => {
     const addr = (p.address || '').toLowerCase();
     const suburb = (p.suburb || '').toLowerCase();
-    return !q || addr.includes(q) || suburb.includes(q);
+    const matchQ = !q || addr.includes(q) || suburb.includes(q);
+    const matchArea = !area || p.area === area;
+    return matchQ && matchArea;
   });
   renderProperties(filtered);
+}
+
+function openPropAreaModal(propId) {
+  const prop = allPropertiesData.find(p => p.id === propId);
+  if (!prop) return;
+  
+  document.getElementById('propAreaEditId').value = propId;
+  document.getElementById('propAreaAddress').value = prop.address || '';
+  document.getElementById('propAreaSuburb').value = prop.suburb || '';
+  document.getElementById('propAreaSelect').value = prop.area || '';
+  document.getElementById('propAreaAlert').className = 'modal-alert';
+  document.getElementById('propAreaAlert').textContent = '';
+  
+  // Show suggestion
+  const suggestion = suggestAreaForSuburb(prop.suburb);
+  const suggEl = document.getElementById('propAreaSuggestion');
+  if (suggestion.area && suggestion.area !== prop.area) {
+    suggEl.innerHTML = `💡 Suggested: <strong>${suggestion.name}</strong> (${suggestion.confidence} confidence)`;
+  } else {
+    suggEl.textContent = '';
+  }
+  
+  document.getElementById('propAreaModal').classList.add('open');
+}
+
+function closePropAreaModal() {
+  document.getElementById('propAreaModal').classList.remove('open');
+}
+
+async function savePropArea() {
+  const id = document.getElementById('propAreaEditId').value;
+  const area = document.getElementById('propAreaSelect').value;
+  const alertEl = document.getElementById('propAreaAlert');
+  
+  const btn = document.getElementById('btnSavePropArea');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  try {
+    const { error } = await sb.from('properties').update({
+      area: area || null
+    }).eq('id', id);
+    
+    if (error) throw error;
+    
+    showToast('Property area updated');
+    closePropAreaModal();
+    loadProperties();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function autoAssignAllAreas() {
+  if (!confirm('This will auto-assign areas to all properties without an area based on suburb. Continue?')) return;
+  
+  const propsToUpdate = allPropertiesData.filter(p => !p.area);
+  if (!propsToUpdate.length) {
+    showToast('All properties already have areas assigned');
+    return;
+  }
+  
+  let updated = 0, failed = 0;
+  
+  for (const prop of propsToUpdate) {
+    const suggestion = suggestAreaForSuburb(prop.suburb);
+    if (suggestion.area) {
+      try {
+        const { error } = await sb.from('properties').update({ area: suggestion.area }).eq('id', prop.id);
+        if (!error) updated++;
+        else failed++;
+      } catch(e) {
+        failed++;
+      }
+    }
+  }
+  
+  showToast(`Auto-assigned ${updated} properties${failed ? `, ${failed} failed` : ''}`);
+  loadProperties();
 }
 
 /* ══ Admin: Customers ═══════════════════════════════════════ */
@@ -1836,6 +2223,7 @@ document.addEventListener('keydown', e => {
     closeJobEditModal();
     closeSchedEditModal();
     closeWorkerModal();
+    closePropAreaModal();
   }
 });
 
