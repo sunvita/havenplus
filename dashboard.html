@@ -1352,8 +1352,10 @@ async function saveProperty() {
   try {
     let payload;
     if (lockStructure) {
-      // Only update editable fields (PM/key holder + access + cleaning prefs)
+      // Only update editable fields (PM/key holder + access + cleaning prefs + beds/baths)
       payload = {
+        bedrooms: beds || null,
+        bathrooms: baths || null,
         access_instructions: access || null,
         key_holder_name: keyName || null,
         key_holder_contact: keyContact || null,

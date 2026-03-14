@@ -178,16 +178,16 @@
   .cta-card.cta-ok .cta-value { color: #059669; }
   .cta-card.cta-ok .cta-label { color: #047857; }
   
-  /* Row 2: Revenue - Clean minimal */
-  .cta-revenue { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #86efac; }
-  .cta-revenue .cta-value { color: #16a34a; }
-  .cta-revenue .cta-label { color: #166534; }
-  .cta-fees { background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-color: #fde047; }
-  .cta-fees .cta-value { color: #ca8a04; }
-  .cta-fees .cta-label { color: #854d0e; }
-  .cta-net { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #93c5fd; }
-  .cta-net .cta-value { color: #2563eb; }
-  .cta-net .cta-label { color: #1e40af; }
+  /* Row 2: Revenue - More vibrant */
+  .cta-revenue { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #34d399; }
+  .cta-revenue .cta-value { color: #047857; }
+  .cta-revenue .cta-label { color: #065f46; }
+  .cta-fees { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #fbbf24; }
+  .cta-fees .cta-value { color: #b45309; }
+  .cta-fees .cta-label { color: #92400e; }
+  .cta-net { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #60a5fa; }
+  .cta-net .cta-value { color: #1d4ed8; }
+  .cta-net .cta-label { color: #1e3a8a; }
   
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -2854,6 +2854,7 @@ async function saveWorker() {
     if (id) {
       ({ error } = await sb.from('workers').update(payload).eq('id', id));
     } else {
+      payload.user_id = currentUser.id;  // Required for new workers
       ({ error } = await sb.from('workers').insert(payload));
     }
     
