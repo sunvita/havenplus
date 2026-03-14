@@ -912,7 +912,7 @@ async function handleLogin() {
   
   try {
     const { data, error } = await sb.from('workers')
-      .select('id, full_name, worker_code, area, is_active, hourly_rate, total_jobs_completed, rating')
+      .select('id, full_name, worker_code, area, is_active, cleaning_rate, tech_rate, total_jobs_completed, rating')
       .eq('worker_code', code)
       .maybeSingle();
     
@@ -1009,7 +1009,7 @@ async function loadTodayJobs() {
       return false;
     });
     
-    const rate = currentWorker.hourly_rate || HOURLY_RATE;
+    const rate = currentWorker.cleaning_rate || HOURLY_RATE;
     const totalHours = todayJobs.reduce((sum, j) => sum + (j.duration_hours || 2), 0);
     const potential = totalHours * rate;
     
@@ -1061,7 +1061,7 @@ async function loadWeekData() {
       return false;
     });
     
-    const rate = currentWorker.hourly_rate || HOURLY_RATE;
+    const rate = currentWorker.cleaning_rate || HOURLY_RATE;
     const completed = weekJobs.filter(j => j.status === 'completed');
     const upcoming = weekJobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled');
     
@@ -1110,7 +1110,7 @@ async function loadWeekData() {
 function renderJobCard(job, isNext = false) {
   const prop = job.properties || {};
   const isInProgress = job.status === 'in_progress';
-  const rate = currentWorker.hourly_rate || HOURLY_RATE;
+  const rate = currentWorker.cleaning_rate || HOURLY_RATE;
   const earnings = (job.duration_hours || 2) * rate;
   const cardClass = isInProgress ? 'in-progress' : (isNext ? 'next-up' : '');
   const badge = isInProgress ? '<span class="job-badge progress">In Progress</span>' : (isNext ? '<span class="job-badge next">Next</span>' : '');
@@ -1179,7 +1179,7 @@ async function loadMeTab() {
     
     document.getElementById('statMonth').textContent = myJobs.length;
     
-    const rate = currentWorker.hourly_rate || HOURLY_RATE;
+    const rate = currentWorker.cleaning_rate || HOURLY_RATE;
     const recentEl = document.getElementById('recentEarnings');
     
     if (!myJobs.length) {
