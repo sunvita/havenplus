@@ -146,7 +146,7 @@
   .btn-delete:hover { background: #a93226; }
 
   /* ── Admin ── */
-  .admin-badge { display: inline-block; background: #e8f0fb; color: var(--navy); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+  .admin-badge { display: inline-block; background: #dbeafe; color: #1e40af; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .03em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
   
   /* ── CTA Cards (Dashboard) ── */
   .cta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
@@ -2917,6 +2917,10 @@ async function loadDashboard() {
     const subs = subsRes.data || [];
     const props = propsRes.data || [];
     const cleanings = cleaningsRes.data || [];
+    
+    // Debug errors
+    if (subsRes.error) console.error('Subs error:', subsRes.error);
+    if (jobsRes.error) console.error('Jobs error:', jobsRes.error);
     
     console.log('Dashboard subs:', subs.length, subs);
     console.log('Active subs:', subs.filter(s => s.status === 'active').length);
