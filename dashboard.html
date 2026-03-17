@@ -1686,7 +1686,7 @@ function applyDateRestriction(urgency) {
     hintText = 'Standard requests: 2+ days advance booking';
   }
 
-  const minDateStr = minDate.toISOString().split('T')[0];
+  const minDateStr = minDate.getFullYear() + '-' + String(minDate.getMonth() + 1).padStart(2, '0') + '-' + String(minDate.getDate()).padStart(2, '0');
   dateInput.min = minDateStr;
   hintEl.textContent = hintText;
 
