@@ -1198,6 +1198,20 @@ const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
 const SERVER_URL    = 'https://rtkgnlcgepromqtoelre.supabase.co/functions/v1';
 
+let sb            = null;
+let currentUser   = null;
+let activePlanKey = null;
+let selectedPlan  = null;
+let selectedSH    = null;
+let billingCycle  = 'monthly';
+let activeChoice  = null;
+
+const PLAN_PRICES = {
+  essential: { monthly: 55,  annual: 660  },
+  smart:     { monthly: 75,  annual: 900  },
+  premium:   { monthly: 150, annual: 1800 },
+};
+
 function getPlanLabel(key) {
   const shLabels = {
     sh_1: '1 × Service Hour — $99',
@@ -1212,25 +1226,11 @@ function getPlanLabel(key) {
     ? names[key] + ' — $' + p.annual.toLocaleString() + '/yr'
     : names[key] + ' — $' + p.monthly + '/mo';
 }
-/* legacy compat — plain object, refreshed on billing toggle */
+
 const planLabels = {};
 function refreshPlanLabels() {
-  if (typeof PLAN_PRICES === 'undefined') return;
   ['essential','smart','premium','sh_1','sh_4','sh_8'].forEach(k => { planLabels[k] = getPlanLabel(k); });
 }
-
-let sb            = null;
-let currentUser   = null;
-let activePlanKey = null;
-let selectedPlan  = null;
-let selectedSH    = null;
-let billingCycle  = 'monthly';
-
-const PLAN_PRICES = {
-  essential: { monthly: 55,  annual: 660  },
-  smart:     { monthly: 75,  annual: 900  },
-  premium:   { monthly: 150, annual: 1800 },
-};
 refreshPlanLabels();
 
 /* ── Billing toggle ──────────────────────────────────── */
@@ -1273,7 +1273,6 @@ function setBilling(cycle) {
   refreshPlanLabels();
   updateCTA();
 }
-let activeChoice  = null;
 
 /* ── Init Supabase after DOM ─────────────────────────── */
 async function handleLogout() {
