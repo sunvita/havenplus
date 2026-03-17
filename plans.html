@@ -318,6 +318,30 @@ body {
 .price-mo   { font-size: 12px; color: var(--txt-s); margin-bottom: 2px; }
 .price-yr   { font-size: 11px; color: #A8A8A8; margin-bottom: 14px; }
 
+/* Billing toggle */
+.billing-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 18px;
+}
+.billing-toggle .bt-label {
+  font-size: 13px; font-weight: 600; color: var(--txt-s); cursor: pointer;
+  transition: color .2s;
+}
+.billing-toggle .bt-label.active { color: var(--navy); }
+.billing-toggle .bt-switch {
+  position: relative; width: 44px; height: 24px;
+  background: #D1D5DB; border-radius: 12px; cursor: pointer;
+  transition: background .2s;
+}
+.billing-toggle .bt-switch.on { background: var(--orange); }
+.billing-toggle .bt-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; background: white; border-radius: 50%;
+  transition: transform .2s;
+}
+.billing-toggle .bt-switch.on::after { transform: translateX(20px); }
+.plan-card.selected .price-yr { color: rgba(255,255,255,.35); }
+
 .clean-badge {
   background: rgba(27,42,74,.07); border-radius: 9px;
   padding: 10px 13px; margin-bottom: 18px;
@@ -713,6 +737,11 @@ body {
   <div class="sec sage">
     <div class="sec-plans-header">
       <div class="sec-plans-title"><span class="lang-en">Subscription Plans</span><span class="lang-ko" style="display:none;">구독 플랜</span></div>
+    </div>
+    <div class="billing-toggle">
+      <span class="bt-label active" id="btMonthly" onclick="setBilling('monthly')"><span class="lang-en">Monthly</span><span class="lang-ko" style="display:none;">월간</span></span>
+      <div class="bt-switch" id="btSwitch" onclick="toggleBilling()"></div>
+      <span class="bt-label" id="btAnnual" onclick="setBilling('annual')"><span class="lang-en">Annual</span><span class="lang-ko" style="display:none;">연간</span></span>
     </div>
     <div class="plans-grid">
 
@@ -1169,20 +1198,75 @@ const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
 const SERVER_URL    = 'https://rtkgnlcgepromqtoelre.supabase.co/functions/v1';
 
-const planLabels = {
-  essential: 'Essential Care — $55/mo',
-  smart:     'Smart Care — $75/mo',
-  premium:   'Premium Care — $150/mo',
-  sh_1:      '1 × Service Hour — $99',
-  sh_4:      '4 × Service Hours — $340',
-  sh_8:      '8 × Service Hours — $640',
-};
+function getPlanLabel(key) {
+  const shLabels = {
+    sh_1: '1 × Service Hour — $99',
+    sh_4: '4 × Service Hours — $340',
+    sh_8: '8 × Service Hours — $640',
+  };
+  if (shLabels[key]) return shLabels[key];
+  const names = { essential: 'Essential Care', smart: 'Smart Care', premium: 'Premium Care' };
+  if (!names[key]) return key;
+  const p = PLAN_PRICES[key];
+  return billingCycle === 'annual'
+    ? names[key] + ' — $' + p.annual.toLocaleString() + '/yr'
+    : names[key] + ' — $' + p.monthly + '/mo';
+}
+/* legacy compat */
+const planLabels = new Proxy({}, { get: (_, k) => getPlanLabel(k) });
 
 let sb            = null;
 let currentUser   = null;
 let activePlanKey = null;
 let selectedPlan  = null;
 let selectedSH    = null;
+let billingCycle  = 'monthly';
+
+const PLAN_PRICES = {
+  essential: { monthly: 55,  annual: 660  },
+  smart:     { monthly: 75,  annual: 900  },
+  premium:   { monthly: 150, annual: 1800 },
+};
+
+/* ── Billing toggle ──────────────────────────────────── */
+function toggleBilling() {
+  setBilling(billingCycle === 'monthly' ? 'annual' : 'monthly');
+}
+function setBilling(cycle) {
+  billingCycle = cycle;
+  const sw = document.getElementById('btSwitch');
+  const mLabel = document.getElementById('btMonthly');
+  const aLabel = document.getElementById('btAnnual');
+  if (cycle === 'annual') {
+    sw.classList.add('on');
+    mLabel.classList.remove('active');
+    aLabel.classList.add('active');
+  } else {
+    sw.classList.remove('on');
+    mLabel.classList.add('active');
+    aLabel.classList.remove('active');
+  }
+  /* Update prices on each plan card */
+  document.querySelectorAll('.plan-card').forEach(card => {
+    const plan = card.dataset.plan;
+    if (!PLAN_PRICES[plan]) return;
+    const p = PLAN_PRICES[plan];
+    const bigEl = card.querySelector('.price-big');
+    const moEl  = card.querySelector('.price-mo');
+    const yrEl  = card.querySelector('.price-yr');
+    if (cycle === 'annual') {
+      bigEl.textContent = p.annual.toLocaleString();
+      moEl.innerHTML = '<span class="lang-en">per year</span><span class="lang-ko" style="display:none;">/ 년</span>';
+      yrEl.innerHTML = '<span class="lang-en">$' + p.monthly + '/mo equivalent</span><span class="lang-ko" style="display:none;">월 $' + p.monthly + ' 상당</span>';
+    } else {
+      bigEl.textContent = p.monthly;
+      moEl.innerHTML = '<span class="lang-en">per month</span><span class="lang-ko" style="display:none;">/ 월</span>';
+      yrEl.innerHTML = '<span class="lang-en">Annual $' + p.annual.toLocaleString() + '</span><span class="lang-ko" style="display:none;">연간 $' + p.annual.toLocaleString() + '</span>';
+    }
+  });
+  applyLang(currentLang);
+  updateCTA();
+}
 let activeChoice  = null;
 
 /* ── Init Supabase after DOM ─────────────────────────── */
@@ -1444,6 +1528,7 @@ async function triggerCheckout(planKey) {
       },
       body: JSON.stringify({
         planKey,
+        billingCycle:   isSub ? billingCycle : 'one_time',
         userId:         currentUser.id,
         userEmail:      currentUser.email,
         contractAgreed: true,
