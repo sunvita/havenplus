@@ -1356,9 +1356,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch(e) { console.warn('Sub check failed:', e); }
 
-  /* Auto-open SH panel if mode=sh */
+  /* Auto-open panels based on context */
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('mode') === 'sh') { setTimeout(() => selectChoice('sh'), 100); }
+  if (urlParams.get('mode') === 'sh') {
+    setTimeout(() => selectChoice('sh'), 100);
+  } else if (sessionStorage.getItem('hp_selected_property') || urlParams.get('mode') === 'sub') {
+    setTimeout(() => selectChoice('subscription'), 100);
+  }
 
   /* Handle Stripe return */
   const p = new URLSearchParams(window.location.search);
