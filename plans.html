@@ -1601,6 +1601,10 @@ function t(key) {
 
 /* ── Language Toggle ── */
 let currentLang = localStorage.getItem('hp_lang') || 'en';
+function applyLang(lang) {
+  document.querySelectorAll('.lang-en').forEach(el => { el.style.display = lang === 'en' ? '' : 'none'; });
+  document.querySelectorAll('.lang-ko').forEach(el => { el.style.display = lang === 'ko' ? '' : 'none'; });
+}
 function toggleLang(lang) {
   currentLang = lang;
   localStorage.setItem('hp_lang', lang);
