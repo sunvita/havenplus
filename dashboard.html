@@ -682,7 +682,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="form-group">
           <label class="form-label">Urgency</label>
           <select class="form-select" id="shReqUrgency" onchange="onUrgencyChange()">
-            <option value="standard">Standard (24–48 hrs)</option>
+            <option value="standard">Standard (in 2+ days)</option>
             <option value="same_day">Same Day (1.5× SH)</option>
             <option value="after_hours">After Hours (2× SH)</option>
           </select>
@@ -1685,11 +1685,16 @@ function applyDateRestriction(urgency) {
     minDate.setDate(minDate.getDate() + 2);
     hintText = 'Standard requests: 2+ days advance booking';
   }
-  
+
   const minDateStr = minDate.toISOString().split('T')[0];
   dateInput.min = minDateStr;
   hintEl.textContent = hintText;
-  
+
+  // For Standard urgency, pre-select today + 2 as the preferred date
+  if (urgency === 'standard') {
+    dateInput.value = minDateStr;
+  }
+
   // Clear date if current selection is now invalid
   if (dateInput.value && dateInput.value < minDateStr) {
     dateInput.value = '';
