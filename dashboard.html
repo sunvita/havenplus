@@ -654,7 +654,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 
       <div class="form-group">
         <label class="form-label">Property *</label>
-        <select class="form-select" id="shReqProperty"></select>
+        <select class="form-select" id="shReqProperty" onchange="onUrgencyChange()"></select>
       </div>
       <div class="form-group">
         <label class="form-label">Category *</label>
@@ -1666,12 +1666,29 @@ function onUrgencyChange() {
   updateShEstimate();
 }
 
+// Map Australian postcode to IANA timezone
+function getTimezoneByPostcode(postcode) {
+  const pc = parseInt(postcode, 10);
+  if (isNaN(pc)) return 'Australia/Sydney';
+  if (pc >= 6000 && pc <= 6999) return 'Australia/Perth';       // WA
+  if (pc >= 800  && pc <= 999)  return 'Australia/Darwin';      // NT
+  if (pc >= 5000 && pc <= 5999) return 'Australia/Adelaide';    // SA
+  if (pc >= 4000 && pc <= 4999) return 'Australia/Brisbane';    // QLD
+  if (pc >= 7000 && pc <= 7999) return 'Australia/Hobart';      // TAS
+  if (pc >= 3000 && pc <= 3999) return 'Australia/Melbourne';   // VIC
+  if (pc >= 2600 && pc <= 2618) return 'Australia/Canberra';    // ACT
+  return 'Australia/Sydney'; // NSW default
+}
+
 function applyDateRestriction(urgency) {
   const dateInput = document.getElementById('shReqDate');
   const hintEl = document.getElementById('shReqDateHint');
-  // Use Perth time (AWST, UTC+8) as the reference timezone
-  const nowPerth = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Perth' }));
-  const today = new Date(nowPerth.getFullYear(), nowPerth.getMonth(), nowPerth.getDate());
+  // Determine timezone from selected property's postcode
+  const selPropId = document.getElementById('shReqProperty')?.value;
+  const selProp = allProperties.find(p => p.id === selPropId) || allProperties[0];
+  const tz = selProp ? getTimezoneByPostcode(selProp.postcode) : 'Australia/Perth';
+  const nowLocal = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+  const today = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate());
   
   let minDate;
   let hintText = '';
