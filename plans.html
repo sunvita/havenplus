@@ -1217,13 +1217,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const { data: sub } = await sb
       .from('subscriptions')
-      .select('plan, plan_type, status')
+      .select('plan_type, status')
       .eq('user_id', currentUser.id)
       .eq('status', 'active')
       .maybeSingle();
 
     if (sub) {
-      activePlanKey = sub.plan || sub.plan_type || '';
+      activePlanKey = sub.plan_type || '';
       if (activePlanKey) {
         document.getElementById('cardSub').classList.add('has-active');
         /* Existing subscriber — already agreed to service agreement */
