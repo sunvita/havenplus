@@ -1297,39 +1297,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     navUser.style.visibility = 'visible';
   }
 
-  /* Check active subscription */
+  /* Check active subscriptions for this user */
   try {
-    const { data: sub } = await sb
+    const { data: subs } = await sb
       .from('subscriptions')
-      .select('plan_type, status')
+      .select('plan_type, status, property_id')
       .eq('user_id', currentUser.id)
-      .eq('status', 'active')
-      .maybeSingle();
+      .eq('status', 'active');
 
-    if (sub) {
-      activePlanKey = sub.plan_type || '';
+    const hasAnySub = subs && subs.length > 0;
+
+    /* Determine if current property already has a subscription */
+    const selectedPropId = sessionStorage.getItem('hp_selected_property');
+    const currentPropSub = selectedPropId && subs
+      ? subs.find(s => s.property_id === selectedPropId)
+      : null;
+
+    if (currentPropSub) {
+      /* This property already has an active plan — lock it */
+      activePlanKey = currentPropSub.plan_type || '';
       if (activePlanKey) {
         document.getElementById('cardSub').classList.add('has-active');
-        /* Existing subscriber — already agreed to service agreement */
-        contractRead = true;
-        const cb = document.getElementById('contractCheck');
-        cb.checked = true;
-        cb.disabled = true;
-        cb.style.opacity = '0.5';
-        /* Update panel text for returning subscribers */
-        document.getElementById('agreePanelTitle').innerHTML =
-          '<span class="lang-en">Service Agreement</span>' +
-          '<span class="lang-ko" style="display:none;">서비스 계약서</span>';
-        document.getElementById('agreePanelDesc').innerHTML =
-          '<span class="lang-en">✅ You have already agreed to the service agreement. ' +
-          '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">View the full agreement</button></span>' +
-          '<span class="lang-ko" style="display:none;">✅ 이미 서비스 계약서에 동의하셨습니다. ' +
-          '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">전체 계약서 보기</button></span>';
-        document.getElementById('agreePanelLabel').innerHTML =
-          '<span class="lang-en">Service agreement accepted — no further action needed.</span>' +
-          '<span class="lang-ko" style="display:none;">서비스 계약서 동의 완료 — 추가 조치가 필요하지 않습니다.</span>';
-        applyLang(currentLang);
       }
+    }
+
+    /* Any existing subscriber — skip contract agreement */
+    if (hasAnySub) {
+      contractRead = true;
+      const cb = document.getElementById('contractCheck');
+      cb.checked = true;
+      cb.disabled = true;
+      cb.style.opacity = '0.5';
+      document.getElementById('agreePanelTitle').innerHTML =
+        '<span class="lang-en">Service Agreement</span>' +
+        '<span class="lang-ko" style="display:none;">서비스 계약서</span>';
+      document.getElementById('agreePanelDesc').innerHTML =
+        '<span class="lang-en">✅ You have already agreed to the service agreement. ' +
+        '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">View the full agreement</button></span>' +
+        '<span class="lang-ko" style="display:none;">✅ 이미 서비스 계약서에 동의하셨습니다. ' +
+        '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">전체 계약서 보기</button></span>';
+      document.getElementById('agreePanelLabel').innerHTML =
+        '<span class="lang-en">Service agreement accepted — no further action needed.</span>' +
+        '<span class="lang-ko" style="display:none;">서비스 계약서 동의 완료 — 추가 조치가 필요하지 않습니다.</span>';
+      applyLang(currentLang);
     }
   } catch(e) { console.warn('Sub check failed:', e); }
 
