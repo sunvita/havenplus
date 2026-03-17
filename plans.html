@@ -1224,7 +1224,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (sub) {
       activePlanKey = sub.plan || sub.plan_type || '';
-      if (activePlanKey) document.getElementById('cardSub').classList.add('has-active');
+      if (activePlanKey) {
+        document.getElementById('cardSub').classList.add('has-active');
+        /* Existing subscriber — already agreed to service agreement */
+        contractRead = true;
+        document.getElementById('contractCheck').checked = true;
+      }
     }
   } catch(e) { console.warn('Sub check failed:', e); }
 
