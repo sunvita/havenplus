@@ -1212,8 +1212,12 @@ function getPlanLabel(key) {
     ? names[key] + ' — $' + p.annual.toLocaleString() + '/yr'
     : names[key] + ' — $' + p.monthly + '/mo';
 }
-/* legacy compat */
-const planLabels = new Proxy({}, { get: (_, k) => getPlanLabel(k) });
+/* legacy compat — plain object, refreshed on billing toggle */
+const planLabels = {};
+function refreshPlanLabels() {
+  ['essential','smart','premium','sh_1','sh_4','sh_8'].forEach(k => { planLabels[k] = getPlanLabel(k); });
+}
+refreshPlanLabels();
 
 let sb            = null;
 let currentUser   = null;
@@ -1265,6 +1269,7 @@ function setBilling(cycle) {
     }
   });
   applyLang(currentLang);
+  refreshPlanLabels();
   updateCTA();
 }
 let activeChoice  = null;
