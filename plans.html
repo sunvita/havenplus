@@ -1307,6 +1307,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const hasAnySub = subs && subs.length > 0;
 
+    /* Check SH purchase history */
+    let hasSHPurchase = false;
+    try {
+      const { data: shBal } = await sb
+        .from('sh_balance')
+        .select('purchased_total')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      hasSHPurchase = shBal && shBal.purchased_total > 0;
+    } catch(e) { /* sh_balance may not exist */ }
+
+    const hasAnyHistory = hasAnySub || hasSHPurchase;
+
     /* Determine if current property already has a subscription */
     const selectedPropId = sessionStorage.getItem('hp_selected_property');
     const currentPropSub = selectedPropId && subs
@@ -1321,8 +1334,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    /* Any existing subscriber — skip contract agreement */
-    if (hasAnySub) {
+    /* Any existing subscriber or SH purchaser — skip contract agreement */
+    if (hasAnyHistory) {
       contractRead = true;
       const cb = document.getElementById('contractCheck');
       cb.checked = true;
