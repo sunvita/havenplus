@@ -1215,9 +1215,9 @@ function getPlanLabel(key) {
 /* legacy compat — plain object, refreshed on billing toggle */
 const planLabels = {};
 function refreshPlanLabels() {
+  if (typeof PLAN_PRICES === 'undefined') return;
   ['essential','smart','premium','sh_1','sh_4','sh_8'].forEach(k => { planLabels[k] = getPlanLabel(k); });
 }
-refreshPlanLabels();
 
 let sb            = null;
 let currentUser   = null;
@@ -1231,6 +1231,7 @@ const PLAN_PRICES = {
   smart:     { monthly: 75,  annual: 900  },
   premium:   { monthly: 150, annual: 1800 },
 };
+refreshPlanLabels();
 
 /* ── Billing toggle ──────────────────────────────────── */
 function toggleBilling() {
