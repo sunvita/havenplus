@@ -1669,8 +1669,9 @@ function onUrgencyChange() {
 function applyDateRestriction(urgency) {
   const dateInput = document.getElementById('shReqDate');
   const hintEl = document.getElementById('shReqDateHint');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Use Perth time (AWST, UTC+8) as the reference timezone
+  const nowPerth = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Perth' }));
+  const today = new Date(nowPerth.getFullYear(), nowPerth.getMonth(), nowPerth.getDate());
   
   let minDate;
   let hintText = '';
