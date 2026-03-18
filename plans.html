@@ -1307,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const { data: subs } = await sb
       .from('subscriptions')
-      .select('plan_type, status, property_id')
+      .select('plan_type, status, property_id, created_at')
       .eq('user_id', currentUser.id)
       .eq('status', 'active');
 
@@ -1343,6 +1343,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     /* Any existing subscriber or SH purchaser — skip contract agreement */
     if (hasAnyHistory) {
       contractRead = true;
+
+      // Find earliest agreement date from subscriptions or SH purchase
+      let agreedDate = null;
+      if (subs && subs.length > 0) {
+        const earliest = subs.reduce((min, s) =>
+          !min || (s.created_at && s.created_at < min) ? s.created_at : min, null);
+        if (earliest) agreedDate = new Date(earliest);
+      }
+
+      // Format agreed date for display
+      let agreedEnStr = '';
+      let agreedKoStr = '';
+      if (agreedDate && !isNaN(agreedDate.getTime())) {
+        const yr = agreedDate.getFullYear();
+        const mo = agreedDate.getMonth() + 1;
+        const dy = agreedDate.getDate();
+        const hh = String(agreedDate.getHours()).padStart(2, '0');
+        const mm = String(agreedDate.getMinutes()).padStart(2, '0');
+        agreedEnStr = `Agreed on ${dy}/${mo}/${yr} at ${hh}:${mm}`;
+        agreedKoStr = `${yr}년 ${mo}월 ${dy}일 ${hh}:${mm}에 동의하셨습니다`;
+      }
+
+      // Store for popup use
+      window._agreedEnStr = agreedEnStr;
+      window._agreedKoStr = agreedKoStr;
+
       const cb = document.getElementById('contractCheck');
       cb.checked = true;
       cb.disabled = true;
@@ -1351,9 +1377,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         '<span class="lang-en">Service Agreement</span>' +
         '<span class="lang-ko" style="display:none;">서비스 계약서</span>';
       document.getElementById('agreePanelDesc').innerHTML =
-        '<span class="lang-en">✅ You have already agreed to the service agreement. ' +
+        '<span class="lang-en">✅ You have already agreed to the service agreement.' + (agreedEnStr ? ' (' + agreedEnStr + ')' : '') + ' ' +
         '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">View the full agreement</button></span>' +
-        '<span class="lang-ko" style="display:none;">✅ 이미 서비스 계약서에 동의하셨습니다. ' +
+        '<span class="lang-ko" style="display:none;">✅ 이미 서비스 계약서에 동의하셨습니다.' + (agreedKoStr ? ' (' + agreedKoStr + ')' : '') + ' ' +
         '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">전체 계약서 보기</button></span>';
       document.getElementById('agreePanelLabel').innerHTML =
         '<span class="lang-en">Service agreement accepted — no further action needed.</span>' +
@@ -1518,9 +1544,11 @@ function openPopup(e) {
   if (contractRead) {
     document.getElementById('btnAgree').style.display = 'none';
     document.getElementById('btnCloseAgreed').style.display = '';
+    const enDate = window._agreedEnStr || '';
+    const koDate = window._agreedKoStr || '';
     document.getElementById('popupHint').innerHTML =
-      '<span class="lang-en">✅ You have already agreed to this agreement.</span>' +
-      '<span class="lang-ko" style="display:none;">✅ 이미 계약서에 동의하셨습니다.</span>';
+      '<span class="lang-en">✅ ' + (enDate || 'You have already agreed to this agreement.') + '</span>' +
+      '<span class="lang-ko" style="display:none;">✅ ' + (koDate || '이미 계약서에 동의하셨습니다.') + '</span>';
     applyLang(currentLang);
   } else {
     document.getElementById('btnAgree').style.display = '';
