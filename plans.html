@@ -1315,13 +1315,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* Check SH purchase history */
     let hasSHPurchase = false;
+    let shCreatedAt = null;
     try {
       const { data: shBal } = await sb
         .from('sh_balance')
-        .select('purchased_total')
+        .select('purchased_total, created_at')
         .eq('user_id', currentUser.id)
         .maybeSingle();
       hasSHPurchase = shBal && shBal.purchased_total > 0;
+      if (hasSHPurchase && shBal.created_at) shCreatedAt = shBal.created_at;
     } catch(e) { /* sh_balance may not exist */ }
 
     const hasAnyHistory = hasAnySub || hasSHPurchase;
@@ -1346,10 +1348,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Find earliest agreement date from subscriptions or SH purchase
       let agreedDate = null;
+      const candidates = [];
       if (subs && subs.length > 0) {
-        const earliest = subs.reduce((min, s) =>
-          !min || (s.created_at && s.created_at < min) ? s.created_at : min, null);
-        if (earliest) agreedDate = new Date(earliest);
+        subs.forEach(s => { if (s.created_at) candidates.push(s.created_at); });
+      }
+      if (shCreatedAt) candidates.push(shCreatedAt);
+      if (candidates.length > 0) {
+        candidates.sort();
+        agreedDate = new Date(candidates[0]);
       }
 
       // Format agreed date for display
@@ -1377,9 +1383,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         '<span class="lang-en">Service Agreement</span>' +
         '<span class="lang-ko" style="display:none;">서비스 계약서</span>';
       document.getElementById('agreePanelDesc').innerHTML =
-        '<span class="lang-en">✅ You have already agreed to the service agreement.' + (agreedEnStr ? ' (' + agreedEnStr + ')' : '') + ' ' +
+        '<span class="lang-en">✅ You have already agreed to the service agreement. ' +
         '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">View the full agreement</button></span>' +
-        '<span class="lang-ko" style="display:none;">✅ 이미 서비스 계약서에 동의하셨습니다.' + (agreedKoStr ? ' (' + agreedKoStr + ')' : '') + ' ' +
+        '<span class="lang-ko" style="display:none;">✅ 이미 서비스 계약서에 동의하셨습니다. ' +
         '<button class="agree-link" type="button" onclick="openPopup(event)" style="font-size:inherit;">전체 계약서 보기</button></span>';
       document.getElementById('agreePanelLabel').innerHTML =
         '<span class="lang-en">Service agreement accepted — no further action needed.</span>' +
@@ -1547,8 +1553,8 @@ function openPopup(e) {
     const enDate = window._agreedEnStr || '';
     const koDate = window._agreedKoStr || '';
     document.getElementById('popupHint').innerHTML =
-      '<span class="lang-en">✅ ' + (enDate || 'You have already agreed to this agreement.') + '</span>' +
-      '<span class="lang-ko" style="display:none;">✅ ' + (koDate || '이미 계약서에 동의하셨습니다.') + '</span>';
+      '<span class="lang-en">✅ ' + (enDate ? enDate + ' to the service agreement.' : 'You have already agreed to this agreement.') + '</span>' +
+      '<span class="lang-ko" style="display:none;">✅ ' + (koDate ? koDate.replace('동의하셨습니다', '서비스 계약서에 동의하셨습니다') : '이미 서비스 계약서에 동의하셨습니다.') + '</span>';
     applyLang(currentLang);
   } else {
     document.getElementById('btnAgree').style.display = '';
