@@ -313,6 +313,10 @@
   .conflict-alert.warning { background: #fff8e1; color: #b7791f; border: 1px solid #ffeeba; }
   .conflict-alert-icon { font-size: 16px; flex-shrink: 0; }
 
+  /* ── PIN Input ── */
+  .pin-input { width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 700; border: 2px solid var(--border); border-radius: 12px; outline: none; transition: border-color .2s; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .pin-input:focus { border-color: var(--accent); }
+
   /* ── Action Buttons in Tables ── */
   .btn-action-sm { background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; color: var(--navy); }
   .btn-action-sm:hover { background: var(--navy); color: white; border-color: var(--navy); }
@@ -613,6 +617,36 @@
           <div style="display:flex;gap:10px;margin-top:4px;">
             <button class="btn-save" id="btnPwSave" onclick="savePassword()">Update Password</button>
             <button class="btn-cancel" onclick="togglePwForm()">Cancel</button>
+          </div>
+        </div>
+        <!-- Admin PIN (admin only) -->
+        <div id="adminPinSection" style="display:none;">
+          <div class="security-row">
+            <div>
+              <div class="security-label">Manual Override PIN <span class="admin-badge" style="background:#fff3e0;color:#e65100;">Admin</span></div>
+              <div class="security-value">4-digit PIN for Manual Override access</div>
+            </div>
+            <button class="btn-change" onclick="togglePinForm()">Change</button>
+          </div>
+          <div class="inline-form" id="pinForm" style="display:none;">
+            <div class="alert alert-error" id="pinError"></div>
+            <div class="alert alert-success" id="pinSuccess"></div>
+            <div class="pw-field">
+              <label>New 4-digit PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="pinNew" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div class="pw-field">
+              <label>Confirm PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="pinConfirm" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn-save" id="btnPinSave" onclick="saveAdminPin()">Update PIN</button>
+              <button class="btn-cancel" onclick="togglePinForm()">Cancel</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1384,6 +1418,27 @@
   </div>
 </div>
 
+<!-- PIN Gate Modal for Manual Override -->
+<div class="modal-overlay" id="pinGateModal" onclick="if(event.target===this)closePinGate()">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">⚠ Manual Override</div>
+      <button class="modal-close" onclick="closePinGate()">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Enter 4-digit PIN to access Manual Override.</p>
+      <div class="modal-alert" id="pinGateAlert"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;" id="pinInputGroup">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,0)" onkeydown="onPinKeydown(event,0)">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,1)" onkeydown="onPinKeydown(event,1)">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,2)" onkeydown="onPinKeydown(event,2)">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,3)" onkeydown="onPinKeydown(event,3)">
+      </div>
+      <button class="modal-btn modal-btn-primary" style="width:100%;" onclick="verifyPin()">Unlock</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1538,7 +1593,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch(e) { console.warn('profiles query error:', e.message); }
 
     isAdmin = profile?.role === 'admin';
-    if (isAdmin) document.getElementById('adminNav').style.display = 'block';
+    if (isAdmin) {
+      document.getElementById('adminNav').style.display = 'block';
+      document.getElementById('adminPinSection').style.display = 'block';
+      loadAdminPin();
+    }
 
     // Pre-fill personal info
     document.getElementById('fieldName').value   = profile?.full_name || meta.full_name || '';
@@ -1582,7 +1641,139 @@ function switchSection(name) {
   if (name === 'workers')      loadWorkers();
   if (name === 'properties')   loadProperties();
   if (name === 'customers')    loadCustomers();
-  if (name === 'manage')       loadManageData();
+  if (name === 'manage') {
+    if (!manageUnlocked) { openPinGate(); return; }
+    loadManageData();
+  }
+}
+
+/* ── Manual Override PIN Gate ──────────────────────────── */
+let manageUnlocked = false;
+let storedPinHash = null;
+
+async function loadAdminPin() {
+  if (!sb || !isAdmin) return;
+  try {
+    const { data } = await sb.from('admin_settings').select('value').eq('key', 'override_pin').maybeSingle();
+    storedPinHash = data?.value || null;
+  } catch(e) { /* table may not exist yet */ }
+}
+
+function openPinGate() {
+  const inputs = document.querySelectorAll('#pinInputGroup .pin-input');
+  inputs.forEach(i => i.value = '');
+  const alert = document.getElementById('pinGateAlert');
+  alert.className = 'modal-alert';
+  alert.textContent = '';
+  document.getElementById('pinGateModal').classList.add('open');
+  setTimeout(() => inputs[0]?.focus(), 100);
+}
+
+function closePinGate() {
+  document.getElementById('pinGateModal').classList.remove('open');
+}
+
+function onPinInput(el, idx) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value && idx < 3) {
+    document.querySelectorAll('#pinInputGroup .pin-input')[idx + 1].focus();
+  }
+}
+
+function onPinKeydown(e, idx) {
+  if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+    document.querySelectorAll('#pinInputGroup .pin-input')[idx - 1].focus();
+  }
+  if (e.key === 'Enter') verifyPin();
+}
+
+async function verifyPin() {
+  const inputs = document.querySelectorAll('#pinInputGroup .pin-input');
+  const pin = Array.from(inputs).map(i => i.value).join('');
+  const alert = document.getElementById('pinGateAlert');
+
+  if (pin.length !== 4) {
+    alert.className = 'modal-alert error';
+    alert.textContent = 'Please enter a 4-digit PIN.';
+    return;
+  }
+
+  // If no PIN set yet, accept any and prompt to set one
+  if (!storedPinHash) {
+    manageUnlocked = true;
+    closePinGate();
+    switchSection('manage');
+    showToast('No PIN set yet. Please set one in Security settings.', true);
+    return;
+  }
+
+  const hash = await hashPin(pin);
+  if (hash === storedPinHash) {
+    manageUnlocked = true;
+    closePinGate();
+    switchSection('manage');
+  } else {
+    alert.className = 'modal-alert error';
+    alert.textContent = 'Incorrect PIN.';
+    inputs.forEach(i => i.value = '');
+    inputs[0].focus();
+  }
+}
+
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin + '_havenplus_override');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ── Admin PIN Change (Security section) ──────────────── */
+function togglePinForm() {
+  const form = document.getElementById('pinForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('pinError').style.display = 'none';
+  document.getElementById('pinSuccess').style.display = 'none';
+  document.getElementById('pinNew').value = '';
+  document.getElementById('pinConfirm').value = '';
+}
+
+async function saveAdminPin() {
+  const pin = document.getElementById('pinNew').value.trim();
+  const confirm = document.getElementById('pinConfirm').value.trim();
+  const errEl = document.getElementById('pinError');
+  const sucEl = document.getElementById('pinSuccess');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!/^\d{4}$/.test(pin)) {
+    errEl.textContent = 'PIN must be exactly 4 digits.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (pin !== confirm) {
+    errEl.textContent = 'PINs do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btnPinSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const hash = await hashPin(pin);
+  const { error } = await sb.from('admin_settings').upsert({ key: 'override_pin', value: hash }, { onConflict: 'key' });
+
+  btn.disabled = false; btn.textContent = 'Update PIN';
+
+  if (error) {
+    errEl.textContent = 'Failed to save: ' + error.message;
+    errEl.style.display = 'block';
+  } else {
+    storedPinHash = hash;
+    sucEl.textContent = 'PIN updated successfully.';
+    sucEl.style.display = 'block';
+    showToast('Override PIN updated.');
+    setTimeout(() => togglePinForm(), 1500);
+  }
 }
 
 /* ── Personal Info ──────────────────────────────────────── */
