@@ -986,19 +986,15 @@
         <div class="section-desc" style="color:var(--red);">Directly modify subscription and service hours data — bypasses payment. Use with caution.</div>
 
         <!-- Tabs -->
-        <div style="display: flex; gap: 12px; border-bottom: 2px solid var(--border); margin-bottom: 24px;">
-          <button class="sidebar-item" id="tabSubscriptions" onclick="switchManageTab('subscriptions')" style="border: none; background: none; flex: 0 0 auto; padding: 12px 0; border-bottom: 3px solid transparent; margin-bottom: -2px;">
-            Subscriptions
-          </button>
-          <button class="sidebar-item" id="tabServiceHours" onclick="switchManageTab('serviceHours')" style="border: none; background: none; flex: 0 0 auto; padding: 12px 0; border-bottom: 3px solid transparent; margin-bottom: -2px;">
-            Service Hours
-          </button>
+        <div style="display:flex; gap:0; border-bottom:2px solid var(--border); margin:20px 0 24px;">
+          <button id="tabSubscriptions" onclick="switchManageTab('subscriptions')" style="border:none; background:none; padding:10px 20px; font-size:14px; font-weight:700; font-family:inherit; color:var(--navy); cursor:pointer; border-bottom:3px solid var(--navy); margin-bottom:-2px;">Subscriptions</button>
+          <button id="tabServiceHours" onclick="switchManageTab('serviceHours')" style="border:none; background:none; padding:10px 20px; font-size:14px; font-weight:700; font-family:inherit; color:var(--text-secondary); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px;">Service Hours</button>
         </div>
 
         <!-- Subscriptions Panel -->
         <div id="panelSubscriptions" style="display: block;">
           <div class="filter-bar">
-            <input type="text" class="filter-input" id="subSearchInput" placeholder="Search by customer name or email" oninput="filterManageSubs()">
+            <input type="text" class="filter-input" id="subSearchInput" placeholder="Search by name or phone" oninput="filterManageSubs()">
             <button class="btn-action-sm" onclick="openAddSubModal()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; font-size: 13px;">+ Add Subscription</button>
           </div>
           <div class="table-wrap">
@@ -1012,7 +1008,7 @@
         <!-- Service Hours Panel -->
         <div id="panelServiceHours" style="display: none;">
           <div class="filter-bar">
-            <input type="text" class="filter-input" id="shSearchInput" placeholder="Search by customer name or email" oninput="filterManageSH()">
+            <input type="text" class="filter-input" id="shSearchInput" placeholder="Search by name or phone" oninput="filterManageSH()">
             <button class="btn-action-sm" onclick="openAddSHModal()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; font-size: 13px;">+ Add SH Balance</button>
           </div>
           <div class="table-wrap">
@@ -3797,7 +3793,7 @@ async function loadManageData() {
     const [subsRes, shRes, profilesRes, propsRes] = await Promise.all([
       sb.from('subscriptions').select('*'),
       sb.from('sh_balance').select('*'),
-      sb.from('profiles').select('id, full_name, email'),
+      sb.from('profiles').select('id, full_name, phone'),
       sb.from('properties').select('id, user_id, address'),
     ]);
 
@@ -3833,13 +3829,17 @@ function switchManageTab(tab) {
     subPanel.style.display = 'block';
     shPanel.style.display = 'none';
     subTab.style.borderBottom = '3px solid var(--navy)';
+    subTab.style.color = 'var(--navy)';
     shTab.style.borderBottom = '3px solid transparent';
+    shTab.style.color = 'var(--text-secondary)';
     renderManageSubs(manageDataState.subscriptions);
   } else {
     subPanel.style.display = 'none';
     shPanel.style.display = 'block';
     subTab.style.borderBottom = '3px solid transparent';
+    subTab.style.color = 'var(--text-secondary)';
     shTab.style.borderBottom = '3px solid var(--navy)';
+    shTab.style.color = 'var(--navy)';
     renderManageSH(manageDataState.shBalance);
   }
 }
@@ -3853,7 +3853,7 @@ function populateCustomerDropdowns() {
     manageDataState.allProfilesForDropdown.forEach(profile => {
       const option = document.createElement('option');
       option.value = profile.id;
-      option.textContent = `${profile.full_name} (${profile.email})`;
+      option.textContent = `${profile.full_name || 'No name'}${profile.phone ? ' (' + profile.phone + ')' : ''}`;
       select.appendChild(option);
     });
   });
@@ -3918,7 +3918,7 @@ function filterManageSubs() {
   const filtered = manageDataState.subscriptions.filter(sub => {
     const customer = manageDataState.profiles.find(p => p.id === sub.user_id);
     if (!customer) return false;
-    return customer.full_name.toLowerCase().includes(query) || customer.email.toLowerCase().includes(query);
+    return (customer.full_name || '').toLowerCase().includes(query) || (customer.phone || '').toLowerCase().includes(query);
   });
   renderManageSubs(filtered);
 }
@@ -3928,7 +3928,7 @@ function filterManageSH() {
   const filtered = manageDataState.shBalance.filter(sh => {
     const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
     if (!customer) return false;
-    return customer.full_name.toLowerCase().includes(query) || customer.email.toLowerCase().includes(query);
+    return (customer.full_name || '').toLowerCase().includes(query) || (customer.phone || '').toLowerCase().includes(query);
   });
   renderManageSH(filtered);
 }
