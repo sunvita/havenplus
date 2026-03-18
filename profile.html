@@ -473,6 +473,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Hours Log
         </button>
+        <button class="sidebar-item" data-section="manage" onclick="switchSection('manage')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Manage Data
+        </button>
       </div>
     </nav>
   </aside>
@@ -941,6 +945,52 @@
       </div>
     </section>
 
+    <!-- ═══ Admin: Manage Data ═══ -->
+    <section class="section" id="section-manage">
+      <div class="section-card">
+        <div class="section-title">Manage Data <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Create, edit, and delete subscriptions and service hours records for testing.</div>
+
+        <!-- Tabs -->
+        <div style="display: flex; gap: 12px; border-bottom: 2px solid var(--border); margin-bottom: 24px;">
+          <button class="sidebar-item" id="tabSubscriptions" onclick="switchManageTab('subscriptions')" style="border: none; background: none; flex: 0 0 auto; padding: 12px 0; border-bottom: 3px solid transparent; margin-bottom: -2px;">
+            Subscriptions
+          </button>
+          <button class="sidebar-item" id="tabServiceHours" onclick="switchManageTab('serviceHours')" style="border: none; background: none; flex: 0 0 auto; padding: 12px 0; border-bottom: 3px solid transparent; margin-bottom: -2px;">
+            Service Hours
+          </button>
+        </div>
+
+        <!-- Subscriptions Panel -->
+        <div id="panelSubscriptions" style="display: block;">
+          <div class="filter-bar">
+            <input type="text" class="filter-input" id="subSearchInput" placeholder="Search by customer name or email" oninput="filterManageSubs()">
+            <button class="btn-action-sm" onclick="openAddSubModal()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; font-size: 13px;">+ Add Subscription</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>Property</th><th>Plan</th><th>Status</th><th>Clean Hrs</th><th>SH Hrs</th><th>Start Date</th><th>Actions</th></tr></thead>
+              <tbody id="manageSubsBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Service Hours Panel -->
+        <div id="panelServiceHours" style="display: none;">
+          <div class="filter-bar">
+            <input type="text" class="filter-input" id="shSearchInput" placeholder="Search by customer name or email" oninput="filterManageSH()">
+            <button class="btn-action-sm" onclick="openAddSHModal()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; font-size: 13px;">+ Add SH Balance</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>Purchased Total</th><th>Purchased Used</th><th>Balance</th><th>Actions</th></tr></thead>
+              <tbody id="manageSHBody"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -1206,6 +1256,134 @@
   </div>
 </div>
 
+<!-- Add/Edit Subscription Modal -->
+<div class="modal-overlay" id="subManageModal" onclick="if(event.target===this)closeSubManageModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="subManageTitle">Add Subscription</div>
+      <button class="modal-close" onclick="closeSubManageModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="subManageAlert"></div>
+      <input type="hidden" id="subManageEditId">
+      <div class="modal-form-group">
+        <label>Customer *</label>
+        <select id="subManageCustomer" onchange="onSubCustomerChange()">
+          <option value="">Select a customer</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Property *</label>
+        <select id="subManageProperty">
+          <option value="">Select a property</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Plan Type *</label>
+        <select id="subManagePlan">
+          <option value="essential">Essential</option>
+          <option value="smart">Smart</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Status *</label>
+        <select id="subManageStatus">
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Start Date</label>
+          <input type="date" id="subManageStartDate">
+        </div>
+        <div class="modal-form-group">
+          <label>End Date</label>
+          <input type="date" id="subManageEndDate">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Cleaning Hours Total</label>
+          <input type="number" id="subManageCleaningTotal" step="1" min="0">
+        </div>
+        <div class="modal-form-group">
+          <label>Cleaning Hours Used</label>
+          <input type="number" id="subManageCleaningUsed" step="1" min="0">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>SH Hours Total</label>
+          <input type="number" id="subManageSHTotal" step="0.5" min="0">
+        </div>
+        <div class="modal-form-group">
+          <label>SH Hours Used</label>
+          <input type="number" id="subManageSHUsed" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSubManageModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveSubManage()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit SH Balance Modal -->
+<div class="modal-overlay" id="shManageModal" onclick="if(event.target===this)closeSHManageModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="shManageTitle">Add SH Balance</div>
+      <button class="modal-close" onclick="closeSHManageModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="shManageAlert"></div>
+      <input type="hidden" id="shManageEditUserId">
+      <div class="modal-form-group">
+        <label>Customer *</label>
+        <select id="shManageCustomer">
+          <option value="">Select a customer</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Purchased Total</label>
+        <input type="number" id="shManagePurchasedTotal" step="0.5" min="0">
+      </div>
+      <div class="modal-form-group">
+        <label>Purchased Used</label>
+        <input type="number" id="shManagePurchasedUsed" step="0.5" min="0">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSHManageModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveSHManage()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteConfirmModal" onclick="if(event.target===this)closeDeleteConfirmModal()">
+  <div class="modal-box" style="max-width: 420px;">
+    <div class="modal-header">
+      <div class="modal-title">Confirm Delete</div>
+      <button class="modal-close" onclick="closeDeleteConfirmModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: #fee; border-radius: 10px; padding: 14px; margin-bottom: 16px; border-left: 4px solid var(--red);">
+        <div style="font-weight: 700; color: var(--red); margin-bottom: 4px;">Are you sure?</div>
+        <div id="deleteConfirmMessage" style="font-size: 13px; color: var(--text);"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeDeleteConfirmModal()">Cancel</button>
+        <button class="modal-btn modal-btn-danger" id="deleteConfirmBtn" onclick="performConfirmedDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1404,6 +1582,7 @@ function switchSection(name) {
   if (name === 'workers')      loadWorkers();
   if (name === 'properties')   loadProperties();
   if (name === 'customers')    loadCustomers();
+  if (name === 'manage')       loadManageData();
 }
 
 /* ── Personal Info ──────────────────────────────────────── */
@@ -3408,13 +3587,410 @@ function toggleLang(lang) {
     el.style.display = lang === 'ko' ? '' : 'none';
   });
 }
+/* ══════════════════════════════════════════════════════════════
+   Admin Manage Data (Subscriptions & SH Balance)
+   ══════════════════════════════════════════════════════════════ */
+
+let manageDataState = {
+  subscriptions: [],
+  shBalance: [],
+  profiles: [],
+  properties: [],
+  allProfilesForDropdown: [],
+};
+let currentDeleteAction = null;
+
+async function loadManageData() {
+  try {
+    // Load all necessary data
+    const [subsRes, shRes, profilesRes, propsRes] = await Promise.all([
+      sb.from('subscriptions').select('*'),
+      sb.from('sh_balance').select('*'),
+      sb.from('profiles').select('id, full_name, email'),
+      sb.from('properties').select('id, user_id, address'),
+    ]);
+
+    manageDataState.subscriptions = subsRes.data || [];
+    manageDataState.shBalance = shRes.data || [];
+    manageDataState.profiles = profilesRes.data || [];
+    manageDataState.properties = propsRes.data || [];
+    manageDataState.allProfilesForDropdown = profilesRes.data || [];
+
+    // Populate dropdowns
+    populateCustomerDropdowns();
+
+    // Render the active tab
+    const activeTab = document.getElementById('panelSubscriptions').style.display === 'block' ? 'subscriptions' : 'serviceHours';
+    if (activeTab === 'subscriptions') {
+      renderManageSubs(manageDataState.subscriptions);
+    } else {
+      renderManageSH(manageDataState.shBalance);
+    }
+  } catch (err) {
+    console.error('Error loading manage data:', err);
+    showToast('Failed to load data', true);
+  }
+}
+
+function switchManageTab(tab) {
+  const subPanel = document.getElementById('panelSubscriptions');
+  const shPanel = document.getElementById('panelServiceHours');
+  const subTab = document.getElementById('tabSubscriptions');
+  const shTab = document.getElementById('tabServiceHours');
+
+  if (tab === 'subscriptions') {
+    subPanel.style.display = 'block';
+    shPanel.style.display = 'none';
+    subTab.style.borderBottom = '3px solid var(--navy)';
+    shTab.style.borderBottom = '3px solid transparent';
+    renderManageSubs(manageDataState.subscriptions);
+  } else {
+    subPanel.style.display = 'none';
+    shPanel.style.display = 'block';
+    subTab.style.borderBottom = '3px solid transparent';
+    shTab.style.borderBottom = '3px solid var(--navy)';
+    renderManageSH(manageDataState.shBalance);
+  }
+}
+
+function populateCustomerDropdowns() {
+  const subCustomerSelect = document.getElementById('subManageCustomer');
+  const shCustomerSelect = document.getElementById('shManageCustomer');
+
+  [subCustomerSelect, shCustomerSelect].forEach(select => {
+    select.innerHTML = '<option value="">Select a customer</option>';
+    manageDataState.allProfilesForDropdown.forEach(profile => {
+      const option = document.createElement('option');
+      option.value = profile.id;
+      option.textContent = `${profile.full_name} (${profile.email})`;
+      select.appendChild(option);
+    });
+  });
+}
+
+function renderManageSubs(subs) {
+  const tbody = document.getElementById('manageSubsBody');
+  if (!subs || subs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No subscriptions found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = subs.map(sub => {
+    const customer = manageDataState.profiles.find(p => p.id === sub.user_id);
+    const property = manageDataState.properties.find(p => p.id === sub.property_id);
+    const custName = customer ? customer.full_name : 'Unknown';
+    const propAddr = property ? property.address : 'Unknown';
+
+    return `<tr>
+      <td><strong>${custName}</strong></td>
+      <td>${propAddr}</td>
+      <td><span class="badge badge-${sub.plan_type}">${sub.plan_type}</span></td>
+      <td><span class="badge badge-${sub.status === 'active' ? 'active' : 'inactive'}">${sub.status}</span></td>
+      <td>${sub.cleaning_hours_used || 0} / ${sub.cleaning_hours_total || 0}</td>
+      <td>${sub.sh_hours_used || 0} / ${sub.sh_hours_total || 0}</td>
+      <td>${sub.start_date || '—'}</td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openEditSubModal('${sub.id}')">Edit</button>
+        <button class="btn-action-sm danger" onclick="openDeleteConfirm('subscription', '${sub.id}', '${custName}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderManageSH(shList) {
+  const tbody = document.getElementById('manageSHBody');
+  if (!shList || shList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No SH balance records found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = shList.map(sh => {
+    const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
+    const custName = customer ? customer.full_name : 'Unknown';
+    const balance = (sh.purchased_total || 0) - (sh.purchased_used || 0);
+
+    return `<tr>
+      <td><strong>${custName}</strong></td>
+      <td>${sh.purchased_total || 0}</td>
+      <td>${sh.purchased_used || 0}</td>
+      <td>${balance}</td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openEditSHModal('${sh.user_id}')">Edit</button>
+        <button class="btn-action-sm danger" onclick="openDeleteConfirm('sh', '${sh.user_id}', '${custName}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterManageSubs() {
+  const query = document.getElementById('subSearchInput').value.toLowerCase();
+  const filtered = manageDataState.subscriptions.filter(sub => {
+    const customer = manageDataState.profiles.find(p => p.id === sub.user_id);
+    if (!customer) return false;
+    return customer.full_name.toLowerCase().includes(query) || customer.email.toLowerCase().includes(query);
+  });
+  renderManageSubs(filtered);
+}
+
+function filterManageSH() {
+  const query = document.getElementById('shSearchInput').value.toLowerCase();
+  const filtered = manageDataState.shBalance.filter(sh => {
+    const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
+    if (!customer) return false;
+    return customer.full_name.toLowerCase().includes(query) || customer.email.toLowerCase().includes(query);
+  });
+  renderManageSH(filtered);
+}
+
+function openAddSubModal() {
+  document.getElementById('subManageEditId').value = '';
+  document.getElementById('subManageTitle').textContent = 'Add Subscription';
+  document.getElementById('subManageCustomer').value = '';
+  document.getElementById('subManageProperty').value = '';
+  document.getElementById('subManagePlan').value = 'essential';
+  document.getElementById('subManageStatus').value = 'active';
+  document.getElementById('subManageStartDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('subManageEndDate').value = '';
+  document.getElementById('subManageCleaningTotal').value = '';
+  document.getElementById('subManageCleaningUsed').value = '';
+  document.getElementById('subManageSHTotal').value = '';
+  document.getElementById('subManageSHUsed').value = '';
+  document.getElementById('subManageAlert').style.display = 'none';
+  document.getElementById('subManageModal').classList.add('open');
+  document.getElementById('subManageProperty').innerHTML = '<option value="">Select a property first</option>';
+}
+
+function openEditSubModal(subId) {
+  const sub = manageDataState.subscriptions.find(s => s.id === subId);
+  if (!sub) return;
+
+  document.getElementById('subManageEditId').value = sub.id;
+  document.getElementById('subManageTitle').textContent = 'Edit Subscription';
+  document.getElementById('subManageCustomer').value = sub.user_id;
+  document.getElementById('subManagePlan').value = sub.plan_type;
+  document.getElementById('subManageStatus').value = sub.status;
+  document.getElementById('subManageStartDate').value = sub.start_date || '';
+  document.getElementById('subManageEndDate').value = sub.end_date || '';
+  document.getElementById('subManageCleaningTotal').value = sub.cleaning_hours_total || '';
+  document.getElementById('subManageCleaningUsed').value = sub.cleaning_hours_used || '';
+  document.getElementById('subManageSHTotal').value = sub.sh_hours_total || '';
+  document.getElementById('subManageSHUsed').value = sub.sh_hours_used || '';
+  document.getElementById('subManageAlert').style.display = 'none';
+
+  // Load properties for this customer
+  onSubCustomerChange();
+  document.getElementById('subManageProperty').value = sub.property_id;
+
+  document.getElementById('subManageModal').classList.add('open');
+}
+
+async function onSubCustomerChange() {
+  const customerId = document.getElementById('subManageCustomer').value;
+  const propSelect = document.getElementById('subManageProperty');
+
+  if (!customerId) {
+    propSelect.innerHTML = '<option value="">Select a customer first</option>';
+    return;
+  }
+
+  const customerProps = manageDataState.properties.filter(p => p.user_id === customerId);
+  propSelect.innerHTML = '<option value="">Select a property</option>' +
+    customerProps.map(p => `<option value="${p.id}">${p.address}</option>`).join('');
+}
+
+function closeSubManageModal() {
+  document.getElementById('subManageModal').classList.remove('open');
+}
+
+async function saveSubManage() {
+  const editId = document.getElementById('subManageEditId').value;
+  const userId = document.getElementById('subManageCustomer').value;
+  const propertyId = document.getElementById('subManageProperty').value;
+  const planType = document.getElementById('subManagePlan').value;
+  const status = document.getElementById('subManageStatus').value;
+  const startDate = document.getElementById('subManageStartDate').value;
+  const endDate = document.getElementById('subManageEndDate').value;
+  const cleaningTotal = parseFloat(document.getElementById('subManageCleaningTotal').value) || 0;
+  const cleaningUsed = parseFloat(document.getElementById('subManageCleaningUsed').value) || 0;
+  const shTotal = parseFloat(document.getElementById('subManageSHTotal').value) || 0;
+  const shUsed = parseFloat(document.getElementById('subManageSHUsed').value) || 0;
+
+  const alertEl = document.getElementById('subManageAlert');
+
+  if (!userId || !propertyId) {
+    alertEl.textContent = 'Please select both a customer and property';
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const payload = {
+      user_id: userId,
+      property_id: propertyId,
+      plan_type: planType,
+      status: status,
+      start_date: startDate,
+      end_date: endDate || null,
+      cleaning_hours_total: cleaningTotal,
+      cleaning_hours_used: cleaningUsed,
+      sh_hours_total: shTotal,
+      sh_hours_used: shUsed,
+    };
+
+    let result;
+    if (editId) {
+      result = await sb.from('subscriptions').update(payload).eq('id', editId);
+    } else {
+      result = await sb.from('subscriptions').insert([payload]);
+    }
+
+    if (result.error) throw result.error;
+
+    alertEl.textContent = editId ? 'Subscription updated!' : 'Subscription created!';
+    alertEl.classList.remove('error');
+    alertEl.classList.add('success');
+    alertEl.style.display = 'block';
+
+    setTimeout(() => {
+      closeSubManageModal();
+      loadManageData();
+      showToast(editId ? 'Subscription updated' : 'Subscription created');
+    }, 800);
+  } catch (err) {
+    console.error('Error saving subscription:', err);
+    alertEl.textContent = 'Error: ' + (err.message || 'Unknown error');
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+  }
+}
+
+function openAddSHModal() {
+  document.getElementById('shManageEditUserId').value = '';
+  document.getElementById('shManageTitle').textContent = 'Add SH Balance';
+  document.getElementById('shManageCustomer').value = '';
+  document.getElementById('shManagePurchasedTotal').value = '';
+  document.getElementById('shManagePurchasedUsed').value = '';
+  document.getElementById('shManageAlert').style.display = 'none';
+  document.getElementById('shManageModal').classList.add('open');
+}
+
+function openEditSHModal(userId) {
+  const sh = manageDataState.shBalance.find(s => s.user_id === userId);
+  if (!sh) return;
+
+  document.getElementById('shManageEditUserId').value = userId;
+  document.getElementById('shManageTitle').textContent = 'Edit SH Balance';
+  document.getElementById('shManageCustomer').value = userId;
+  document.getElementById('shManagePurchasedTotal').value = sh.purchased_total || '';
+  document.getElementById('shManagePurchasedUsed').value = sh.purchased_used || '';
+  document.getElementById('shManageAlert').style.display = 'none';
+  document.getElementById('shManageModal').classList.add('open');
+}
+
+function closeSHManageModal() {
+  document.getElementById('shManageModal').classList.remove('open');
+}
+
+async function saveSHManage() {
+  const editUserId = document.getElementById('shManageEditUserId').value;
+  const userId = document.getElementById('shManageCustomer').value;
+  const purchasedTotal = parseFloat(document.getElementById('shManagePurchasedTotal').value) || 0;
+  const purchasedUsed = parseFloat(document.getElementById('shManagePurchasedUsed').value) || 0;
+
+  const alertEl = document.getElementById('shManageAlert');
+
+  if (!userId) {
+    alertEl.textContent = 'Please select a customer';
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const payload = {
+      user_id: userId,
+      purchased_total: purchasedTotal,
+      purchased_used: purchasedUsed,
+    };
+
+    let result;
+    if (editUserId) {
+      result = await sb.from('sh_balance').update(payload).eq('user_id', editUserId);
+    } else {
+      result = await sb.from('sh_balance').insert([payload]);
+    }
+
+    if (result.error) throw result.error;
+
+    alertEl.textContent = editUserId ? 'SH balance updated!' : 'SH balance created!';
+    alertEl.classList.remove('error');
+    alertEl.classList.add('success');
+    alertEl.style.display = 'block';
+
+    setTimeout(() => {
+      closeSHManageModal();
+      loadManageData();
+      showToast(editUserId ? 'SH balance updated' : 'SH balance created');
+    }, 800);
+  } catch (err) {
+    console.error('Error saving SH balance:', err);
+    alertEl.textContent = 'Error: ' + (err.message || 'Unknown error');
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+  }
+}
+
+function openDeleteConfirm(type, id, name) {
+  currentDeleteAction = { type, id, name };
+  const msgEl = document.getElementById('deleteConfirmMessage');
+  if (type === 'subscription') {
+    msgEl.textContent = `Delete subscription for ${name}? This action cannot be undone.`;
+  } else if (type === 'sh') {
+    msgEl.textContent = `Delete SH balance for ${name}? This action cannot be undone.`;
+  }
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+function closeDeleteConfirmModal() {
+  document.getElementById('deleteConfirmModal').classList.remove('open');
+  currentDeleteAction = null;
+}
+
+async function performConfirmedDelete() {
+  if (!currentDeleteAction) return;
+
+  const { type, id } = currentDeleteAction;
+  try {
+    let result;
+    if (type === 'subscription') {
+      result = await sb.from('subscriptions').delete().eq('id', id);
+    } else if (type === 'sh') {
+      result = await sb.from('sh_balance').delete().eq('user_id', id);
+    }
+
+    if (result.error) throw result.error;
+
+    closeDeleteConfirmModal();
+    loadManageData();
+    showToast(type === 'subscription' ? 'Subscription deleted' : 'SH balance deleted');
+  } catch (err) {
+    console.error('Error deleting record:', err);
+    showToast('Failed to delete', true);
+  }
+}
+
 (function initLang() {
   const lang = localStorage.getItem('hp_lang') || 'en';
   currentLang = lang;
   document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
   const el = document.getElementById('lang-' + lang);
   if (el) el.classList.add('active');
-  
+
   // Initial toggle
   document.querySelectorAll('.lang-en').forEach(el => {
     el.style.display = lang === 'en' ? '' : 'none';
