@@ -1173,8 +1173,9 @@ body {
       </div>
     </div>
     <div class="popup-foot">
-      <div class="popup-hint"><span class="lang-en">Please read the full agreement before agreeing.</span><span class="lang-ko" style="display:none;">동의하기 전에 전체 계약서를 읽어주세요.</span></div>
-      <button class="btn-agree" onclick="agreeContract()"><span class="lang-en">✓ &nbsp;I agree to the Haven Plus Service Agreement</span><span class="lang-ko" style="display:none;">✓ &nbsp;Haven Plus 서비스 계약서에 동의합니다</span></button>
+      <div class="popup-hint" id="popupHint"><span class="lang-en">Please read the full agreement before agreeing.</span><span class="lang-ko" style="display:none;">동의하기 전에 전체 계약서를 읽어주세요.</span></div>
+      <button class="btn-agree" id="btnAgree" onclick="agreeContract()"><span class="lang-en">✓ &nbsp;I agree to the Haven Plus Service Agreement</span><span class="lang-ko" style="display:none;">✓ &nbsp;Haven Plus 서비스 계약서에 동의합니다</span></button>
+      <button class="btn-agree" id="btnCloseAgreed" style="display:none;background:#6B7280;" onclick="closePopup()"><span class="lang-en">Close</span><span class="lang-ko" style="display:none;">닫기</span></button>
     </div>
   </div>
 </div>
@@ -1513,6 +1514,22 @@ function onCheckboxClick(e) {
 
 function openPopup(e) {
   if (e) e.preventDefault();
+  // If already agreed, show close button instead of agree button
+  if (contractRead) {
+    document.getElementById('btnAgree').style.display = 'none';
+    document.getElementById('btnCloseAgreed').style.display = '';
+    document.getElementById('popupHint').innerHTML =
+      '<span class="lang-en">✅ You have already agreed to this agreement.</span>' +
+      '<span class="lang-ko" style="display:none;">✅ 이미 계약서에 동의하셨습니다.</span>';
+    applyLang(currentLang);
+  } else {
+    document.getElementById('btnAgree').style.display = '';
+    document.getElementById('btnCloseAgreed').style.display = 'none';
+    document.getElementById('popupHint').innerHTML =
+      '<span class="lang-en">Please read the full agreement before agreeing.</span>' +
+      '<span class="lang-ko" style="display:none;">동의하기 전에 전체 계약서를 읽어주세요.</span>';
+    applyLang(currentLang);
+  }
   document.getElementById('popup').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
