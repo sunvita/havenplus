@@ -3928,14 +3928,14 @@ function renderManageSH(shList) {
     const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
     const custName = customer ? customer.full_name : 'Unknown';
     const purchRem = (sh.purchased_total || 0) - (sh.purchased_used || 0);
-    const grantRem = (sh.granted_total || 0) - (sh.granted_used || 0);
+    const grantRem = (sh.override_total || 0) - (sh.override_used || 0);
     const totalBal = purchRem + grantRem;
-    const label = sh.grant_label || '—';
+    const label = sh.override_label || '—';
 
     return `<tr>
       <td><strong>${custName}</strong></td>
       <td>${purchRem} / ${sh.purchased_total || 0}</td>
-      <td>${grantRem > 0 ? grantRem + ' / ' + (sh.granted_total || 0) : '—'}</td>
+      <td>${grantRem > 0 ? grantRem + ' / ' + (sh.override_total || 0) : '—'}</td>
       <td>${grantRem > 0 ? '<span style="font-size:11px;background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:4px;">' + label + '</span>' : '—'}</td>
       <td><strong>${totalBal}</strong></td>
       <td class="action-cell">
@@ -4120,10 +4120,10 @@ function openEditSHModal(userId) {
   document.getElementById('shManageCustomer').value = userId;
   document.getElementById('shManagePurchasedTotal').value = sh.purchased_total || '';
   document.getElementById('shManagePurchasedUsed').value = sh.purchased_used || '';
-  document.getElementById('shManageGrantedTotal').value = sh.granted_total || 0;
-  document.getElementById('shManageGrantedUsed').value = sh.granted_used || 0;
+  document.getElementById('shManageGrantedTotal').value = sh.override_total || 0;
+  document.getElementById('shManageGrantedUsed').value = sh.override_used || 0;
   // Set grant label
-  const label = sh.grant_label || 'Bonus';
+  const label = sh.override_label || 'Bonus';
   const sel = document.getElementById('shManageGrantLabel');
   const presetMatch = Array.from(sel.options).find(o => o.value === label);
   if (presetMatch) {
@@ -4176,9 +4176,9 @@ async function saveSHManage() {
       user_id: userId,
       purchased_total: purchasedTotal,
       purchased_used: purchasedUsed,
-      granted_total: grantedTotal,
-      granted_used: grantedUsed,
-      grant_label: grantedTotal > 0 ? grantLabel : null,
+      override_total: grantedTotal,
+      override_used: grantedUsed,
+      override_label: grantedTotal > 0 ? grantLabel : null,
     };
 
     let result;

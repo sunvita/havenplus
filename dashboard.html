@@ -789,7 +789,7 @@ async function loadDashboard() {
 
   hasActiveSub = allSubs.length > 0;
   const shPurchasedRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
-  const shGrantedRem = shBal ? ((shBal.granted_total || 0) - (shBal.granted_used || 0)) : 0;
+  const shGrantedRem = shBal ? ((shBal.override_total || 0) - (shBal.override_used || 0)) : 0;
   const shTotalRem = shPurchasedRem + shGrantedRem;
 
   if (hasActiveSub) {
@@ -866,7 +866,7 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
   setText('ovPropSub', `${activePlanCount} active ${planWord}`);
   setText('ovCleanRem', totalCleanRem);
   setText('ovCleanSub', `of ${totalCleanTotal} total hrs`);
-  const shGrantLabel = shBal?.grant_label || 'Bonus';
+  const shGrantLabel = shBal?.override_label || 'Bonus';
   setText('ovSHRem', totalSHVouchRem + shPurchasedRem + (shGrantedRem || 0));
   const shParts = [`${totalSHVouchRem} voucher`, `${shPurchasedRem} purchased`];
   if (shGrantedRem > 0) shParts.push(`${shGrantedRem} ${shGrantLabel.toLowerCase()}`);
@@ -1169,7 +1169,7 @@ function showStateSHOnly(shPurchasedRem, shGrantedRem, shBal) {
   if (shGrantedRem > 0) {
     document.getElementById('shOnlyGrantedItem').style.display = '';
     setText('shOnlyGranted', shGrantedRem);
-    const label = shBal?.grant_label || 'Bonus';
+    const label = shBal?.override_label || 'Bonus';
     document.getElementById('shOnlyGrantLabel').textContent = label;
   }
   if (allProperties.length > 0) {
