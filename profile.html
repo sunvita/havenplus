@@ -1013,8 +1013,8 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Customer</th><th>Purchased Total</th><th>Purchased Used</th><th>Balance</th><th>Actions</th></tr></thead>
-              <tbody id="manageSHBody"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+              <thead><tr><th>Customer</th><th>Purchased</th><th>Granted</th><th>Label</th><th>Balance</th><th>Actions</th></tr></thead>
+              <tbody id="manageSHBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1378,13 +1378,42 @@
           <option value="">Select a customer</option>
         </select>
       </div>
-      <div class="modal-form-group">
-        <label>Purchased Total</label>
-        <input type="number" id="shManagePurchasedTotal" step="0.5" min="0">
+      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;">Purchased SH</div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Total</label>
+          <input type="number" id="shManagePurchasedTotal" step="0.5" min="0">
+        </div>
+        <div class="modal-form-group">
+          <label>Used</label>
+          <input type="number" id="shManagePurchasedUsed" step="0.5" min="0">
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;">⚠ Admin Adjusted SH</div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Granted Total</label>
+          <input type="number" id="shManageGrantedTotal" step="0.5" min="0" value="0">
+        </div>
+        <div class="modal-form-group">
+          <label>Granted Used</label>
+          <input type="number" id="shManageGrantedUsed" step="0.5" min="0" value="0">
+        </div>
       </div>
       <div class="modal-form-group">
-        <label>Purchased Used</label>
-        <input type="number" id="shManagePurchasedUsed" step="0.5" min="0">
+        <label>Label / Reason</label>
+        <select id="shManageGrantLabel">
+          <option value="Bonus">Bonus</option>
+          <option value="Maintenance Compensation">Maintenance Compensation</option>
+          <option value="Referral Reward">Referral Reward</option>
+          <option value="Service Recovery">Service Recovery</option>
+          <option value="Initial Credit">Initial Credit</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="modal-form-group" id="shManageGrantLabelCustomWrap" style="display:none;">
+        <label>Custom Label</label>
+        <input type="text" id="shManageGrantLabelCustom" placeholder="Enter custom label">
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeSHManageModal()">Cancel</button>
@@ -3891,20 +3920,24 @@ function renderManageSubs(subs) {
 function renderManageSH(shList) {
   const tbody = document.getElementById('manageSHBody');
   if (!shList || shList.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No SH balance records found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No SH balance records found</td></tr>';
     return;
   }
 
   tbody.innerHTML = shList.map(sh => {
     const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
     const custName = customer ? customer.full_name : 'Unknown';
-    const balance = (sh.purchased_total || 0) - (sh.purchased_used || 0);
+    const purchRem = (sh.purchased_total || 0) - (sh.purchased_used || 0);
+    const grantRem = (sh.granted_total || 0) - (sh.granted_used || 0);
+    const totalBal = purchRem + grantRem;
+    const label = sh.grant_label || '—';
 
     return `<tr>
       <td><strong>${custName}</strong></td>
-      <td>${sh.purchased_total || 0}</td>
-      <td>${sh.purchased_used || 0}</td>
-      <td>${balance}</td>
+      <td>${purchRem} / ${sh.purchased_total || 0}</td>
+      <td>${grantRem > 0 ? grantRem + ' / ' + (sh.granted_total || 0) : '—'}</td>
+      <td>${grantRem > 0 ? '<span style="font-size:11px;background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:4px;">' + label + '</span>' : '—'}</td>
+      <td><strong>${totalBal}</strong></td>
       <td class="action-cell">
         <button class="btn-action-sm" onclick="openEditSHModal('${sh.user_id}')">Edit</button>
         <button class="btn-action-sm danger" onclick="openDeleteConfirm('sh', '${sh.user_id}', '${custName}')">Delete</button>
@@ -4070,6 +4103,10 @@ function openAddSHModal() {
   document.getElementById('shManageCustomer').value = '';
   document.getElementById('shManagePurchasedTotal').value = '';
   document.getElementById('shManagePurchasedUsed').value = '';
+  document.getElementById('shManageGrantedTotal').value = '0';
+  document.getElementById('shManageGrantedUsed').value = '0';
+  document.getElementById('shManageGrantLabel').value = 'Bonus';
+  document.getElementById('shManageGrantLabelCustomWrap').style.display = 'none';
   document.getElementById('shManageAlert').style.display = 'none';
   document.getElementById('shManageModal').classList.add('open');
 }
@@ -4083,9 +4120,30 @@ function openEditSHModal(userId) {
   document.getElementById('shManageCustomer').value = userId;
   document.getElementById('shManagePurchasedTotal').value = sh.purchased_total || '';
   document.getElementById('shManagePurchasedUsed').value = sh.purchased_used || '';
+  document.getElementById('shManageGrantedTotal').value = sh.granted_total || 0;
+  document.getElementById('shManageGrantedUsed').value = sh.granted_used || 0;
+  // Set grant label
+  const label = sh.grant_label || 'Bonus';
+  const sel = document.getElementById('shManageGrantLabel');
+  const presetMatch = Array.from(sel.options).find(o => o.value === label);
+  if (presetMatch) {
+    sel.value = label;
+    document.getElementById('shManageGrantLabelCustomWrap').style.display = 'none';
+  } else {
+    sel.value = 'Other';
+    document.getElementById('shManageGrantLabelCustomWrap').style.display = '';
+    document.getElementById('shManageGrantLabelCustom').value = label;
+  }
   document.getElementById('shManageAlert').style.display = 'none';
   document.getElementById('shManageModal').classList.add('open');
 }
+
+// Show/hide custom label input
+document.addEventListener('change', e => {
+  if (e.target.id === 'shManageGrantLabel') {
+    document.getElementById('shManageGrantLabelCustomWrap').style.display = e.target.value === 'Other' ? '' : 'none';
+  }
+});
 
 function closeSHManageModal() {
   document.getElementById('shManageModal').classList.remove('open');
@@ -4096,6 +4154,12 @@ async function saveSHManage() {
   const userId = document.getElementById('shManageCustomer').value;
   const purchasedTotal = parseFloat(document.getElementById('shManagePurchasedTotal').value) || 0;
   const purchasedUsed = parseFloat(document.getElementById('shManagePurchasedUsed').value) || 0;
+  const grantedTotal = parseFloat(document.getElementById('shManageGrantedTotal').value) || 0;
+  const grantedUsed = parseFloat(document.getElementById('shManageGrantedUsed').value) || 0;
+  const grantLabelSel = document.getElementById('shManageGrantLabel').value;
+  const grantLabel = grantLabelSel === 'Other'
+    ? (document.getElementById('shManageGrantLabelCustom').value.trim() || 'Other')
+    : grantLabelSel;
 
   const alertEl = document.getElementById('shManageAlert');
 
@@ -4112,6 +4176,9 @@ async function saveSHManage() {
       user_id: userId,
       purchased_total: purchasedTotal,
       purchased_used: purchasedUsed,
+      granted_total: grantedTotal,
+      granted_used: grantedUsed,
+      grant_label: grantedTotal > 0 ? grantLabel : null,
     };
 
     let result;

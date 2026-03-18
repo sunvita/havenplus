@@ -405,8 +405,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
       <div style="font-size:28px;font-weight:900;color:var(--navy);margin-bottom:12px"><span id="shOnlyTotal">0</span> <span class="lang-en">hrs</span><span class="lang-ko" style="display:none;">시간</span></div>
       <div class="sh-bal-grid">
         <div class="sh-bal-item">
-          <div class="sh-bal-item-label"><span class="lang-en">Purchased bundles</span><span class="lang-ko" style="display:none;">구매한 번들</span></div>
+          <div class="sh-bal-item-label"><span class="lang-en">Purchased</span><span class="lang-ko" style="display:none;">구매</span></div>
           <div class="sh-bal-item-val"><span id="shOnlyPurchased">0</span><span class="u"><span class="lang-en">hrs</span><span class="lang-ko" style="display:none;">시간</span></span></div>
+        </div>
+        <div class="sh-bal-item" id="shOnlyGrantedItem" style="display:none;">
+          <div class="sh-bal-item-label"><span id="shOnlyGrantLabel" class="lang-en">Bonus</span></div>
+          <div class="sh-bal-item-val"><span id="shOnlyGranted">0</span><span class="u"><span class="lang-en">hrs</span><span class="lang-ko" style="display:none;">시간</span></span></div>
         </div>
         <div class="sh-bal-item">
           <div class="sh-bal-item-label"><span class="lang-en">Call-out fee</span><span class="lang-ko" style="display:none;">출장비</span></div>
@@ -785,11 +789,13 @@ async function loadDashboard() {
 
   hasActiveSub = allSubs.length > 0;
   const shPurchasedRem = shBal ? ((shBal.purchased_total || 0) - (shBal.purchased_used || 0)) : 0;
+  const shGrantedRem = shBal ? ((shBal.granted_total || 0) - (shBal.granted_used || 0)) : 0;
+  const shTotalRem = shPurchasedRem + shGrantedRem;
 
   if (hasActiveSub) {
-    showStateActive(allSubs, shBal, shPurchasedRem);
-  } else if (shPurchasedRem > 0) {
-    showStateSHOnly(shPurchasedRem);
+    showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem);
+  } else if (shTotalRem > 0) {
+    showStateSHOnly(shPurchasedRem, shGrantedRem, shBal);
   } else {
     showStateOnboard();
   }
@@ -825,7 +831,7 @@ const PLAN_VISITS = { essential: 4, smart: 6, premium: 12 };
 const PLAN_INTERVAL = { essential: 3, smart: 2, premium: 1 }; // months between visits
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function showStateActive(allSubs, shBal, shPurchasedRem) {
+function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
   document.getElementById('welcomeSub').textContent = allProperties.length > 1
     ? `Managing ${allProperties.length} properties with Haven Plus. Your properties are in good hands.`
     : `Managing 1 property with Haven Plus. Your property is in good hands.`;
@@ -860,8 +866,11 @@ function showStateActive(allSubs, shBal, shPurchasedRem) {
   setText('ovPropSub', `${activePlanCount} active ${planWord}`);
   setText('ovCleanRem', totalCleanRem);
   setText('ovCleanSub', `of ${totalCleanTotal} total hrs`);
-  setText('ovSHRem', totalSHVouchRem + shPurchasedRem);
-  setText('ovSHSub', `${totalSHVouchRem} voucher + ${shPurchasedRem} purchased`);
+  const shGrantLabel = shBal?.grant_label || 'Bonus';
+  setText('ovSHRem', totalSHVouchRem + shPurchasedRem + (shGrantedRem || 0));
+  const shParts = [`${totalSHVouchRem} voucher`, `${shPurchasedRem} purchased`];
+  if (shGrantedRem > 0) shParts.push(`${shGrantedRem} ${shGrantLabel.toLowerCase()}`);
+  setText('ovSHSub', shParts.join(' + '));
 
   // Render property hub cards
   const hub = document.getElementById('propertyHubList');
@@ -1151,11 +1160,18 @@ async function confirmStartSchedule(subId) {
 }
 
 /* ── State C ─────────────────────────────────────────── */
-function showStateSHOnly(shPurchasedRem) {
+function showStateSHOnly(shPurchasedRem, shGrantedRem, shBal) {
   document.getElementById('welcomeSub').textContent = 'You have Service Hours available.';
   document.getElementById('stateSHOnly').classList.add('show');
-  setText('shOnlyTotal', shPurchasedRem);
+  setText('shOnlyTotal', shPurchasedRem + shGrantedRem);
   setText('shOnlyPurchased', shPurchasedRem);
+  // Show granted SH if any
+  if (shGrantedRem > 0) {
+    document.getElementById('shOnlyGrantedItem').style.display = '';
+    setText('shOnlyGranted', shGrantedRem);
+    const label = shBal?.grant_label || 'Bonus';
+    document.getElementById('shOnlyGrantLabel').textContent = label;
+  }
   if (allProperties.length > 0) {
     renderPropertyList('propertyListSH');
     document.getElementById('propInfoSH').style.display = 'block';
