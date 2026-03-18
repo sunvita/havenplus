@@ -3986,7 +3986,13 @@ async function onSubCustomerChange() {
 
   const customerProps = manageDataState.properties.filter(p => p.user_id === customerId);
   propSelect.innerHTML = '<option value="">Select a property</option>' +
-    customerProps.map(p => `<option value="${p.id}">${p.address}</option>`).join('');
+    customerProps.map(p => {
+      const existingSub = manageDataState.subscriptions.find(s => s.property_id === p.id && s.status === 'active');
+      const tag = existingSub
+        ? ` — ${existingSub.plan_type.charAt(0).toUpperCase() + existingSub.plan_type.slice(1)} active`
+        : ' — No plan';
+      return `<option value="${p.id}">${p.address}${tag}</option>`;
+    }).join('');
 }
 
 function closeSubManageModal() {
