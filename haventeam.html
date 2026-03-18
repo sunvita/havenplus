@@ -828,7 +828,34 @@ body {
   </button>
 </nav>
 
-<!-- Complete Modal -->
+<!-- Before Photos Modal (shown on Start Job) -->
+<div class="modal-overlay" id="beforeModal" onclick="if(event.target===this)closeBeforeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Start Job — Before Photos</div>
+      <button class="modal-close" onclick="closeBeforeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-section">
+        <div class="photo-title">📷 Before Photos (minimum 1)</div>
+        <div class="photo-grid" id="beforePhotoGrid">
+          <label class="photo-add">
+            <input type="file" accept="image/*" capture="environment" multiple hidden onchange="handleBeforePhotos(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add</span>
+          </label>
+        </div>
+        <div class="photo-count" id="beforePhotoCount">0 / 1 photos</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeBeforeModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnStartConfirm" onclick="confirmStartJob()" disabled>Start Job</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Modal (After Photos + Notes) -->
 <div class="modal-overlay" id="completeModal" onclick="if(event.target===this)closeCompleteModal()">
   <div class="modal-box">
     <div class="modal-header">
@@ -846,6 +873,10 @@ body {
           </label>
         </div>
         <div class="photo-count" id="photoCount">0 / 3 photos</div>
+      </div>
+      <div class="photo-section" style="margin-top:12px;">
+        <div class="photo-title">📝 Notes (optional)</div>
+        <textarea id="workerNotes" placeholder="Any notes about this job..." style="width:100%;min-height:70px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeCompleteModal()">Cancel</button>
@@ -875,6 +906,9 @@ let sb, currentWorker = null;
 let todayJobs = [], weekJobs = [];
 let activeJobId = null, jobStartTime = null, timerInterval = null;
 let photos = [];
+let beforePhotos = [];
+let pendingStartJobId = null;
+let pendingStartJobType = 'cleaning';
 
 // ═══ Init ═══
 document.addEventListener('DOMContentLoaded', () => {
@@ -1295,27 +1329,87 @@ async function loadMeTab() {
 // ═══ Job Actions ═══
 let activeJobType = 'cleaning';
 
-async function startJob(jobId, jobType = 'cleaning') {
+function startJob(jobId, jobType = 'cleaning') {
+  pendingStartJobId = jobId;
+  pendingStartJobType = jobType;
+  beforePhotos = [];
+  updateBeforePhotoGrid();
+  document.getElementById('beforeModal').classList.add('open');
+}
+
+function closeBeforeModal() {
+  document.getElementById('beforeModal').classList.remove('open');
+}
+
+function handleBeforePhotos(input) {
+  Array.from(input.files).forEach(file => {
+    resizeImage(file, 1200, 0.8).then(blob => {
+      beforePhotos.push(blob);
+      updateBeforePhotoGrid();
+    });
+  });
+  input.value = '';
+}
+
+function updateBeforePhotoGrid() {
+  const grid = document.getElementById('beforePhotoGrid');
+  const countEl = document.getElementById('beforePhotoCount');
+  const btn = document.getElementById('btnStartConfirm');
+
+  let html = beforePhotos.map((blob, i) => `
+    <div class="photo-item">
+      <img src="${URL.createObjectURL(blob)}">
+      <button class="photo-remove" onclick="beforePhotos.splice(${i},1);updateBeforePhotoGrid()">×</button>
+    </div>`).join('');
+
+  html += `<label class="photo-add">
+    <input type="file" accept="image/*" capture="environment" multiple hidden onchange="handleBeforePhotos(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Add</span>
+  </label>`;
+
+  grid.innerHTML = html;
+  const valid = beforePhotos.length >= 1;
+  countEl.textContent = `${beforePhotos.length} / 1 photos`;
+  countEl.className = `photo-count ${valid ? 'valid' : ''}`;
+  btn.disabled = !valid;
+}
+
+async function confirmStartJob() {
+  if (beforePhotos.length < 1) return;
+  const btn = document.getElementById('btnStartConfirm');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
   try {
+    const jobId = pendingStartJobId;
+    const jobType = pendingStartJobType;
+    const urls = await uploadPhotos(beforePhotos, jobId, 'before');
+
     const now = new Date().toISOString();
     const table = jobType === 'service' ? 'service_requests' : 'cleaning_schedule';
-    
+
     const { error } = await sb.from(table).update({
       status: 'in_progress',
-      actual_start: now
+      actual_start: now,
+      before_photos: urls
     }).eq('id', jobId);
-    
+
     if (error) throw error;
-    
+
     activeJobId = jobId;
     activeJobType = jobType;
     jobStartTime = new Date();
     startTimer();
+    closeBeforeModal();
     showToast('Job started! 🚀', 'success');
     loadTodayJobs();
   } catch(e) {
     showToast('Failed to start job', 'error');
     console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Start Job';
   }
 }
 
@@ -1338,6 +1432,7 @@ function openCompleteModal(jobId, jobType = 'cleaning') {
   activeJobType = jobType;
   photos = [];
   updatePhotoGrid();
+  document.getElementById('workerNotes').value = '';
   document.getElementById('completeModal').classList.add('open');
 }
 
@@ -1347,9 +1442,10 @@ function closeCompleteModal() {
 
 function handlePhotos(input) {
   Array.from(input.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => { photos.push(e.target.result); updatePhotoGrid(); };
-    reader.readAsDataURL(file);
+    resizeImage(file, 1200, 0.8).then(blob => {
+      photos.push(blob);
+      updatePhotoGrid();
+    });
   });
   input.value = '';
 }
@@ -1359,9 +1455,9 @@ function updatePhotoGrid() {
   const countEl = document.getElementById('photoCount');
   const btn = document.getElementById('btnComplete');
   
-  let html = photos.map((src, i) => `
+  let html = photos.map((blob, i) => `
     <div class="photo-item">
-      <img src="${src}">
+      <img src="${URL.createObjectURL(blob)}">
       <button class="photo-remove" onclick="photos.splice(${i},1);updatePhotoGrid()">×</button>
     </div>`).join('');
   
@@ -1380,40 +1476,31 @@ function updatePhotoGrid() {
 
 async function confirmComplete() {
   if (photos.length < 3) return;
-  
+
   const btn = document.getElementById('btnComplete');
   btn.disabled = true;
-  btn.textContent = 'Saving...';
-  
+  btn.textContent = 'Uploading...';
+
   try {
+    const urls = await uploadPhotos(photos, activeJobId, 'after');
+    const notes = document.getElementById('workerNotes').value.trim();
     const now = new Date().toISOString();
     const duration = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : null;
-    
+
     const table = activeJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
-    
-    const updateData = activeJobType === 'service' 
-      ? {
-          status: 'completed',
-          actual_end: now,
-          sh_used: duration,
-          after_photos: photos
-        }
-      : {
-          status: 'completed',
-          actual_end: now,
-          actual_duration: duration,
-          after_photos: photos
-        };
-    
+
+    const updateData = activeJobType === 'service'
+      ? { status: 'completed', actual_end: now, sh_used: duration, after_photos: urls, worker_notes: notes }
+      : { status: 'completed', actual_end: now, actual_duration: duration, after_photos: urls, worker_notes: notes };
+
     const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
-    
     if (error) throw error;
-    
+
     if (timerInterval) clearInterval(timerInterval);
     activeJobId = null;
     activeJobType = 'cleaning';
     jobStartTime = null;
-    
+
     closeCompleteModal();
     showToast('Job completed! 🎉', 'success');
     loadAllData();
@@ -1424,6 +1511,43 @@ async function confirmComplete() {
     btn.disabled = false;
     btn.textContent = 'Complete';
   }
+}
+
+/* ── Image resize utility ── */
+function resizeImage(file, maxSize, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const ratio = Math.min(maxSize / w, maxSize / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ── Upload photos to Supabase Storage ── */
+async function uploadPhotos(blobs, jobId, prefix) {
+  const urls = [];
+  for (let i = 0; i < blobs.length; i++) {
+    const ts = Date.now();
+    const path = `${jobId}/${prefix}_${ts}_${i}.jpg`;
+    const { error } = await sb.storage.from('job-photos').upload(path, blobs[i], {
+      contentType: 'image/jpeg',
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data: { publicUrl } } = sb.storage.from('job-photos').getPublicUrl(path);
+    urls.push(publicUrl);
+  }
+  return urls;
 }
 
 function navigate(address) {
