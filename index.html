@@ -3110,15 +3110,25 @@
 
         if (!sb) return;
 
-        const { data: { session } } = await sb.auth.getSession();
-        if (session?.user) updateUIForUser(session.user);
+        // Detect recovery flow from URL hash (Supabase appends #access_token=...&type=recovery)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const isRecoveryFromURL = hashParams.get('type') === 'recovery';
 
-        let isRecoveryMode = false;
+        // Skip showing logged-in UI if this is a recovery flow
+        if (!isRecoveryFromURL) {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session?.user) updateUIForUser(session.user);
+        }
+
+        let isRecoveryMode = isRecoveryFromURL;
 
         sb.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY') {
                 isRecoveryMode = true;
                 document.getElementById('resetPasswordOverlay').classList.add('active');
+                // Ensure UI stays in logged-out state during recovery
+                document.getElementById('authButtons').style.display = 'flex';
+                document.getElementById('userMenu').style.display = 'none';
             } else if (event === 'SIGNED_IN' && session?.user) {
                 if (isRecoveryMode) return;
                 window.location.href = '/dashboard.html';
