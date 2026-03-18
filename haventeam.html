@@ -1033,16 +1033,16 @@ async function loadTodayJobs() {
     const { data: cleaningData, error: cleaningError } = await sb.from('cleaning_schedule')
       .select('*, properties(address, suburb, area, bedrooms, bathrooms)')
       .eq('planned_date', today)
-      .in('status', ['scheduled', 'confirmed', 'in_progress'])
+      .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
       .order('planned_time');
-    
+
     if (cleaningError) throw cleaningError;
-    
+
     // Fetch service requests
     const { data: serviceData, error: serviceError } = await sb.from('service_requests')
       .select('*, properties(address, suburb, area)')
       .eq('scheduled_date', today)
-      .in('status', ['scheduled', 'confirmed', 'in_progress']);
+      .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress']);
     
     if (serviceError) console.warn('Service requests error:', serviceError);
     

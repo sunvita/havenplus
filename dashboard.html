@@ -336,8 +336,11 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .sh-job-summary-right { display: flex; align-items: center; gap: 8px; }
 .sh-status { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
 .sh-status-completed { background: var(--green-bg); color: var(--green-txt); }
+.sh-status-requested { background: #f3f0ff; color: #7048e8; }
 .sh-status-scheduled { background: #e7f5ff; color: #228be6; }
+.sh-status-confirmed { background: #e7f5ff; color: #1971c2; }
 .sh-status-in_progress { background: #fff3e0; color: var(--orange); }
+.sh-status-cancelled { background: #fff5f5; color: #e03131; }
 .sh-chevron {
   width: 18px; height: 18px; color: var(--text-light);
   transition: transform .25s ease; flex-shrink: 0;
@@ -1262,7 +1265,7 @@ async function confirmStartSchedule(subId) {
         subscription_id: subId,
         planned_date: visitDate.toISOString().split('T')[0],
         duration_hours: 2,
-        status: 'pending',
+        status: 'requested',
       });
     }
 
@@ -1924,7 +1927,7 @@ async function submitShRequest() {
       urgency: urg,
       sh_estimate: Math.round(base * 10) / 10,
       sh_multiplier: mult,
-      status: 'pending',
+      status: 'requested',
     });
     if (error) throw error;
     sucEl.textContent = 'Service request submitted! We will confirm the estimate and schedule shortly.';
