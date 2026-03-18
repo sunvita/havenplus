@@ -1760,7 +1760,8 @@
 
     <!-- Reset Password Modal -->
     <div class="auth-overlay" id="resetPasswordOverlay">
-        <div class="auth-modal">
+        <div class="auth-modal" style="position:relative;">
+            <button class="auth-close" onclick="closeResetPasswordModal()" aria-label="Close">&times;</button>
             <div class="auth-logo">
                 <div class="auth-logo-text">HAVEN<span>PLUS</span></div>
             </div>
@@ -2725,6 +2726,7 @@
                 btn.textContent = 'Update Password';
             } else {
                 sucEl.textContent = 'Password updated successfully!';
+                localStorage.removeItem('havenplus_recovery');
                 setTimeout(async () => {
                     await sb.auth.signOut();
                     document.getElementById('resetPasswordOverlay').classList.remove('active');
@@ -2735,6 +2737,15 @@
                 }, 1500);
             }
         }
+
+    function closeResetPasswordModal() {
+        localStorage.removeItem('havenplus_recovery');
+        document.getElementById('resetPasswordOverlay').classList.remove('active');
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('resetError').textContent = '';
+        document.getElementById('resetSuccess').textContent = '';
+    }
 
     const PLAN_META_INDEX = {
         essential: { name: 'Essential Care', price: '$55/mo', hours: '8 hrs', visits: '4× per year', vouchers: '2 / year' },
@@ -2859,7 +2870,9 @@
             showAuthError(currentLang === 'ko' ? '이메일을 먼저 입력해 주세요.' : 'Please enter your email first.');
             return;
         }
-        const { error } = await sb.auth.resetPasswordForEmail(email);
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/?mode=recovery'
+        });
         if (error) {
             showAuthError(error.message.includes('rate limit') ? (currentLang === 'ko' ? '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' : 'Too many requests. Please wait a moment and try again.') : error.message);
         } else {
@@ -3110,9 +3123,10 @@
 
         if (!sb) return;
 
-        // Detect recovery flow from URL hash (Supabase appends #access_token=...&type=recovery)
+        // Detect recovery flow from URL query param (?mode=recovery) or hash (type=recovery)
+        const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const isRecoveryFromURL = hashParams.get('type') === 'recovery';
+        const isRecoveryFromURL = urlParams.get('mode') === 'recovery' || hashParams.get('type') === 'recovery';
 
         // Skip showing logged-in UI if this is a recovery flow
         if (!isRecoveryFromURL) {
@@ -3125,15 +3139,19 @@
         sb.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY') {
                 isRecoveryMode = true;
+                localStorage.setItem('havenplus_recovery', Date.now());
                 document.getElementById('resetPasswordOverlay').classList.add('active');
                 // Ensure UI stays in logged-out state during recovery
                 document.getElementById('authButtons').style.display = 'flex';
                 document.getElementById('userMenu').style.display = 'none';
             } else if (event === 'SIGNED_IN' && session?.user) {
                 if (isRecoveryMode) return;
+                // Ignore cross-tab SIGNED_IN if another tab is in recovery mode
+                if (localStorage.getItem('havenplus_recovery')) return;
                 window.location.href = '/dashboard.html';
             } else if (event === 'SIGNED_OUT') {
                 isRecoveryMode = false;
+                localStorage.removeItem('havenplus_recovery');
                 currentUser = null;
                 document.getElementById('authButtons').style.display = 'flex';
                 document.getElementById('userMenu').style.display = 'none';
