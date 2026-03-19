@@ -1092,7 +1092,7 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
       ${keyLine}${accessLine}
       ${keyLine || accessLine ? '<div style="margin-bottom:16px"></div>' : ''}
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn-history" onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb} ${p.postcode}')">
+        <button class="btn-history" onclick="event.stopPropagation();event.preventDefault();openServiceHistory('${p.id}','${(p.address + ', ' + p.suburb + ' ' + p.postcode).replace(/'/g, "\\'")}')">
           <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Service History
         </button>
@@ -1112,8 +1112,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     `;
 
     return `
-      <div class="prop-hub-card" id="phub_${p.id}" onclick="togglePropHub('${p.id}')">
-        <div class="prop-hub-summary">
+      <div class="prop-hub-card" id="phub_${p.id}">
+        <div class="prop-hub-summary" onclick="togglePropHub('${p.id}')" style="cursor:pointer;">
           <div class="prop-hub-left">
             <div class="prop-hub-addr">${p.address}, ${p.suburb} ${p.postcode}</div>
             <div class="prop-hub-meta">${summaryMeta}</div>
