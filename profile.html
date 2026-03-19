@@ -101,7 +101,8 @@
 
   /* ── Subscription card ── */
   .sub-card { background: var(--bg); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-  .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sub-card-header { margin-bottom: 12px; }
+  .sub-card-header-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .sub-plan-name { font-size: 16px; font-weight: 800; color: var(--navy); }
   .sub-plan-price { font-size: 14px; font-weight: 700; color: var(--navy); }
   .sub-badge { display: inline-block; background: var(--green-bg); color: var(--green-txt); font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; letter-spacing: .05em; text-transform: uppercase; }
@@ -2012,12 +2013,12 @@ async function loadSubscription() {
         html += `
           <div class="sub-card">
             <div class="sub-card-header">
-              <div>
+              <div class="sub-card-header-top">
                 <div class="sub-plan-name">${plan.name}</div>
+                <div class="sub-plan-price">${plan.price}</div>
                 <span class="sub-badge">${sub.status}</span>
-                ${propLabel ? `<div style="font-size:12px;color:#888;margin-top:4px;">${propLabel}</div>` : ''}
               </div>
-              <div class="sub-plan-price">${plan.price}</div>
+              ${propLabel ? `<div style="font-size:12px;color:#888;margin-top:4px;">${propLabel}</div>` : ''}
             </div>
             <div class="sub-details">
               <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
