@@ -1612,6 +1612,7 @@ async function triggerCheckout(planKey) {
       body: JSON.stringify({
         planKey,
         billingCycle:   isSub ? billingCycle : 'one_time',
+        propertyId:     sessionStorage.getItem('hp_selected_property') || null,
         userId:         currentUser.id,
         userEmail:      currentUser.email,
         contractAgreed: true,
