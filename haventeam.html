@@ -1271,19 +1271,19 @@ function renderJobCard(job, isNext, todayStr) {
     : propTypeRaw ? '🏠 ' + propTypeRaw.charAt(0).toUpperCase() + propTypeRaw.slice(1)
     : '🏠 House';
 
-  /* Notes */
-  const notes = job.notes || job.special_instructions || prop.notes || '';
+  /* Notes — skip if it's just bed/bath info already shown above */
+  let notes = job.notes || job.special_instructions || prop.notes || '';
+  if (/^Bedrooms:\s*\d+,?\s*Bathrooms:\s*\d+$/i.test(notes.trim())) notes = '';
   const notesHtml = notes ? '<div class="job-notes"><span class="job-notes-icon">📝</span> ' + notes + '</div>' : '';
 
-  /* Property info line */
-  const propInfo = isService
-    ? '<span class="job-prop-tag">' + propTypeLabel + '</span>'
-      + (categoryLabel ? '<span>' + categoryLabel.replace(' · ','') + '</span>' : '')
-      + '<span>⏱ ' + (job.duration_hours || 1) + 'h</span>'
-    : '<span class="job-prop-tag">' + propTypeLabel + '</span>'
-      + '<span>🛏 ' + (prop.bedrooms || '?') + '</span>'
-      + '<span>🚿 ' + (prop.bathrooms || '?') + '</span>'
-      + '<span>⏱ ' + (job.duration_hours || 2) + 'h</span>';
+  /* Property info line — same layout for both types */
+  let propInfo = '<span class="job-prop-tag">' + propTypeLabel + '</span>'
+    + '<span>🛏 ' + (prop.bedrooms || '?') + '</span>'
+    + '<span>🚿 ' + (prop.bathrooms || '?') + '</span>'
+    + '<span>⏱ ' + (job.duration_hours || (isService ? 1 : 2)) + 'h</span>';
+  if (isService && categoryLabel) {
+    propInfo += '<span>' + categoryLabel.replace(' · ','') + '</span>';
+  }
 
   return '<div class="job-card ' + cardClass + '">'
     + '<div class="job-card-top">'
