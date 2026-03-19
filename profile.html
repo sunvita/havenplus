@@ -1346,7 +1346,7 @@
       </div>
       <div class="modal-form-group">
         <label>Plan Type *</label>
-        <select id="subManagePlan">
+        <select id="subManagePlan" onchange="onSubPlanChange()">
           <option value="essential">Essential</option>
           <option value="smart">Smart</option>
           <option value="premium">Premium</option>
@@ -1390,6 +1390,18 @@
           <input type="number" id="subManageSHUsed" step="0.5" min="0">
         </div>
       </div>
+      <!-- Cleaning Start Month (edit only) -->
+      <div id="subManageCleaningStartSection" style="display:none;margin-bottom:16px;background:#f8f9fa;border-radius:10px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;">Cleaning Start Month</div>
+            <div id="subManageCleaningStartValue" style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;">—</div>
+          </div>
+          <button class="btn-action-sm" onclick="resetCleaningStartMonth()" style="background:#fff3e0;color:#e65100;border:1px solid #ffcc80;font-size:11px;">Reset Schedule</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Reset will clear the cleaning start month so the customer can re-select from their dashboard.</div>
+      </div>
+
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeSubManageModal()">Cancel</button>
         <button class="modal-btn modal-btn-primary" onclick="saveSubManage()">Save</button>
@@ -4095,6 +4107,30 @@ function filterManageSH() {
   renderManageSH(filtered);
 }
 
+const PLAN_DEFAULTS = {
+  essential: { cleaning_hours: 8,  sh_hours: 2 },
+  smart:     { cleaning_hours: 12, sh_hours: 3 },
+  premium:   { cleaning_hours: 24, sh_hours: 6 },
+};
+
+function onSubPlanChange() {
+  const editId = document.getElementById('subManageEditId').value;
+  if (editId) return; // don't override values when editing
+  const plan = document.getElementById('subManagePlan').value;
+  const d = PLAN_DEFAULTS[plan] || {};
+  document.getElementById('subManageCleaningTotal').value = d.cleaning_hours || '';
+  document.getElementById('subManageCleaningUsed').value = 0;
+  document.getElementById('subManageSHTotal').value = d.sh_hours || '';
+  document.getElementById('subManageSHUsed').value = 0;
+  // Auto-set end date to 1 year from start
+  const startDate = document.getElementById('subManageStartDate').value;
+  if (startDate) {
+    const end = new Date(startDate);
+    end.setFullYear(end.getFullYear() + 1);
+    document.getElementById('subManageEndDate').value = end.toISOString().split('T')[0];
+  }
+}
+
 function openAddSubModal() {
   document.getElementById('subManageEditId').value = '';
   document.getElementById('subManageTitle').textContent = 'Add Subscription';
@@ -4102,15 +4138,15 @@ function openAddSubModal() {
   document.getElementById('subManageProperty').value = '';
   document.getElementById('subManagePlan').value = 'essential';
   document.getElementById('subManageStatus').value = 'active';
-  document.getElementById('subManageStartDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('subManageEndDate').value = '';
-  document.getElementById('subManageCleaningTotal').value = '';
-  document.getElementById('subManageCleaningUsed').value = '';
-  document.getElementById('subManageSHTotal').value = '';
-  document.getElementById('subManageSHUsed').value = '';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('subManageStartDate').value = today;
+  const endDate = new Date(); endDate.setFullYear(endDate.getFullYear() + 1);
+  document.getElementById('subManageEndDate').value = endDate.toISOString().split('T')[0];
   document.getElementById('subManageAlert').style.display = 'none';
+  document.getElementById('subManageCleaningStartSection').style.display = 'none';
   document.getElementById('subManageModal').classList.add('open');
   document.getElementById('subManageProperty').innerHTML = '<option value="">Select a property first</option>';
+  onSubPlanChange(); // set defaults for essential
 }
 
 function openEditSubModal(subId) {
@@ -4129,6 +4165,17 @@ function openEditSubModal(subId) {
   document.getElementById('subManageSHTotal').value = sub.sh_hours_total || '';
   document.getElementById('subManageSHUsed').value = sub.sh_hours_used || '';
   document.getElementById('subManageAlert').style.display = 'none';
+
+  // Show cleaning start month section
+  const csSection = document.getElementById('subManageCleaningStartSection');
+  const csValue = document.getElementById('subManageCleaningStartValue');
+  if (sub.cleaning_start_month) {
+    csValue.textContent = new Date(sub.cleaning_start_month).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+    csSection.style.display = '';
+  } else {
+    csValue.textContent = 'Not set — customer will select from dashboard';
+    csSection.style.display = '';
+  }
 
   // Load properties for this customer
   onSubCustomerChange();
@@ -4159,6 +4206,32 @@ async function onSubCustomerChange() {
 
 function closeSubManageModal() {
   document.getElementById('subManageModal').classList.remove('open');
+}
+
+async function resetCleaningStartMonth() {
+  const editId = document.getElementById('subManageEditId').value;
+  if (!editId) return;
+  if (!confirm('Reset cleaning schedule? The customer will need to re-select their start month from the dashboard.')) return;
+
+  try {
+    // Clear cleaning_start_month and preferred_week on subscription
+    const { error } = await sb.from('subscriptions')
+      .update({ cleaning_start_month: null, preferred_week: null, confirmed_date: null })
+      .eq('id', editId);
+    if (error) throw error;
+
+    // Delete future cleaning_schedule records (keep completed ones)
+    await sb.from('cleaning_schedule')
+      .delete()
+      .eq('subscription_id', editId)
+      .in('status', ['requested', 'scheduled', 'confirmed']);
+
+    document.getElementById('subManageCleaningStartValue').textContent = 'Not set — customer will select from dashboard';
+    showToast('Cleaning schedule reset. Customer can re-select start month.');
+  } catch(e) {
+    showToast('Failed to reset: ' + e.message, true);
+    console.error(e);
+  }
 }
 
 async function saveSubManage() {
