@@ -3348,19 +3348,15 @@ function initWorkerPlaces() {
     const place = workerPlacesAC.getPlace();
     if (!place.address_components) return;
     input.value = place.formatted_address || '';
-    /* Extract suburb directly from Places data for reliable area match */
+    /* Extract suburb from Places + use enhancedAreaMatch */
     let suburb = '';
     place.address_components.forEach(c => {
       if (c.types.includes('locality')) suburb = c.long_name;
     });
-    if (suburb) {
-      const result = suggestAreaForSuburb(suburb);
-      document.getElementById('workerArea').value = result.area || '';
-      document.getElementById('workerAreaDisplay').value = result.area ? getAreaName(result.area) : '';
-      updateWorkerAreaBadge(result.area, result.confidence);
-    } else {
-      matchWorkerArea(); /* fallback to text parsing */
-    }
+    const result = enhancedAreaMatch(suburb, input.value);
+    document.getElementById('workerArea').value = result.area || '';
+    document.getElementById('workerAreaDisplay').value = result.area ? getAreaName(result.area) : '';
+    updateWorkerAreaBadge(result.area, result.confidence);
   });
 }
 
