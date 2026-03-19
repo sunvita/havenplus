@@ -2047,18 +2047,32 @@ async function openServiceHistory(propertyId, address) {
       label: j.category ? j.category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Service'
     }));
 
-    const allJobs = [...cleanJobs, ...srJobs].sort((a, b) => {
-      if (!a.date) return 1;
-      if (!b.date) return -1;
-      return new Date(b.date) - new Date(a.date);
-    });
+    const todayStr = new Date().toISOString().split('T')[0];
+    const upcoming = [...cleanJobs, ...srJobs]
+      .filter(j => j.date && j.date >= todayStr && j.status !== 'completed' && j.status !== 'cancelled')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const past = [...cleanJobs, ...srJobs]
+      .filter(j => !j.date || j.date < todayStr || j.status === 'completed' || j.status === 'cancelled')
+      .sort((a, b) => {
+        if (!a.date) return 1; if (!b.date) return -1;
+        return new Date(b.date) - new Date(a.date);
+      });
 
-    if (allJobs.length === 0) {
+    if (upcoming.length === 0 && past.length === 0) {
       document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">No service history for this property yet.</div>';
       return;
     }
 
-    document.getElementById('shPanelBody').innerHTML = allJobs.map(j => renderJobEntry(j)).join('');
+    let html = '';
+    if (upcoming.length) {
+      html += '<div style="font-size:11px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;padding:4px 0 8px;">Upcoming</div>';
+      html += upcoming.map(j => renderJobEntry(j)).join('');
+    }
+    if (past.length) {
+      html += '<div style="font-size:11px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;padding:' + (upcoming.length ? '16' : '4') + 'px 0 8px;">Past</div>';
+      html += past.map(j => renderJobEntry(j)).join('');
+    }
+    document.getElementById('shPanelBody').innerHTML = html;
   } catch(e) {
     console.error('Service history load failed:', e);
     document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">Failed to load history.</div>';
