@@ -1076,13 +1076,18 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
 
     if (!nextVisitText && hasSub) nextVisitText = cleaningStartMonth ? '—' : 'Set start month';
 
+    // Bed/bath summary
+    const bedBath = `<span>🛏 ${p.bedrooms || '—'} · 🚿 ${p.bathrooms || '—'}</span>`;
+
     // Summary line
     const summaryMeta = hasSub
       ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
+         ${bedBath}
          <span><strong>Cleaning:</strong> ${cleanR}/${cleanT}h</span>
          <span><strong>Service Hour:</strong> ${shVR}/${shVT}SH</span>
          ${nextVisitText ? `<span><strong>Next Visit:</strong> ${nextVisitText}</span>` : ''}`
-      : `<span class="prop-hub-plan-pill pill-none">No plan</span>`;
+      : `<span class="prop-hub-plan-pill pill-none">No plan</span>
+         ${bedBath}`;
 
     // PM / Key Holder info
     const keyName = p.key_holder_name || p.key_holder || '';

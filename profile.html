@@ -1987,6 +1987,28 @@ async function loadSubscription() {
         const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
         const propLabel  = sub.property_id && propMap[sub.property_id] ? propMap[sub.property_id] : '';
 
+        // Next payment date calculation
+        let nextPayDate = '—';
+        if (sub.start_date) {
+          const sd = new Date(sub.start_date);
+          const now = new Date();
+          const isAnnual = sub.plan_type === 'premium';
+          if (isAnnual) {
+            // Annual: next anniversary of start_date
+            const next = new Date(sd);
+            next.setFullYear(now.getFullYear());
+            if (next <= now) next.setFullYear(now.getFullYear() + 1);
+            nextPayDate = next.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+          } else {
+            // Monthly: next month anniversary of start_date
+            const next = new Date(sd);
+            next.setMonth(now.getMonth());
+            next.setFullYear(now.getFullYear());
+            if (next <= now) next.setMonth(next.getMonth() + 1);
+            nextPayDate = next.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        }
+
         html += `
           <div class="sub-card">
             <div class="sub-card-header">
@@ -2003,6 +2025,7 @@ async function loadSubscription() {
               <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
               <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
               <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
+              <div class="sub-detail-item">Next payment<strong>${nextPayDate}</strong></div>
             </div>
           </div>`;
       });
