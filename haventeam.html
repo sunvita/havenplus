@@ -315,7 +315,16 @@ body {
 .job-btn-primary:hover { background: #0ca678; }
 .job-btn-complete { background: var(--accent); color: white; }
 .job-btn-complete:hover { background: #e55d2b; }
-.job-btn-locked { background: #f0f0f0; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; }
+.job-btn-locked { background: #f0f0f0; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; font-size: 11px; }
+
+/* Filter chips */
+.filter-chip {
+  padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+  background: white; font-size: 12px; font-weight: 600; font-family: inherit;
+  color: var(--text-secondary); cursor: pointer; transition: all .15s;
+}
+.filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+.filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
 /* Timer */
 .job-timer {
@@ -695,6 +704,13 @@ body {
             </div>
           </div>
 
+          <!-- Filter chips -->
+          <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:4px;" id="jobFilterChips">
+            <button class="filter-chip active" onclick="filterJobs('all',this)">All</button>
+            <button class="filter-chip" onclick="filterJobs('cleaning',this)">🧹 Cleaning</button>
+            <button class="filter-chip" onclick="filterJobs('service',this)">🔧 Service</button>
+          </div>
+
           <!-- All Jobs grouped by date -->
           <div id="allJobsList"></div>
         </div>
@@ -1002,6 +1018,16 @@ async function loadAllData() {
   await loadAllJobs();
 }
 
+let currentJobFilter = 'all';
+let allMyJobs = [];
+
+function filterJobs(type, btn) {
+  currentJobFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderAllJobs();
+}
+
 async function loadAllJobs() {
   const container = document.getElementById('allJobsList');
   container.innerHTML = '<div class="empty-state"><div class="empty-text">Loading...</div></div>';
@@ -1044,6 +1070,10 @@ async function loadAllJobs() {
       return (a.planned_time || '99:99').localeCompare(b.planned_time || '99:99');
     });
 
+    allMyJobs = myJobs;
+    window._todayStr = todayStr;
+    window._weekEndStr = weekEndStr;
+
     /* Summary counts */
     const todayCount = myJobs.filter(j => j.planned_date === todayStr).length;
     const weekCount = myJobs.filter(j => j.planned_date <= weekEndStr).length;
@@ -1052,9 +1082,18 @@ async function loadAllJobs() {
     document.getElementById('summaryToday').textContent = todayCount;
     document.getElementById('summaryWeek').textContent = weekCount;
     document.getElementById('summaryMonth').textContent = monthCount;
-    document.getElementById('summaryHeadline').textContent = todayCount
-      ? 'You have ' + todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today'
-      : 'No jobs today';
+
+    /* Smart headline */
+    if (todayCount) {
+      document.getElementById('summaryHeadline').textContent = 'You have ' + todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today';
+    } else if (myJobs.length) {
+      const nextJob = myJobs[0];
+      const nextDate = new Date(nextJob.planned_date + 'T00:00:00');
+      const diffDays = Math.ceil((nextDate - new Date(todayStr + 'T00:00:00')) / 86400000);
+      document.getElementById('summaryHeadline').textContent = '1 job in ' + diffDays + ' day' + (diffDays > 1 ? 's' : '') + ', ' + monthCount + ' this month';
+    } else {
+      document.getElementById('summaryHeadline').textContent = 'No upcoming jobs';
+    }
 
     /* Detect in-progress job */
     const inProgress = myJobs.find(j => j.status === 'in_progress');
@@ -1064,39 +1103,48 @@ async function loadAllJobs() {
       startTimer();
     }
 
-    if (!myJobs.length) {
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No upcoming jobs assigned to you.</div></div>';
-      return;
-    }
-
-    /* Group by date */
-    const grouped = {};
-    myJobs.forEach(j => {
-      const d = j.planned_date || 'unscheduled';
-      if (!grouped[d]) grouped[d] = [];
-      grouped[d].push(j);
-    });
-
-    let html = '';
-    for (const [date, jobs] of Object.entries(grouped)) {
-      const isToday = date === todayStr;
-      const d = new Date(date + 'T00:00:00');
-      const dayLabel = isToday ? 'Today'
-        : d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
-      const labelStyle = isToday ? ' style="color:var(--accent);font-weight:800;"' : '';
-
-      html += '<div class="section-header" style="margin-top:20px;">';
-      html += '<div class="section-title"' + labelStyle + '>' + dayLabel + '</div>';
-      html += '<div class="section-badge">' + jobs.length + '</div>';
-      html += '</div>';
-      html += jobs.map((job, idx) => renderJobCard(job, isToday && idx === 0 && !inProgress, todayStr)).join('');
-    }
-    container.innerHTML = html;
+    renderAllJobs();
 
   } catch(e) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Failed to load jobs</div></div>';
+    document.getElementById('allJobsList').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Failed to load jobs</div></div>';
     console.error(e);
   }
+}
+
+function renderAllJobs() {
+  const container = document.getElementById('allJobsList');
+  const todayStr = window._todayStr;
+  const jobs = currentJobFilter === 'all' ? allMyJobs : allMyJobs.filter(j => j.job_type === currentJobFilter);
+
+  if (!jobs.length) {
+    const msg = currentJobFilter === 'all' ? 'No upcoming jobs assigned to you.' : 'No ' + currentJobFilter + ' jobs.';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">' + msg + '</div></div>';
+    return;
+  }
+
+  const inProgress = jobs.find(j => j.status === 'in_progress');
+  const grouped = {};
+  jobs.forEach(j => {
+    const d = j.planned_date || 'unscheduled';
+    if (!grouped[d]) grouped[d] = [];
+    grouped[d].push(j);
+  });
+
+  let html = '';
+  for (const [date, dateJobs] of Object.entries(grouped)) {
+    const isToday = date === todayStr;
+    const d = new Date(date + 'T00:00:00');
+    const dayLabel = isToday ? 'Today'
+      : d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+    const labelStyle = isToday ? ' style="color:var(--accent);font-weight:800;"' : '';
+
+    html += '<div class="section-header" style="margin-top:20px;">';
+    html += '<div class="section-title"' + labelStyle + '>' + dayLabel + '</div>';
+    html += '<div class="section-badge">' + dateJobs.length + '</div>';
+    html += '</div>';
+    html += dateJobs.map((job, idx) => renderJobCard(job, isToday && idx === 0 && !inProgress, todayStr)).join('');
+  }
+  container.innerHTML = html;
 }
 
 function renderJobCard(job, isNext, todayStr) {
@@ -1112,6 +1160,17 @@ function renderJobCard(job, isNext, todayStr) {
   const typeLabel = isService ? 'Service' : 'Cleaning';
   const categoryLabel = isService && job.category ? ' · ' + job.category.replace(/_/g, ' ') : '';
 
+  /* Date + time line */
+  const jobDate = new Date(job.planned_date + 'T00:00:00');
+  const dateLabel = isToday ? 'Today'
+    : jobDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+  const timeLabel = job.planned_time || '';
+  const dateTimeStr = dateLabel + (timeLabel ? ' · ' + timeLabel : '');
+
+  /* Address single line */
+  const addrLine = (prop.address || 'Unknown') + (prop.suburb ? ', ' + prop.suburb : '');
+  const navAddr = ((prop.address||'') + ', ' + (prop.suburb||'')).replace(/'/g, "\\'");
+
   let actions = '';
   if (isInProgress) {
     actions = '<div class="job-timer">'
@@ -1124,31 +1183,30 @@ function renderJobCard(job, isNext, todayStr) {
       + ' Complete Job</button></div>';
   } else if (isToday) {
     actions = '<div class="job-actions">'
-      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + ((prop.address||'') + ', ' + (prop.suburb||'')).replace(/'/g, "\\'") + '\')">'
+      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
       + ' Navigate</button>'
       + '<button class="job-btn job-btn-primary" onclick="startJob(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
       + ' Start</button></div>';
   } else {
-    const lockDate = new Date(job.planned_date + 'T00:00:00').toLocaleDateString('en-AU', { day:'numeric', month:'short' });
+    const lockLabel = jobDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
     actions = '<div class="job-actions">'
-      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + ((prop.address||'') + ', ' + (prop.suburb||'')).replace(/'/g, "\\'") + '\')">'
+      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
       + ' Navigate</button>'
       + '<button class="job-btn job-btn-locked" disabled>'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
-      + ' ' + lockDate + '</button></div>';
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+      + ' Starts ' + lockLabel + '</button></div>';
   }
 
   const metaInfo = isService
     ? '<span>' + typeIcon + ' ' + typeLabel + categoryLabel + '</span><span>⏱ ' + (job.duration_hours || 1) + 'h</span>'
-    : '<span>🛏 ' + (prop.bedrooms || '?') + '</span><span>🚿 ' + (prop.bathrooms || '?') + '</span><span>⏱ ' + (job.duration_hours || 2) + 'h</span>';
+    : '<span>' + typeIcon + ' ' + typeLabel + '</span><span>🛏 ' + (prop.bedrooms || '?') + ' 🚿 ' + (prop.bathrooms || '?') + '</span><span>⏱ ' + (job.duration_hours || 2) + 'h</span>';
 
   return '<div class="job-card ' + cardClass + '">'
-    + '<div class="job-card-top"><div class="job-time">' + (job.planned_time || '—') + '</div>' + badge + '</div>'
-    + '<div class="job-address">' + (prop.address || 'Unknown') + '</div>'
-    + '<div class="job-suburb">' + (prop.suburb || '') + '</div>'
+    + '<div class="job-card-top"><div class="job-time">' + dateTimeStr + '</div>' + badge + '</div>'
+    + '<div class="job-address">' + addrLine + '</div>'
     + '<div class="job-meta">' + metaInfo + '</div>'
     + actions + '</div>';
 }
