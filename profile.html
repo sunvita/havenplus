@@ -1340,12 +1340,12 @@
       </div>
       <div class="modal-form-group">
         <label>Property *</label>
-        <select id="subManageProperty">
+        <select id="subManageProperty" onchange="onSubPropertyChange()">
           <option value="">Select a property</option>
         </select>
       </div>
       <div class="modal-form-group">
-        <label>Plan Type *</label>
+        <label>Plan Type * <span id="subManagePlanHint" style="font-weight:400;font-size:11px;color:var(--text-light);"></span></label>
         <select id="subManagePlan" onchange="onSubPlanChange()">
           <option value="essential">Essential</option>
           <option value="smart">Smart</option>
@@ -4224,6 +4224,21 @@ async function onSubCustomerChange() {
         : ' — No plan';
       return `<option value="${p.id}">${p.address}${tag}</option>`;
     }).join('');
+}
+
+function onSubPropertyChange() {
+  const propId = document.getElementById('subManageProperty').value;
+  const hint = document.getElementById('subManagePlanHint');
+  if (!propId) { hint.textContent = ''; return; }
+  const existingSub = manageDataState.subscriptions.find(s => s.property_id === propId && s.status === 'active');
+  if (existingSub) {
+    const name = existingSub.plan_type.charAt(0).toUpperCase() + existingSub.plan_type.slice(1);
+    hint.textContent = `(Current: ${name})`;
+    hint.style.color = '#27ae60';
+  } else {
+    hint.textContent = '(No plan)';
+    hint.style.color = 'var(--orange)';
+  }
 }
 
 function closeSubManageModal() {
