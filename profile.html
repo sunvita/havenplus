@@ -393,6 +393,7 @@
   .admin-lb-nav button:hover { background: rgba(255,255,255,.25); }
   .admin-lb-label { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 8px; }
 </style>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC03KO68dQ459iJ1RCXn2Loe8tJJ-thKYk&libraries=places" async defer></script>
 </head>
 <body>
 
@@ -1239,7 +1240,7 @@
       <div class="modal-form-row">
         <div class="modal-form-group" style="flex:2;">
           <label>Address</label>
-          <input type="text" id="workerAddress" placeholder="e.g. 123 Main St, Armadale WA 6112" oninput="matchWorkerArea()">
+          <input type="text" id="workerAddress" placeholder="Start typing address..." autocomplete="off" oninput="matchWorkerArea()">
         </div>
         <div class="modal-form-group" style="flex:1;">
           <label>Area <span id="workerAreaBadge" style="font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px;"></span></label>
@@ -3296,6 +3297,25 @@ function openWorkerModal(workerId = null) {
   updateWorkerAreaBadge(worker?.area);
   
   document.getElementById('workerModal').classList.add('open');
+  initWorkerPlaces();
+}
+
+let workerPlacesAC = null;
+function initWorkerPlaces() {
+  const input = document.getElementById('workerAddress');
+  if (!input || !window.google?.maps?.places) return;
+  if (workerPlacesAC) return; // already initialized
+  workerPlacesAC = new google.maps.places.Autocomplete(input, {
+    componentRestrictions: { country: 'au' },
+    types: ['address'],
+    fields: ['address_components', 'formatted_address'],
+  });
+  workerPlacesAC.addListener('place_changed', () => {
+    const place = workerPlacesAC.getPlace();
+    if (!place.formatted_address) return;
+    input.value = place.formatted_address;
+    matchWorkerArea();
+  });
 }
 
 function matchWorkerArea() {
