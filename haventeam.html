@@ -279,6 +279,23 @@ body {
   font-size: 15px;
   line-height: 1;
 }
+.job-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.job-type-tag.cleaning {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.job-type-tag.service {
+  background: #fff3e0;
+  color: #e65100;
+}
 .job-prop-info {
   display: flex;
   flex-wrap: wrap;
@@ -1271,7 +1288,7 @@ function renderJobCard(job, isNext, todayStr) {
   return '<div class="job-card ' + cardClass + '">'
     + '<div class="job-card-top">'
     +   '<div class="job-time">' + dateTimeStr + '</div>'
-    +   '<div class="job-top-right">' + badge + '<span class="job-type-icon" title="' + typeLabel + '">' + typeIcon + '</span></div>'
+    +   '<div class="job-top-right">' + badge + '<span class="job-type-tag ' + (isService ? 'service' : 'cleaning') + '">' + typeIcon + ' ' + typeLabel + '</span></div>'
     + '</div>'
     + '<div class="job-address">' + addrLine + '</div>'
     + '<div class="job-prop-info">' + propInfo + '</div>'
