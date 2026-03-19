@@ -2336,18 +2336,40 @@ async function loadSchedules() {
   }
   // 'all' = no date filter
 
-  let q = sb.from('cleaning_schedule')
-    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes')
+  /* Fetch two sets: overdue incomplete + date-filtered */
+  const selectCols = 'id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes';
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  let q = sb.from('cleaning_schedule').select(selectCols)
     .order('planned_date', { ascending: true }).limit(200);
-  
+
   if (status) q = q.eq('status', status);
-  // Worker filter is handled client-side to support assigned_workers JSONB array
   if (dateFrom) q = q.gte('planned_date', dateFrom.toISOString().split('T')[0]);
   if (dateTo) q = q.lte('planned_date', dateTo.toISOString().split('T')[0]);
-  
-  const { data } = await q;
 
-  if (!data?.length) { 
+  /* Also fetch overdue incomplete (past date + not completed/cancelled) */
+  let overdueQ = null;
+  if (dateFrom && !status) {
+    overdueQ = sb.from('cleaning_schedule').select(selectCols)
+      .lt('planned_date', todayStr)
+      .in('status', ['requested', 'scheduled', 'confirmed'])
+      .order('planned_date', { ascending: true }).limit(50);
+  }
+  
+  const [mainRes, overdueRes] = await Promise.all([
+    q, overdueQ || Promise.resolve({ data: [] })
+  ]);
+
+  /* Merge and deduplicate by id */
+  const seenIds = new Set();
+  const data = [];
+  for (const item of [...(overdueRes.data || []), ...(mainRes.data || [])]) {
+    if (!seenIds.has(item.id)) { seenIds.add(item.id); data.push(item); }
+  }
+  /* Sort: overdue first, then by date */
+  data.sort((a, b) => new Date(a.planned_date) - new Date(b.planned_date));
+
+  if (!data?.length) {
     body.innerHTML = '<tr><td colspan="8" class="empty-state">No schedules found for this period.</td></tr>'; 
     return; 
   }
