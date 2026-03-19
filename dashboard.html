@@ -315,6 +315,19 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .sh-panel-title { font-size: 18px; font-weight: 800; }
 .sh-panel-subtitle { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 2px; }
 .sh-panel-body { padding: 16px; }
+.sh-filter-bar {
+  display: flex; gap: 6px; padding: 12px 16px 4px; background: var(--bg);
+  position: sticky; top: 0; z-index: 5;
+}
+.sh-filter-chip {
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--card); color: var(--text-secondary); cursor: pointer;
+  transition: all .15s;
+}
+.sh-filter-chip.active {
+  background: var(--navy); color: white; border-color: var(--navy);
+}
 
 /* Job entry accordion */
 .sh-job-entry {
@@ -1996,6 +2009,11 @@ function toggleLang(lang) {
       <div class="sh-panel-title">Service History</div>
       <div class="sh-panel-subtitle" id="shPanelAddress"></div>
     </div>
+    <div class="sh-filter-bar" id="shFilterBar">
+      <button class="sh-filter-chip active" onclick="filterSH('all',this)">All</button>
+      <button class="sh-filter-chip" onclick="filterSH('cleaning',this)">Cleaning</button>
+      <button class="sh-filter-chip" onclick="filterSH('service',this)">Service</button>
+    </div>
     <div class="sh-panel-body" id="shPanelBody">
       <div class="sh-empty">Loading...</div>
     </div>
@@ -2015,11 +2033,16 @@ function toggleLang(lang) {
 
 <script>
 /* ═══ Service History ═══ */
+let shAllJobs = [];
+let shFilterType = 'all';
+
 async function openServiceHistory(propertyId, address) {
   document.getElementById('shPanelAddress').textContent = address;
   document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">Loading...</div>';
   document.getElementById('shPanelOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  shFilterType = 'all';
+  document.querySelectorAll('.sh-filter-chip').forEach((c,i) => c.classList.toggle('active', i === 0));
 
   try {
     const [cleanRes, srRes] = await Promise.all([
@@ -2028,7 +2051,7 @@ async function openServiceHistory(propertyId, address) {
         .eq('property_id', propertyId)
         .order('planned_date', { ascending: false }),
       sb.from('service_requests')
-        .select('id, scheduled_date, preferred_date, status, category, sh_used, actual_start, actual_end, before_photos, after_photos, worker_notes, assigned_worker_id')
+        .select('id, scheduled_date, preferred_date, status, category, sh_used, description, urgency, assigned_worker_id')
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false })
     ]);
@@ -2047,36 +2070,50 @@ async function openServiceHistory(propertyId, address) {
       label: j.category ? j.category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Service'
     }));
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const upcoming = [...cleanJobs, ...srJobs]
-      .filter(j => j.date && j.date >= todayStr && j.status !== 'completed' && j.status !== 'cancelled')
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    const past = [...cleanJobs, ...srJobs]
-      .filter(j => !j.date || j.date < todayStr || j.status === 'completed' || j.status === 'cancelled')
-      .sort((a, b) => {
-        if (!a.date) return 1; if (!b.date) return -1;
-        return new Date(b.date) - new Date(a.date);
-      });
-
-    if (upcoming.length === 0 && past.length === 0) {
-      document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">No service history for this property yet.</div>';
-      return;
-    }
-
-    let html = '';
-    if (upcoming.length) {
-      html += '<div style="font-size:11px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;padding:4px 0 8px;">Upcoming</div>';
-      html += upcoming.map(j => renderJobEntry(j)).join('');
-    }
-    if (past.length) {
-      html += '<div style="font-size:11px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;padding:' + (upcoming.length ? '16' : '4') + 'px 0 8px;">Past</div>';
-      html += past.map(j => renderJobEntry(j)).join('');
-    }
-    document.getElementById('shPanelBody').innerHTML = html;
+    shAllJobs = [...cleanJobs, ...srJobs];
+    renderSHList();
   } catch(e) {
     console.error('Service history load failed:', e);
     document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">Failed to load history.</div>';
   }
+}
+
+function filterSH(type, btn) {
+  shFilterType = type;
+  document.querySelectorAll('.sh-filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderSHList();
+}
+
+function renderSHList() {
+  const jobs = shFilterType === 'all' ? shAllJobs : shAllJobs.filter(j => j.type === shFilterType);
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const upcoming = jobs
+    .filter(j => j.date && j.date >= todayStr && j.status !== 'completed' && j.status !== 'cancelled')
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const past = jobs
+    .filter(j => !j.date || j.date < todayStr || j.status === 'completed' || j.status === 'cancelled')
+    .sort((a, b) => {
+      if (!a.date) return 1; if (!b.date) return -1;
+      return new Date(b.date) - new Date(a.date);
+    });
+
+  if (upcoming.length === 0 && past.length === 0) {
+    document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">No service history for this property yet.</div>';
+    return;
+  }
+
+  let html = '';
+  if (upcoming.length) {
+    html += '<div style="font-size:11px;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;padding:4px 0 8px;">Upcoming</div>';
+    html += upcoming.map(j => renderJobEntry(j)).join('');
+  }
+  if (past.length) {
+    html += '<div style="font-size:11px;font-weight:800;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;padding:' + (upcoming.length ? '16' : '4') + 'px 0 8px;">Past</div>';
+    html += past.map(j => renderJobEntry(j)).join('');
+  }
+  document.getElementById('shPanelBody').innerHTML = html;
 }
 
 function renderJobEntry(j) {
@@ -2088,10 +2125,11 @@ function renderJobEntry(j) {
 
   const beforePhotos = Array.isArray(j.before_photos) && j.before_photos.length > 0 ? j.before_photos : [];
   const afterPhotos = Array.isArray(j.after_photos) && j.after_photos.length > 0 ? j.after_photos : [];
-  const notes = j.worker_notes || '';
+  const notes = j.worker_notes || j.description || '';
 
   let detailHTML = `<div class="sh-job-meta">
     <div>⏱ ${durationStr}</div>
+    ${j.type === 'service' && j.urgency ? '<div>⚡ ' + j.urgency.replace(/_/g,' ') + '</div>' : ''}
   </div>`;
 
   if (beforePhotos.length > 0) {

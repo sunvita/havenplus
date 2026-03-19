@@ -1107,7 +1107,7 @@ async function loadAllJobs() {
         .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
         .order('planned_date').order('planned_time'),
       sb.from('service_requests')
-        .select('*, properties(address, suburb, area, property_type, notes)')
+        .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('scheduled_date', todayStr)
         .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
         .order('scheduled_date')
