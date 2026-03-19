@@ -1347,6 +1347,7 @@
       <div class="modal-form-group">
         <label>Plan Type * <span id="subManagePlanHint" style="font-weight:400;font-size:11px;color:var(--text-light);"></span></label>
         <select id="subManagePlan" onchange="onSubPlanChange()">
+          <option value="">— No Plan (Reset) —</option>
           <option value="essential">Essential</option>
           <option value="smart">Smart</option>
           <option value="premium">Premium</option>
@@ -4240,6 +4241,7 @@ function onSubPropertyChange() {
   } else {
     hint.textContent = '(No plan)';
     hint.style.color = 'var(--orange)';
+    planSelect.value = '';
   }
 }
 
@@ -4293,6 +4295,34 @@ async function saveSubManage() {
     alertEl.classList.remove('success');
     alertEl.classList.add('error');
     alertEl.style.display = 'block';
+    return;
+  }
+
+  /* ── No Plan = full reset for this property ── */
+  if (!planType) {
+    const existingSub = manageDataState.subscriptions.find(s => s.property_id === propertyId && s.status === 'active');
+    if (!existingSub) {
+      alertEl.textContent = 'This property has no active plan to reset.';
+      alertEl.classList.remove('success'); alertEl.classList.add('error');
+      alertEl.style.display = 'block';
+      return;
+    }
+    if (!confirm('⚠ Remove plan and delete ALL related data for this property?\n\n• Subscription\n• Cleaning schedules\n• Service requests\n\nThis cannot be undone.')) return;
+
+    try {
+      await sb.from('cleaning_schedule').delete().eq('property_id', propertyId);
+      await sb.from('service_requests').delete().eq('property_id', propertyId);
+      await sb.from('subscriptions').delete().eq('id', existingSub.id);
+
+      alertEl.textContent = 'Plan removed and all data reset.';
+      alertEl.classList.remove('error'); alertEl.classList.add('success');
+      alertEl.style.display = 'block';
+      setTimeout(() => { closeSubManageModal(); loadManageData(); showToast('Property plan reset complete.'); }, 800);
+    } catch(e) {
+      alertEl.textContent = 'Error: ' + (e.message || 'Reset failed');
+      alertEl.classList.remove('success'); alertEl.classList.add('error');
+      alertEl.style.display = 'block';
+    }
     return;
   }
 
