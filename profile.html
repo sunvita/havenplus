@@ -1087,7 +1087,8 @@
         </div>
         <div class="modal-form-group">
           <label>Scheduled Time</label>
-          <input type="time" id="jobEditTime">
+          <input type="hidden" id="jobEditTime">
+          <div id="jobTimeGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
         </div>
       </div>
       <div class="modal-form-group">
@@ -2829,7 +2830,7 @@ async function openSchedEditModal(schedId) {
   // Schedule
   document.getElementById('schedEditDate').value = sched.planned_date || '';
   document.getElementById('schedEditTime').value = sched.planned_time || '';
-  buildTimeGrid(sched.planned_time || '');
+  buildTimeGrid(sched.planned_time || '', 'schedTimeGrid', 'schedEditTime');
   document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
   document.getElementById('schedEditStatus').value = sched.status || 'requested';
 
@@ -3051,25 +3052,39 @@ function minutesToTime(mins) {
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
 }
 
-function buildTimeGrid(selectedTime) {
-  const grid = document.getElementById('schedTimeGrid');
+function buildTimeGrid(selectedTime, gridId, inputId) {
+  gridId = gridId || 'schedTimeGrid';
+  inputId = inputId || 'schedEditTime';
+  const grid = document.getElementById(gridId);
   const slots = [];
   for (let h = 7; h <= 17; h++) {
     slots.push(`${h.toString().padStart(2,'0')}:00`);
     if (h < 17) slots.push(`${h.toString().padStart(2,'0')}:30`);
   }
-  grid.innerHTML = slots.map(t => {
-    const sel = t === (selectedTime || '').substring(0,5) ? ' selected' : '';
+  const selShort = (selectedTime || '').substring(0,5);
+  const isCustom = selectedTime && !slots.includes(selShort);
+  let html = slots.map(t => {
+    const sel = t === selShort ? ' selected' : '';
     const hr = parseInt(t); const mn = t.substring(3);
     const label = hr > 12 ? `${hr-12}:${mn}pm` : (hr === 12 ? `12:${mn}pm` : `${hr}:${mn}am`);
-    return `<button type="button" class="time-btn${sel}" onclick="pickTime('${t}',this)">${label}</button>`;
+    return `<button type="button" class="time-btn${sel}" onclick="pickTime('${t}','${gridId}','${inputId}',this)">${label}</button>`;
   }).join('');
+  /* Custom time input */
+  html += `<input type="time" class="time-btn${isCustom ? ' selected' : ''}" value="${isCustom ? selShort : ''}" placeholder="Other" style="font-size:11px;text-align:center;" onchange="pickCustomTime(this,'${gridId}','${inputId}')">`;
+  grid.innerHTML = html;
 }
-function pickTime(val, btn) {
-  document.getElementById('schedEditTime').value = val;
-  document.querySelectorAll('#schedTimeGrid .time-btn').forEach(b => b.classList.remove('selected'));
+function pickTime(val, gridId, inputId, btn) {
+  document.getElementById(inputId).value = val;
+  document.querySelectorAll('#' + gridId + ' .time-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  checkWorkerConflicts();
+  if (gridId === 'schedTimeGrid') checkWorkerConflicts();
+}
+function pickCustomTime(input, gridId, inputId) {
+  if (!input.value) return;
+  document.getElementById(inputId).value = input.value;
+  document.querySelectorAll('#' + gridId + ' .time-btn').forEach(b => b.classList.remove('selected'));
+  input.classList.add('selected');
+  if (gridId === 'schedTimeGrid') checkWorkerConflicts();
 }
 
 function checkWorkerConflicts() {
@@ -3280,6 +3295,7 @@ async function openJobEditModal(jobId) {
   document.getElementById('jobEditStatus').value = job.status || 'requested';
   document.getElementById('jobEditDate').value = job.scheduled_date || job.preferred_date || '';
   document.getElementById('jobEditTime').value = job.scheduled_time || '';
+  buildTimeGrid(job.scheduled_time || '', 'jobTimeGrid', 'jobEditTime');
   document.getElementById('jobEditWorker').value = job.assigned_worker_id || '';
   document.getElementById('jobEditEstimate').value = job.sh_estimate || 1;
   document.getElementById('jobEditActual').value = job.sh_used || '';
@@ -3296,7 +3312,7 @@ function closeJobEditModal() {
 
 async function saveJobEdit() {
   const id = document.getElementById('jobEditId').value;
-  const status = document.getElementById('jobEditStatus').value;
+  let status = document.getElementById('jobEditStatus').value;
   const date = document.getElementById('jobEditDate').value;
   const time = document.getElementById('jobEditTime').value;
   const worker = document.getElementById('jobEditWorker').value;
@@ -3304,10 +3320,17 @@ async function saveJobEdit() {
   const actual = parseFloat(document.getElementById('jobEditActual').value) || null;
   const notes = document.getElementById('jobEditNotes').value.trim();
   const alertEl = document.getElementById('jobEditAlert');
-  
+
+  /* Auto-upgrade status when worker + date assigned */
+  if (worker && date && (status === 'requested' || status === 'confirmed')) {
+    status = 'scheduled';
+  } else if (worker && !date && status === 'requested') {
+    status = 'confirmed';
+  }
+
   const btn = document.getElementById('btnSaveJob');
   btn.disabled = true; btn.textContent = 'Saving…';
-  
+
   try {
     const { error } = await sb.from('service_requests').update({
       status,
