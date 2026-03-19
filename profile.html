@@ -4229,12 +4229,14 @@ async function onSubCustomerChange() {
 function onSubPropertyChange() {
   const propId = document.getElementById('subManageProperty').value;
   const hint = document.getElementById('subManagePlanHint');
+  const planSelect = document.getElementById('subManagePlan');
   if (!propId) { hint.textContent = ''; return; }
   const existingSub = manageDataState.subscriptions.find(s => s.property_id === propId && s.status === 'active');
   if (existingSub) {
     const name = existingSub.plan_type.charAt(0).toUpperCase() + existingSub.plan_type.slice(1);
     hint.textContent = `(Current: ${name})`;
     hint.style.color = '#27ae60';
+    planSelect.value = existingSub.plan_type;
   } else {
     hint.textContent = '(No plan)';
     hint.style.color = 'var(--orange)';
