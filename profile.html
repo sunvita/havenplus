@@ -370,6 +370,15 @@
     .page { padding: 20px 16px; }
   }
 
+  /* Time picker grid */
+  .time-btn {
+    padding: 7px 4px; border: 1px solid var(--border); border-radius: 8px;
+    background: white; font-size: 12px; font-weight: 600; font-family: inherit;
+    color: var(--navy); cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .time-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .time-btn.selected { background: var(--navy); color: white; border-color: var(--navy); }
+
   /* Admin photo gallery */
   .admin-photo-label { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; margin-top: 8px; }
   .admin-photo-row { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 4px; }
@@ -1150,7 +1159,8 @@
           </div>
           <div class="modal-form-group">
             <label>Start Time</label>
-            <input type="time" id="schedEditTime" onchange="checkWorkerConflicts()">
+            <input type="hidden" id="schedEditTime">
+            <div id="schedTimeGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
           </div>
         </div>
         <div class="modal-form-group">
@@ -2819,6 +2829,7 @@ async function openSchedEditModal(schedId) {
   // Schedule
   document.getElementById('schedEditDate').value = sched.planned_date || '';
   document.getElementById('schedEditTime').value = sched.planned_time || '';
+  buildTimeGrid(sched.planned_time || '');
   document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
   document.getElementById('schedEditStatus').value = sched.status || 'requested';
 
@@ -3038,6 +3049,27 @@ function minutesToTime(mins) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+}
+
+function buildTimeGrid(selectedTime) {
+  const grid = document.getElementById('schedTimeGrid');
+  const slots = [];
+  for (let h = 7; h <= 17; h++) {
+    slots.push(`${h.toString().padStart(2,'0')}:00`);
+    if (h < 17) slots.push(`${h.toString().padStart(2,'0')}:30`);
+  }
+  grid.innerHTML = slots.map(t => {
+    const sel = t === (selectedTime || '').substring(0,5) ? ' selected' : '';
+    const hr = parseInt(t); const mn = t.substring(3);
+    const label = hr > 12 ? `${hr-12}:${mn}pm` : (hr === 12 ? `12:${mn}pm` : `${hr}:${mn}am`);
+    return `<button type="button" class="time-btn${sel}" onclick="pickTime('${t}',this)">${label}</button>`;
+  }).join('');
+}
+function pickTime(val, btn) {
+  document.getElementById('schedEditTime').value = val;
+  document.querySelectorAll('#schedTimeGrid .time-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  checkWorkerConflicts();
 }
 
 function checkWorkerConflicts() {
