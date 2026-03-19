@@ -3331,20 +3331,38 @@ function initWorkerPlaces() {
 }
 
 function matchWorkerArea() {
-  const address = document.getElementById('workerAddress').value;
-  // Extract suburb from address (last part before state/postcode)
-  const parts = address.split(',').map(p => p.trim());
-  let suburb = '';
-  
-  if (parts.length >= 2) {
-    // Try second-to-last part (usually suburb + state + postcode)
-    const suburbPart = parts[parts.length - 1].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
-    suburb = suburbPart || parts[parts.length - 2];
-  } else if (parts.length === 1) {
-    suburb = parts[0].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
+  const address = document.getElementById('workerAddress').value.trim();
+  if (!address) { updateWorkerAreaBadge(null); return; }
+
+  /* 1. Try raw input as suburb name first (handles "Armadale", "South Perth" etc.) */
+  let result = suggestAreaForSuburb(address);
+
+  /* 2. If no match, try parsing from comma-separated address */
+  if (!result.area) {
+    const parts = address.split(',').map(p => p.trim());
+    let suburb = '';
+    if (parts.length >= 2) {
+      const suburbPart = parts[parts.length - 1].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
+      suburb = suburbPart || parts[parts.length - 2];
+    } else {
+      suburb = parts[0].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
+    }
+    if (suburb) result = suggestAreaForSuburb(suburb);
   }
-  
-  const result = suggestAreaForSuburb(suburb);
+
+  /* 3. If still no match and multiple words, try each word */
+  if (!result.area && address.includes(' ')) {
+    const words = address.replace(/[,\d]/g, '').split(/\s+/).filter(w => w.length > 2);
+    for (let i = words.length - 1; i >= 0; i--) {
+      result = suggestAreaForSuburb(words[i]);
+      if (result.area) break;
+      /* Try two-word combo for suburbs like "South Perth" */
+      if (i > 0) {
+        result = suggestAreaForSuburb(words[i-1] + ' ' + words[i]);
+        if (result.area) break;
+      }
+    }
+  }
   document.getElementById('workerArea').value = result.area || '';
   document.getElementById('workerAreaDisplay').value = result.area ? getAreaName(result.area) : '';
   updateWorkerAreaBadge(result.area, result.confidence);
