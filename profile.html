@@ -369,6 +369,29 @@
   @media (max-width: 600px) {
     .page { padding: 20px 16px; }
   }
+
+  /* Admin photo gallery */
+  .admin-photo-label { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; margin-top: 8px; }
+  .admin-photo-row { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .admin-photo-thumb {
+    width: 72px; height: 72px; border-radius: 8px; object-fit: cover;
+    cursor: pointer; flex-shrink: 0; border: 1px solid var(--border); transition: transform .15s;
+  }
+  .admin-photo-thumb:hover { transform: scale(1.08); }
+  .admin-no-photos { font-size: 12px; color: #adb5bd; font-style: italic; padding: 4px 0; }
+
+  /* Admin lightbox */
+  .admin-lightbox {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    z-index: 500; align-items: center; justify-content: center; flex-direction: column;
+  }
+  .admin-lightbox.open { display: flex; }
+  .admin-lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 8px; object-fit: contain; }
+  .admin-lb-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: white; font-size: 28px; cursor: pointer; }
+  .admin-lb-nav { display: flex; gap: 16px; margin-top: 16px; }
+  .admin-lb-nav button { background: rgba(255,255,255,.15); border: none; color: white; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-family: inherit; cursor: pointer; }
+  .admin-lb-nav button:hover { background: rgba(255,255,255,.25); }
+  .admin-lb-label { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -775,7 +798,7 @@
           <input type="text" class="filter-input" id="jobSearch" placeholder="Search customer or description…" oninput="filterJobRequests()" style="flex:1;min-width:180px;">
           <select class="filter-input" id="jobStatusFilter" onchange="loadJobRequests()">
             <option value="">All statuses</option>
-            <option value="pending">Pending</option>
+            <option value="requested">Requested</option>
             <option value="confirmed">Confirmed</option>
             <option value="scheduled">Scheduled</option>
             <option value="in_progress">In Progress</option>
@@ -814,7 +837,7 @@
           <input type="date" class="filter-input" id="schedDateTo" style="display:none;" onchange="loadSchedules()">
           <select class="filter-input" id="schedStatusFilter" onchange="loadSchedules()">
             <option value="">All statuses</option>
-            <option value="pending">Pending</option>
+            <option value="requested">Requested</option>
             <option value="scheduled">Scheduled</option>
             <option value="confirmed">Confirmed</option>
             <option value="completed">Completed</option>
@@ -1039,7 +1062,7 @@
       <div class="modal-form-group">
         <label>Status</label>
         <select id="jobEditStatus">
-          <option value="pending">Pending</option>
+          <option value="requested">Requested</option>
           <option value="confirmed">Confirmed</option>
           <option value="scheduled">Scheduled</option>
           <option value="in_progress">In Progress</option>
@@ -1155,11 +1178,23 @@
         </div>
       </div>
       
+      <!-- Photos -->
+      <div id="schedPhotosSection" style="margin-bottom:16px;display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📷 Job Photos</div>
+        <div id="schedPhotosContent"></div>
+      </div>
+
+      <!-- Worker Notes -->
+      <div id="schedNotesSection" style="margin-bottom:16px;display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">📝 Worker Notes</div>
+        <div id="schedNotesContent" style="font-size:13px;color:var(--text);background:var(--bg);border-radius:8px;padding:10px 12px;border-left:3px solid var(--orange);"></div>
+      </div>
+
       <!-- Status -->
       <div class="modal-form-group">
         <label>Status</label>
         <select id="schedEditStatus">
-          <option value="pending">Pending</option>
+          <option value="requested">Requested</option>
           <option value="scheduled">Scheduled</option>
           <option value="confirmed">Confirmed</option>
           <option value="in_progress">In Progress</option>
@@ -2255,7 +2290,7 @@ async function loadSchedules() {
   // 'all' = no date filter
 
   let q = sb.from('cleaning_schedule')
-    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, assigned_workers, user_id')
+    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes')
     .order('planned_date', { ascending: true }).limit(200);
   
   if (status) q = q.eq('status', status);
@@ -2311,7 +2346,7 @@ async function loadSchedules() {
   }
 
   // Stats (based on filtered data)
-  const pending = filteredData.filter(s => s.status === 'pending').length;
+  const pending = filteredData.filter(s => s.status === 'requested').length;
   const scheduled = filteredData.filter(s => s.status === 'scheduled' || s.status === 'confirmed').length;
   const completed = filteredData.filter(s => s.status === 'completed').length;
   const thisMonth = filteredData.filter(s => {
@@ -2354,7 +2389,7 @@ async function loadSchedules() {
       workerDisplay = `${names[0]} +${names.length - 1}`;
     }
     
-    const badgeClass = r.status === 'completed' ? 'completed' : r.status === 'cancelled' ? 'cancelled' : r.status === 'pending' ? 'pending' : 'scheduled';
+    const badgeClass = r.status === 'completed' ? 'completed' : r.status === 'cancelled' ? 'cancelled' : r.status === 'requested' ? 'pending' : 'scheduled';
     
     return `<tr>
       <td style="font-weight:600;">${d}</td>
@@ -2414,10 +2449,10 @@ async function loadCalendar() {
   }
   
   // Separate scheduled vs unscheduled
-  calendarData.scheduled = schedules.filter(s => s.planned_date && s.status !== 'pending').map(s => ({
+  calendarData.scheduled = schedules.filter(s => s.planned_date && s.status !== 'requested').map(s => ({
     ...s, prop: propMap[s.property_id] || {}
   }));
-  calendarData.unscheduled = schedules.filter(s => !s.planned_date || s.status === 'pending').map(s => ({
+  calendarData.unscheduled = schedules.filter(s => !s.planned_date || s.status === 'requested').map(s => ({
     ...s, prop: propMap[s.property_id] || {}
   }));
   
@@ -2715,8 +2750,44 @@ async function openSchedEditModal(schedId) {
   document.getElementById('schedEditDate').value = sched.planned_date || '';
   document.getElementById('schedEditTime').value = sched.planned_time || '';
   document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
-  document.getElementById('schedEditStatus').value = sched.status || 'pending';
-  
+  document.getElementById('schedEditStatus').value = sched.status || 'requested';
+
+  // Photos & Notes
+  const beforePhotos = Array.isArray(sched.before_photos) ? sched.before_photos.filter(Boolean) : [];
+  const afterPhotos = Array.isArray(sched.after_photos) ? sched.after_photos.filter(Boolean) : [];
+  const hasPhotos = beforePhotos.length > 0 || afterPhotos.length > 0;
+
+  const photoSection = document.getElementById('schedPhotosSection');
+  const photoContent = document.getElementById('schedPhotosContent');
+  if (hasPhotos) {
+    let html = '';
+    if (beforePhotos.length) {
+      html += '<div class="admin-photo-label">Before (' + beforePhotos.length + ')</div>';
+      html += '<div class="admin-photo-row">' + beforePhotos.map((url, i) =>
+        '<img class="admin-photo-thumb" src="' + url + '" onclick="event.stopPropagation();openAdminLb(this,' + i + ')">'
+      ).join('') + '</div>';
+    }
+    if (afterPhotos.length) {
+      html += '<div class="admin-photo-label">After (' + afterPhotos.length + ')</div>';
+      html += '<div class="admin-photo-row">' + afterPhotos.map((url, i) =>
+        '<img class="admin-photo-thumb" src="' + url + '" onclick="event.stopPropagation();openAdminLb(this,' + i + ')">'
+      ).join('') + '</div>';
+    }
+    photoContent.innerHTML = html;
+    photoSection.style.display = '';
+  } else {
+    photoSection.style.display = 'none';
+  }
+
+  const notesSection = document.getElementById('schedNotesSection');
+  const notesContent = document.getElementById('schedNotesContent');
+  if (sched.worker_notes) {
+    notesContent.textContent = sched.worker_notes;
+    notesSection.style.display = '';
+  } else {
+    notesSection.style.display = 'none';
+  }
+
   // Load workers with distance sorting
   await loadWorkerSchedulesForDate(sched.planned_date);
   renderWorkerCheckboxList(prop.area);
@@ -2814,7 +2885,7 @@ function toggleWorkerSelection(workerId) {
   // Auto-update status to scheduled if workers assigned
   if (selectedWorkerIds.length > 0) {
     const statusEl = document.getElementById('schedEditStatus');
-    if (statusEl.value === 'pending') {
+    if (statusEl.value === 'requested') {
       statusEl.value = 'scheduled';
     }
   }
@@ -3046,7 +3117,7 @@ async function loadJobRequests() {
   }
 
   // Stats
-  const pending = data.filter(j => j.status === 'pending').length;
+  const pending = data.filter(j => j.status === 'requested').length;
   const confirmed = data.filter(j => j.status === 'confirmed').length;
   const inProgress = data.filter(j => j.status === 'in_progress').length;
   const completed = data.filter(j => j.status === 'completed').length;
@@ -3070,7 +3141,7 @@ function renderJobRequests(list) {
     const category = (j.category || '—').replace(/_/g, ' ');
     const urgency = j.urgency === 'same_day' ? '⚡ Same Day' : j.urgency === 'after_hours' ? '🌙 After Hrs' : 'Standard';
     const estimate = j.sh_estimate ? `${j.sh_estimate}${j.sh_multiplier > 1 ? '×'+j.sh_multiplier : ''}` : '—';
-    const badgeClass = j.status || 'pending';
+    const badgeClass = j.status || 'requested';
     
     return `<tr>
       <td style="color:var(--text-light);">${d}</td>
@@ -3078,7 +3149,7 @@ function renderJobRequests(list) {
       <td style="text-transform:capitalize;">${category}</td>
       <td style="font-size:12px;">${urgency}</td>
       <td>${estimate} SH</td>
-      <td><span class="badge badge-${badgeClass}">${j.status || 'pending'}</span></td>
+      <td><span class="badge badge-${badgeClass}">${j.status || 'requested'}</span></td>
       <td class="action-cell">
         <button class="btn-action-sm" onclick="openJobEditModal('${j.id}')">Edit</button>
       </td>
@@ -3104,7 +3175,7 @@ async function openJobEditModal(jobId) {
   if (!allWorkers.length) await loadWorkersForDropdowns();
   
   document.getElementById('jobEditId').value = jobId;
-  document.getElementById('jobEditStatus').value = job.status || 'pending';
+  document.getElementById('jobEditStatus').value = job.status || 'requested';
   document.getElementById('jobEditDate').value = job.scheduled_date || job.preferred_date || '';
   document.getElementById('jobEditTime').value = job.scheduled_time || '';
   document.getElementById('jobEditWorker').value = job.assigned_worker_id || '';
@@ -3361,7 +3432,7 @@ async function loadDashboard() {
       cleaningsRes
     ] = await Promise.all([
       // Pending job requests
-      sb.from('service_requests').select('id').eq('status', 'pending'),
+      sb.from('service_requests').select('id').eq('status', 'requested'),
       // All active/suspended subscriptions
       sb.from('subscriptions').select('id, status, plan_type, user_id, property_id, cleaning_hours_total, cleaning_hours_used').in('status', ['active', 'suspended']),
       // All properties
@@ -3480,7 +3551,7 @@ async function loadUpcomingCleanings() {
     .select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers')
     .gte('planned_date', today)
     .lte('planned_date', weekLater)
-    .in('status', ['pending', 'scheduled', 'confirmed'])
+    .in('status', ['requested', 'scheduled', 'confirmed'])
     .order('planned_date', { ascending: true })
     .order('planned_time', { ascending: true })
     .limit(10);
@@ -3520,7 +3591,7 @@ async function loadUpcomingCleanings() {
       workerDisplay = `${workerMap[workerIds[0]]?.full_name || '?'} +${workerIds.length - 1}`;
     }
     
-    const badgeClass = c.status === 'pending' ? 'pending' : 'scheduled';
+    const badgeClass = c.status === 'requested' ? 'pending' : 'scheduled';
     
     return `<tr>
       <td style="font-weight:600;">${d}</td>
@@ -4263,6 +4334,42 @@ async function performConfirmedDelete() {
     el.style.display = lang === 'ko' ? '' : 'none';
   });
 })();
+</script>
+
+<!-- Admin Photo Lightbox -->
+<div class="admin-lightbox" id="adminLightbox" onclick="if(event.target===this)closeAdminLb()">
+  <button class="admin-lb-close" onclick="closeAdminLb()">×</button>
+  <img id="adminLbImage" src="">
+  <div class="admin-lb-label" id="adminLbLabel"></div>
+  <div class="admin-lb-nav">
+    <button onclick="navAdminLb(-1)">← Prev</button>
+    <button onclick="navAdminLb(1)">Next →</button>
+  </div>
+</div>
+<script>
+let adminLbImages = [], adminLbIndex = 0;
+function openAdminLb(imgEl, idx) {
+  const row = imgEl.closest('.admin-photo-row');
+  adminLbImages = Array.from(row.querySelectorAll('img')).map(i => i.src);
+  adminLbIndex = idx;
+  updateAdminLb();
+  document.getElementById('adminLightbox').classList.add('open');
+}
+function closeAdminLb() { document.getElementById('adminLightbox').classList.remove('open'); }
+function navAdminLb(dir) {
+  adminLbIndex = (adminLbIndex + dir + adminLbImages.length) % adminLbImages.length;
+  updateAdminLb();
+}
+function updateAdminLb() {
+  document.getElementById('adminLbImage').src = adminLbImages[adminLbIndex];
+  document.getElementById('adminLbLabel').textContent = 'Photo ' + (adminLbIndex + 1) + ' of ' + adminLbImages.length;
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('adminLightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') closeAdminLb();
+  if (e.key === 'ArrowLeft') navAdminLb(-1);
+  if (e.key === 'ArrowRight') navAdminLb(1);
+});
 </script>
 </body>
 </html>
