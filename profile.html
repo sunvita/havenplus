@@ -1303,9 +1303,9 @@
 
 <!-- Property Area Edit Modal -->
 <div class="modal-overlay" id="propAreaModal" onclick="if(event.target===this)closePropAreaModal()">
-  <div class="modal-box" style="max-width:400px;">
+  <div class="modal-box" style="max-width:480px;">
     <div class="modal-header">
-      <div class="modal-title">Edit Property Area</div>
+      <div class="modal-title">Edit Property</div>
       <button class="modal-close" onclick="closePropAreaModal()">×</button>
     </div>
     <div class="modal-body">
@@ -1313,11 +1313,38 @@
       <input type="hidden" id="propAreaEditId">
       <div class="modal-form-group">
         <label>Address</label>
-        <input type="text" id="propAreaAddress" disabled style="background:#f5f5f5;">
+        <input type="text" id="propAreaAddress">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="modal-form-group">
+          <label>Suburb</label>
+          <input type="text" id="propAreaSuburb">
+        </div>
+        <div class="modal-form-group">
+          <label>Postcode</label>
+          <input type="text" id="propEditPostcode" maxlength="4">
+        </div>
       </div>
       <div class="modal-form-group">
-        <label>Suburb</label>
-        <input type="text" id="propAreaSuburb" disabled style="background:#f5f5f5;">
+        <label>Property Type</label>
+        <select id="propEditType">
+          <option value="house">House</option>
+          <option value="apartment">Apartment</option>
+          <option value="townhouse">Townhouse</option>
+          <option value="unit">Unit</option>
+          <option value="studio">Studio</option>
+          <option value="villa">Villa</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="modal-form-group">
+          <label>Bedrooms</label>
+          <input type="number" id="propEditBedrooms" min="0" max="20">
+        </div>
+        <div class="modal-form-group">
+          <label>Bathrooms</label>
+          <input type="number" id="propEditBathrooms" min="0" max="20">
+        </div>
       </div>
       <div class="modal-form-group">
         <label>Area</label>
@@ -1326,6 +1353,10 @@
         </select>
       </div>
       <div id="propAreaSuggestion" style="font-size:12px;color:var(--text-light);margin-top:-8px;margin-bottom:16px;"></div>
+      <div class="modal-form-group">
+        <label>Access Instructions</label>
+        <textarea id="propEditAccess" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;resize:vertical;" placeholder="e.g. Key under pot, gate code 1234…"></textarea>
+      </div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closePropAreaModal()">Cancel</button>
         <button class="modal-btn modal-btn-primary" id="btnSavePropArea" onclick="savePropArea()">Save</button>
@@ -3781,7 +3812,7 @@ async function loadProperties() {
   initAreaDropdowns();
 
   const { data } = await sb.from('properties')
-    .select('id, address, suburb, area, property_type, bedrooms, bathrooms, user_id')
+    .select('id, address, suburb, postcode, area, property_type, bedrooms, bathrooms, access_instructions, user_id')
     .order('created_at', { ascending: false }).limit(200);
     
   if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No properties found.</td></tr>'; return; }
@@ -3827,7 +3858,7 @@ function renderProperties(list) {
       <td>${p.bedrooms || '—'} / ${p.bathrooms || '—'}</td>
       <td>${p.owner}</td>
       <td class="action-cell">
-        <button class="btn-action-sm" onclick="openPropAreaModal('${p.id}')">Edit Area</button>
+        <button class="btn-action-sm" onclick="openPropAreaModal('${p.id}')">Edit</button>
       </td>
     </tr>`;
   }).join('');
@@ -3849,14 +3880,19 @@ function filterProperties() {
 function openPropAreaModal(propId) {
   const prop = allPropertiesData.find(p => p.id === propId);
   if (!prop) return;
-  
+
   document.getElementById('propAreaEditId').value = propId;
   document.getElementById('propAreaAddress').value = prop.address || '';
   document.getElementById('propAreaSuburb').value = prop.suburb || '';
+  document.getElementById('propEditPostcode').value = prop.postcode || '';
+  document.getElementById('propEditType').value = (prop.property_type || 'house').toLowerCase();
+  document.getElementById('propEditBedrooms').value = prop.bedrooms || '';
+  document.getElementById('propEditBathrooms').value = prop.bathrooms || '';
+  document.getElementById('propEditAccess').value = prop.access_instructions || '';
   document.getElementById('propAreaSelect').value = prop.area || '';
   document.getElementById('propAreaAlert').className = 'modal-alert';
   document.getElementById('propAreaAlert').textContent = '';
-  
+
   // Show suggestion using enhanced matching
   const suggestion = enhancedAreaMatch(prop.suburb, prop.address);
   const suggEl = document.getElementById('propAreaSuggestion');
@@ -3881,20 +3917,33 @@ function closePropAreaModal() {
 
 async function savePropArea() {
   const id = document.getElementById('propAreaEditId').value;
-  const area = document.getElementById('propAreaSelect').value;
   const alertEl = document.getElementById('propAreaAlert');
-  
+
+  const payload = {
+    address: document.getElementById('propAreaAddress').value.trim(),
+    suburb: document.getElementById('propAreaSuburb').value.trim(),
+    postcode: document.getElementById('propEditPostcode').value.trim(),
+    property_type: document.getElementById('propEditType').value,
+    bedrooms: parseInt(document.getElementById('propEditBedrooms').value) || null,
+    bathrooms: parseInt(document.getElementById('propEditBathrooms').value) || null,
+    access_instructions: document.getElementById('propEditAccess').value.trim() || null,
+    area: document.getElementById('propAreaSelect').value || null
+  };
+
+  if (!payload.address || !payload.suburb) {
+    alertEl.textContent = 'Address and suburb are required.';
+    alertEl.className = 'modal-alert error';
+    return;
+  }
+
   const btn = document.getElementById('btnSavePropArea');
   btn.disabled = true; btn.textContent = 'Saving…';
-  
+
   try {
-    const { error } = await sb.from('properties').update({
-      area: area || null
-    }).eq('id', id);
-    
+    const { error } = await sb.from('properties').update(payload).eq('id', id);
     if (error) throw error;
-    
-    showToast('Property area updated');
+
+    showToast('Property updated');
     closePropAreaModal();
     loadProperties();
   } catch(e) {
