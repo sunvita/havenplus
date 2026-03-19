@@ -1444,7 +1444,7 @@ async function confirmStartJob() {
     startTimer();
     closeBeforeModal();
     showToast('Job started! 🚀', 'success');
-    loadTodayJobs();
+    loadAllData();
   } catch(e) {
     showToast('Failed to start job', 'error');
     console.error(e);
