@@ -270,55 +270,6 @@ body {
   color: var(--text-secondary);
   margin-bottom: 10px;
 }
-.job-top-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.job-type-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-.job-date {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-.job-prop-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  align-items: center;
-}
-.job-prop-info span {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.job-prop-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: var(--blue-bg);
-  color: var(--blue);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-}
-.job-notes {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  line-height: 1.4;
-}
-.job-notes-icon { flex-shrink: 0; }
 .job-meta {
   display: flex;
   gap: 12px;
@@ -364,6 +315,16 @@ body {
 .job-btn-primary:hover { background: #0ca678; }
 .job-btn-complete { background: var(--accent); color: white; }
 .job-btn-complete:hover { background: #e55d2b; }
+.job-btn-locked { background: #f0f0f0; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; font-size: 11px; }
+
+/* Filter chips */
+.filter-chip {
+  padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+  background: white; font-size: 12px; font-weight: 600; font-family: inherit;
+  color: var(--text-secondary); cursor: pointer; transition: all .15s;
+}
+.filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+.filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
 /* Timer */
 .job-timer {
@@ -729,44 +690,29 @@ body {
             <div class="summary-headline" id="summaryHeadline">Loading...</div>
             <div class="summary-stats">
               <div class="summary-stat">
-                <div class="summary-stat-value" id="summaryJobs">0</div>
-                <div class="summary-stat-label">jobs today</div>
+                <div class="summary-stat-value" id="summaryToday">0</div>
+                <div class="summary-stat-label">today</div>
               </div>
               <div class="summary-stat">
-                <div class="summary-stat-value" id="summaryHours">0h</div>
-                <div class="summary-stat-label">total hours</div>
+                <div class="summary-stat-value" id="summaryWeek">0</div>
+                <div class="summary-stat-label">this week</div>
               </div>
               <div class="summary-stat">
-                <div class="summary-stat-value" id="summaryEarning">$0</div>
-                <div class="summary-stat-label">potential</div>
+                <div class="summary-stat-value" id="summaryMonth">0</div>
+                <div class="summary-stat-label">this month</div>
               </div>
             </div>
           </div>
 
-          <!-- Today's Jobs -->
-          <div class="section-header">
-            <div class="section-title">Today</div>
-            <div class="section-badge" id="todayBadge">0</div>
+          <!-- Filter chips -->
+          <div style="display:flex;gap:6px;margin-top:16px;margin-bottom:4px;" id="jobFilterChips">
+            <button class="filter-chip active" onclick="filterJobs('all',this)">All</button>
+            <button class="filter-chip" onclick="filterJobs('cleaning',this)">🧹 Cleaning</button>
+            <button class="filter-chip" onclick="filterJobs('service',this)">🔧 Service</button>
           </div>
-          <div id="todayJobs"></div>
 
-          <!-- This Week -->
-          <div class="section-header" style="margin-top: 24px;">
-            <div class="section-title">This Week</div>
-          </div>
-          <div class="earnings-summary">
-            <div class="earnings-row">
-              <div class="earnings-box">
-                <div class="earnings-value green" id="weekCompleted">$0</div>
-                <div class="earnings-label">Completed</div>
-              </div>
-              <div class="earnings-box">
-                <div class="earnings-value blue" id="weekPotential">$0</div>
-                <div class="earnings-label">Potential</div>
-              </div>
-            </div>
-          </div>
-          <div class="week-list" id="weekList"></div>
+          <!-- All Jobs grouped by date -->
+          <div id="allJobsList"></div>
         </div>
       </div>
 
@@ -850,8 +796,9 @@ body {
           </div>
 
           <div class="recent-list">
-            <div class="recent-header">Recent Earnings</div>
+            <div class="recent-header">Earnings History</div>
             <div id="recentEarnings"></div>
+            <button class="btn-load-more" id="btnLoadMoreEarnings" onclick="loadMoreEarnings()" style="display:none;width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:white;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-top:8px;">Load more</button>
           </div>
 
           <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
@@ -864,8 +811,8 @@ body {
 <!-- Bottom Tabs (outside main-app for fixed positioning) -->
 <nav class="bottom-tabs" id="bottomTabs" style="display:none;">
   <button class="tab-btn active" data-tab="tabHome" onclick="switchTab('tabHome')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Home</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Jobs</span>
   </button>
   <button class="tab-btn" data-tab="tabTraining" onclick="switchTab('tabTraining')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -877,7 +824,34 @@ body {
   </button>
 </nav>
 
-<!-- Complete Modal -->
+<!-- Before Photos Modal (shown on Start Job) -->
+<div class="modal-overlay" id="beforeModal" onclick="if(event.target===this)closeBeforeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Start Job — Before Photos</div>
+      <button class="modal-close" onclick="closeBeforeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-section">
+        <div class="photo-title">📷 Before Photos (minimum 1)</div>
+        <div class="photo-grid" id="beforePhotoGrid">
+          <label class="photo-add">
+            <input type="file" accept="image/*" capture="environment" multiple hidden onchange="handleBeforePhotos(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Add</span>
+          </label>
+        </div>
+        <div class="photo-count" id="beforePhotoCount">0 / 1 photos</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeBeforeModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnStartConfirm" onclick="confirmStartJob()" disabled>Start Job</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Modal (After Photos + Notes) -->
 <div class="modal-overlay" id="completeModal" onclick="if(event.target===this)closeCompleteModal()">
   <div class="modal-box">
     <div class="modal-header">
@@ -895,6 +869,10 @@ body {
           </label>
         </div>
         <div class="photo-count" id="photoCount">0 / 3 photos</div>
+      </div>
+      <div class="photo-section" style="margin-top:12px;">
+        <div class="photo-title">📝 Notes (optional)</div>
+        <textarea id="workerNotes" placeholder="Any notes about this job..." style="width:100%;min-height:70px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
       </div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeCompleteModal()">Cancel</button>
@@ -924,6 +902,9 @@ let sb, currentWorker = null;
 let todayJobs = [], weekJobs = [];
 let activeJobId = null, jobStartTime = null, timerInterval = null;
 let photos = [];
+let beforePhotos = [];
+let pendingStartJobId = null;
+let pendingStartJobType = 'cleaning';
 
 // ═══ Init ═══
 document.addEventListener('DOMContentLoaded', () => {
@@ -1034,289 +1015,374 @@ function switchTab(tabId) {
 
 // ═══ Load Data ═══
 async function loadAllData() {
-  await Promise.all([loadTodayJobs(), loadWeekData()]);
+  await loadAllJobs();
 }
 
-async function loadTodayJobs() {
-  const container = document.getElementById('todayJobs');
-  container.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div></div>';
-  
+let currentJobFilter = 'all';
+let allMyJobs = [];
+
+function filterJobs(type, btn) {
+  currentJobFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderAllJobs();
+}
+
+async function loadAllJobs() {
+  const container = document.getElementById('allJobsList');
+  container.innerHTML = '<div class="empty-state"><div class="empty-text">Loading...</div></div>';
+
   try {
-    const today = new Date().toISOString().split('T')[0];
-    
-    const { data, error } = await sb.from('cleaning_schedule')
-      .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
-      .eq('planned_date', today)
-      .in('status', ['scheduled', 'confirmed', 'in_progress'])
-      .order('planned_time');
-    
-    if (error) throw error;
-    
-    todayJobs = (data || []).filter(job => {
-      if (job.assigned_workers?.includes(currentWorker.id)) return true;
-      if (job.assigned_worker_id === currentWorker.id) return true;
-      return false;
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const weekEnd = new Date(today);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekEndStr = weekEnd.toISOString().split('T')[0];
+
+    const [cleanRes, srRes] = await Promise.all([
+      sb.from('cleaning_schedule')
+        .select('*, properties(address, suburb, area, bedrooms, bathrooms)')
+        .gte('planned_date', todayStr)
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
+        .order('planned_date').order('planned_time'),
+      sb.from('service_requests')
+        .select('*, properties(address, suburb, area)')
+        .gte('scheduled_date', todayStr)
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
+        .order('scheduled_date')
+    ]);
+
+    const myJobs = [
+      ...(cleanRes.data || []).filter(j =>
+        j.assigned_workers?.includes(currentWorker.id) || j.assigned_worker_id === currentWorker.id
+      ).map(j => ({ ...j, job_type: 'cleaning' })),
+      ...(srRes.data || []).filter(j =>
+        j.assigned_worker_id === currentWorker.id
+      ).map(j => ({
+        ...j, job_type: 'service',
+        planned_date: j.scheduled_date,
+        planned_time: j.scheduled_time,
+        duration_hours: j.sh_estimate || 1
+      }))
+    ].sort((a, b) => {
+      const da = a.planned_date || '9999'; const db = b.planned_date || '9999';
+      if (da !== db) return da.localeCompare(db);
+      return (a.planned_time || '99:99').localeCompare(b.planned_time || '99:99');
     });
-    
-    const rate = currentWorker.cleaning_rate || HOURLY_RATE;
-    const totalHours = todayJobs.reduce((sum, j) => sum + (j.duration_hours || 2), 0);
-    const potential = totalHours * rate;
-    
-    document.getElementById('summaryJobs').textContent = todayJobs.length;
-    document.getElementById('summaryHours').textContent = totalHours + 'h';
-    document.getElementById('summaryEarning').textContent = '$' + potential;
-    document.getElementById('summaryHeadline').textContent = todayJobs.length 
-      ? `You have ${todayJobs.length} job${todayJobs.length > 1 ? 's' : ''} today`
-      : 'No jobs scheduled today';
-    document.getElementById('todayBadge').textContent = todayJobs.length;
-    
-    if (!todayJobs.length) {
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-text">No jobs today. Enjoy your day!</div></div>';
-      return;
+
+    allMyJobs = myJobs;
+    window._todayStr = todayStr;
+    window._weekEndStr = weekEndStr;
+
+    /* Summary counts */
+    const todayCount = myJobs.filter(j => j.planned_date === todayStr).length;
+    const weekCount = myJobs.filter(j => j.planned_date <= weekEndStr).length;
+    const monthCount = myJobs.length;
+
+    document.getElementById('summaryToday').textContent = todayCount;
+    document.getElementById('summaryWeek').textContent = weekCount;
+    document.getElementById('summaryMonth').textContent = monthCount;
+
+    /* Smart headline */
+    if (todayCount) {
+      document.getElementById('summaryHeadline').textContent = 'You have ' + todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today';
+    } else if (myJobs.length) {
+      const nextJob = myJobs[0];
+      const nextDate = new Date(nextJob.planned_date + 'T00:00:00');
+      const diffDays = Math.ceil((nextDate - new Date(todayStr + 'T00:00:00')) / 86400000);
+      document.getElementById('summaryHeadline').textContent = '1 job in ' + diffDays + ' day' + (diffDays > 1 ? 's' : '') + ', ' + monthCount + ' this month';
+    } else {
+      document.getElementById('summaryHeadline').textContent = 'No upcoming jobs';
     }
-    
-    const inProgress = todayJobs.find(j => j.status === 'in_progress');
+
+    /* Detect in-progress job */
+    const inProgress = myJobs.find(j => j.status === 'in_progress');
     if (inProgress?.actual_start) {
       activeJobId = inProgress.id;
       jobStartTime = new Date(inProgress.actual_start);
       startTimer();
     }
-    
-    container.innerHTML = todayJobs.map((job, idx) => renderJobCard(job, idx === 0 && !inProgress)).join('');
+
+    renderAllJobs();
+
   } catch(e) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Failed to load</div></div>';
+    document.getElementById('allJobsList').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">Failed to load jobs</div></div>';
     console.error(e);
   }
 }
 
-async function loadWeekData() {
-  try {
-    const today = new Date();
-    const weekEnd = new Date(today);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    
-    const { data, error } = await sb.from('cleaning_schedule')
-      .select('*, properties(address, suburb, property_type, notes, bedrooms, bathrooms)')
-      .gte('planned_date', today.toISOString().split('T')[0])
-      .lte('planned_date', weekEnd.toISOString().split('T')[0])
-      .order('planned_date')
-      .order('planned_time');
-    
-    if (error) throw error;
-    
-    weekJobs = (data || []).filter(job => {
-      if (job.assigned_workers?.includes(currentWorker.id)) return true;
-      if (job.assigned_worker_id === currentWorker.id) return true;
-      return false;
-    });
-    
-    const rate = currentWorker.cleaning_rate || HOURLY_RATE;
-    const completed = weekJobs.filter(j => j.status === 'completed');
-    const upcoming = weekJobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled');
-    
-    const completedEarnings = completed.reduce((sum, j) => sum + ((j.duration_hours || 2) * rate), 0);
-    const potentialEarnings = upcoming.reduce((sum, j) => sum + ((j.duration_hours || 2) * rate), 0);
-    
-    document.getElementById('weekCompleted').textContent = '$' + completedEarnings;
-    document.getElementById('weekPotential').textContent = '$' + potentialEarnings;
-    
-    // Group upcoming by date
-    const todayStr = today.toISOString().split('T')[0];
-    const grouped = {};
-    upcoming.filter(j => j.planned_date !== todayStr).forEach(job => {
-      if (!grouped[job.planned_date]) grouped[job.planned_date] = [];
-      grouped[job.planned_date].push(job);
-    });
-    
-    const weekListEl = document.getElementById('weekList');
-    if (!Object.keys(grouped).length) {
-      weekListEl.innerHTML = '<div class="empty-state"><div class="empty-text">No upcoming jobs this week</div></div>';
-      return;
-    }
-    
-    weekListEl.innerHTML = Object.entries(grouped).slice(0, 5).map(([date, jobs]) => {
-      const d = new Date(date);
-      const dayName = d.toLocaleDateString('en-AU', { weekday: 'short' });
-      const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-      const totalEarning = jobs.reduce((sum, j) => sum + ((j.duration_hours || 2) * rate), 0);
-      
-      return `<div class="week-item">
-        <div>
-          <div class="week-day">${dayName}</div>
-          <div class="week-date">${dateStr}</div>
-        </div>
-        <div class="week-info">
-          <div class="week-jobs">${jobs.length} job${jobs.length > 1 ? 's' : ''}</div>
-          <div class="week-earning">$${totalEarning}</div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    console.error(e);
+function renderAllJobs() {
+  const container = document.getElementById('allJobsList');
+  const todayStr = window._todayStr;
+  const jobs = currentJobFilter === 'all' ? allMyJobs : allMyJobs.filter(j => j.job_type === currentJobFilter);
+
+  if (!jobs.length) {
+    const msg = currentJobFilter === 'all' ? 'No upcoming jobs assigned to you.' : 'No ' + currentJobFilter + ' jobs.';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">' + msg + '</div></div>';
+    return;
   }
+
+  const inProgress = jobs.find(j => j.status === 'in_progress');
+  const grouped = {};
+  jobs.forEach(j => {
+    const d = j.planned_date || 'unscheduled';
+    if (!grouped[d]) grouped[d] = [];
+    grouped[d].push(j);
+  });
+
+  let html = '';
+  for (const [date, dateJobs] of Object.entries(grouped)) {
+    const isToday = date === todayStr;
+    const d = new Date(date + 'T00:00:00');
+    const dayLabel = isToday ? 'Today'
+      : d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+    const labelStyle = isToday ? ' style="color:var(--accent);font-weight:800;"' : '';
+
+    html += '<div class="section-header" style="margin-top:20px;">';
+    html += '<div class="section-title"' + labelStyle + '>' + dayLabel + '</div>';
+    html += '<div class="section-badge">' + dateJobs.length + '</div>';
+    html += '</div>';
+    html += dateJobs.map((job, idx) => renderJobCard(job, isToday && idx === 0 && !inProgress, todayStr)).join('');
+  }
+  container.innerHTML = html;
 }
 
-function getJobTypeIcon(job) {
-  const type = (job.cleaning_type || job.type || 'cleaning').toLowerCase();
-  if (type === 'service' || type === 'maintenance' || type === 'repair') return '🔧';
-  return '🧹';
-}
-
-function getJobTypeLabel(job) {
-  const type = (job.cleaning_type || job.type || 'cleaning').toLowerCase();
-  if (type === 'service' || type === 'maintenance' || type === 'repair') return 'Service';
-  return 'Cleaning';
-}
-
-function formatJobDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  const day = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-  const weekday = d.toLocaleDateString('en-AU', { weekday: 'short' });
-  return `${day} ${weekday}`;
-}
-
-function getPropertyTypeLabel(prop) {
-  const type = (prop.property_type || prop.type || '').toLowerCase();
-  if (type === 'apartment' || type === 'apt') return '🏢 Apt';
-  if (type === 'townhouse') return '🏘 Townhouse';
-  if (type === 'studio') return '🏠 Studio';
-  if (type === 'unit') return '🏢 Unit';
-  if (type === 'villa') return '🏡 Villa';
-  if (type) return '🏠 ' + type.charAt(0).toUpperCase() + type.slice(1);
-  return '🏠 House';
-}
-
-function renderJobCard(job, isNext = false) {
+function renderJobCard(job, isNext, todayStr) {
   const prop = job.properties || {};
   const isInProgress = job.status === 'in_progress';
-  const rate = currentWorker.cleaning_rate || HOURLY_RATE;
-  const earnings = (job.duration_hours || 2) * rate;
+  const isToday = job.planned_date === todayStr;
   const cardClass = isInProgress ? 'in-progress' : (isNext ? 'next-up' : '');
-  const badge = isInProgress ? '<span class="job-badge progress">In Progress</span>' : (isNext ? '<span class="job-badge next">Next</span>' : '');
-  const typeIcon = getJobTypeIcon(job);
-  const typeLabel = getJobTypeLabel(job);
-  const dateStr = formatJobDate(job.planned_date);
-  const propType = getPropertyTypeLabel(prop);
-  const notes = job.notes || job.special_instructions || prop.notes || '';
+  const badge = isInProgress ? '<span class="job-badge progress">In Progress</span>'
+    : (isNext ? '<span class="job-badge next">Next</span>' : '');
+
+  const isService = job.job_type === 'service';
+  const typeIcon = isService ? '🔧' : '🧹';
+  const typeLabel = isService ? 'Service' : 'Cleaning';
+  const categoryLabel = isService && job.category ? ' · ' + job.category.replace(/_/g, ' ') : '';
+
+  /* Date + time line */
+  const jobDate = new Date(job.planned_date + 'T00:00:00');
+  const dateLabel = isToday ? 'Today'
+    : jobDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+  const timeLabel = job.planned_time || '';
+  const dateTimeStr = dateLabel + (timeLabel ? ' · ' + timeLabel : '');
+
+  /* Address single line */
+  const addrLine = (prop.address || 'Unknown') + (prop.suburb ? ', ' + prop.suburb : '');
+  const navAddr = ((prop.address||'') + ', ' + (prop.suburb||'')).replace(/'/g, "\\'");
 
   let actions = '';
   if (isInProgress) {
-    actions = `
-      <div class="job-timer">
-        <span class="job-timer-label">Elapsed</span>
-        <span class="job-timer-value" id="timer-${job.id}">00:00:00</span>
-      </div>
-      <div class="job-actions">
-        <button class="job-btn job-btn-complete" onclick="openCompleteModal('${job.id}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          Complete Job
-        </button>
-      </div>`;
+    actions = '<div class="job-timer">'
+      + '<span class="job-timer-label">Elapsed</span>'
+      + '<span class="job-timer-value" id="timer-' + job.id + '">00:00:00</span>'
+      + '</div>'
+      + '<div class="job-actions">'
+      + '<button class="job-btn job-btn-complete" onclick="openCompleteModal(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+      + ' Complete Job</button></div>';
+  } else if (isToday) {
+    actions = '<div class="job-actions">'
+      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      + ' Navigate</button>'
+      + '<button class="job-btn job-btn-primary" onclick="startJob(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
+      + ' Start</button></div>';
   } else {
-    actions = `
-      <div class="job-actions">
-        <button class="job-btn job-btn-secondary" onclick="navigate('${prop.address}, ${prop.suburb}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          Navigate
-        </button>
-        <button class="job-btn job-btn-primary" onclick="startJob('${job.id}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Start
-        </button>
-      </div>`;
+    const lockLabel = jobDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+    actions = '<div class="job-actions">'
+      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      + ' Navigate</button>'
+      + '<button class="job-btn job-btn-locked" disabled>'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+      + ' Starts ' + lockLabel + '</button></div>';
   }
 
-  const notesHtml = notes ? `<div class="job-notes"><span class="job-notes-icon">📝</span> ${notes}</div>` : '';
+  const metaInfo = isService
+    ? '<span>' + typeIcon + ' ' + typeLabel + categoryLabel + '</span><span>⏱ ' + (job.duration_hours || 1) + 'h</span>'
+    : '<span>' + typeIcon + ' ' + typeLabel + '</span><span>🛏 ' + (prop.bedrooms || '?') + ' 🚿 ' + (prop.bathrooms || '?') + '</span><span>⏱ ' + (job.duration_hours || 2) + 'h</span>';
 
-  return `
-    <div class="job-card ${cardClass}">
-      <div class="job-card-top">
-        <div class="job-time">${job.planned_time || '—'}</div>
-        <div class="job-top-right">
-          ${badge}
-          <span class="job-type-icon" title="${typeLabel}">${typeIcon}</span>
-          <span class="job-date">${dateStr}</span>
-        </div>
-      </div>
-      <div class="job-address">${prop.address || 'Unknown'}</div>
-      <div class="job-suburb">${prop.suburb || ''}</div>
-      <div class="job-prop-info">
-        <span class="job-prop-tag">${propType}</span>
-        <span>🛏 ${prop.bedrooms || '?'}</span>
-        <span>🚿 ${prop.bathrooms || '?'}</span>
-        <span>⏱ ${job.duration_hours || 2}h</span>
-      </div>
-      ${notesHtml}
-      <div class="job-earning">$${earnings}</div>
-      ${actions}
-    </div>`;
+  return '<div class="job-card ' + cardClass + '">'
+    + '<div class="job-card-top"><div class="job-time">' + dateTimeStr + '</div>' + badge + '</div>'
+    + '<div class="job-address">' + addrLine + '</div>'
+    + '<div class="job-meta">' + metaInfo + '</div>'
+    + actions + '</div>';
 }
 
-// ═══ Me Tab ═══
+
+let earningsPage = 0;
+const EARNINGS_PER_PAGE = 10;
+let allEarningsJobs = [];
+
 async function loadMeTab() {
   try {
+    earningsPage = 0;
+    const [cleanRes, srRes] = await Promise.all([
+      sb.from('cleaning_schedule')
+        .select('id, planned_date, duration_hours, assigned_worker_id, assigned_workers, properties(address, suburb)')
+        .eq('status', 'completed')
+        .order('planned_date', { ascending: false }).limit(100),
+      sb.from('service_requests')
+        .select('id, scheduled_date, sh_used, category, assigned_worker_id, properties(address, suburb)')
+        .eq('status', 'completed')
+        .order('scheduled_date', { ascending: false }).limit(100)
+    ]);
+
+    const myCleaningJobs = (cleanRes.data || []).filter(j =>
+      j.assigned_workers?.includes(currentWorker.id) || j.assigned_worker_id === currentWorker.id
+    ).map(j => ({ ...j, job_type: 'cleaning' }));
+
+    const myServiceJobs = (srRes.data || []).filter(j =>
+      j.assigned_worker_id === currentWorker.id
+    ).map(j => ({
+      ...j, job_type: 'service',
+      planned_date: j.scheduled_date,
+      duration_hours: j.sh_used || 1
+    }));
+
+    allEarningsJobs = [...myCleaningJobs, ...myServiceJobs].sort((a, b) =>
+      new Date(b.planned_date) - new Date(a.planned_date)
+    );
+
+    /* This month count */
     const monthStart = new Date();
     monthStart.setDate(1);
-    
-    const { data } = await sb.from('cleaning_schedule')
-      .select('id, planned_date, duration_hours, properties(address)')
-      .eq('status', 'completed')
-      .gte('planned_date', monthStart.toISOString().split('T')[0]);
-    
-    const myJobs = (data || []).filter(job => {
-      if (job.assigned_workers?.includes(currentWorker.id)) return true;
-      if (job.assigned_worker_id === currentWorker.id) return true;
-      return true; // For now, show all
-    });
-    
-    document.getElementById('statMonth').textContent = myJobs.length;
-    
-    const rate = currentWorker.cleaning_rate || HOURLY_RATE;
-    const recentEl = document.getElementById('recentEarnings');
-    
-    if (!myJobs.length) {
-      recentEl.innerHTML = '<div class="recent-item"><div class="recent-date">No completed jobs yet</div></div>';
-      return;
-    }
-    
-    recentEl.innerHTML = myJobs.slice(0, 5).map(job => {
-      const d = new Date(job.planned_date);
-      const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-      const earnings = (job.duration_hours || 2) * rate;
-      
-      return `<div class="recent-item">
-        <div>
-          <div class="recent-date">${dateStr}</div>
-          <div class="recent-address">${job.properties?.address || 'Unknown'}</div>
-        </div>
-        <div class="recent-amount">$${earnings}</div>
-      </div>`;
-    }).join('');
+    const monthStartStr = monthStart.toISOString().split('T')[0];
+    const thisMonthJobs = allEarningsJobs.filter(j => j.planned_date >= monthStartStr);
+    document.getElementById('statMonth').textContent = thisMonthJobs.length;
+
+    renderEarningsPage();
   } catch(e) {
     console.error(e);
   }
 }
 
+function renderEarningsPage() {
+  const rate = currentWorker.cleaning_rate || HOURLY_RATE;
+  const recentEl = document.getElementById('recentEarnings');
+  const btnMore = document.getElementById('btnLoadMoreEarnings');
+  const end = (earningsPage + 1) * EARNINGS_PER_PAGE;
+  const visible = allEarningsJobs.slice(0, end);
+
+  if (!visible.length) {
+    recentEl.innerHTML = '<div class="recent-item"><div class="recent-date">No completed jobs yet</div></div>';
+    btnMore.style.display = 'none';
+    return;
+  }
+
+  recentEl.innerHTML = visible.map(job => {
+    const d = new Date(job.planned_date + 'T00:00:00');
+    const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const earnings = (job.duration_hours || 2) * rate;
+    const typeIcon = job.job_type === 'service' ? '🔧' : '🧹';
+    const typeLabel = job.job_type === 'service'
+      ? (job.category ? job.category.replace(/_/g, ' ') : 'Service')
+      : 'Cleaning';
+    const suburb = job.properties?.suburb || '';
+
+    return `<div class="recent-item">
+      <div>
+        <div class="recent-date">${dateStr}</div>
+        <div class="recent-address">${typeIcon} ${typeLabel} · ${suburb}</div>
+      </div>
+      <div class="recent-amount">$${earnings}</div>
+    </div>`;
+  }).join('');
+
+  btnMore.style.display = end < allEarningsJobs.length ? '' : 'none';
+}
+
+function loadMoreEarnings() {
+  earningsPage++;
+  renderEarningsPage();
+}
+
 // ═══ Job Actions ═══
-async function startJob(jobId) {
+let activeJobType = 'cleaning';
+
+function startJob(jobId, jobType = 'cleaning') {
+  pendingStartJobId = jobId;
+  pendingStartJobType = jobType;
+  beforePhotos = [];
+  updateBeforePhotoGrid();
+  document.getElementById('beforeModal').classList.add('open');
+}
+
+function closeBeforeModal() {
+  document.getElementById('beforeModal').classList.remove('open');
+}
+
+function handleBeforePhotos(input) {
+  Array.from(input.files).forEach(file => {
+    resizeImage(file, 1200, 0.8).then(blob => {
+      beforePhotos.push(blob);
+      updateBeforePhotoGrid();
+    });
+  });
+  input.value = '';
+}
+
+function updateBeforePhotoGrid() {
+  const grid = document.getElementById('beforePhotoGrid');
+  const countEl = document.getElementById('beforePhotoCount');
+  const btn = document.getElementById('btnStartConfirm');
+
+  let html = beforePhotos.map((blob, i) => `
+    <div class="photo-item">
+      <img src="${URL.createObjectURL(blob)}">
+      <button class="photo-remove" onclick="beforePhotos.splice(${i},1);updateBeforePhotoGrid()">×</button>
+    </div>`).join('');
+
+  html += `<label class="photo-add">
+    <input type="file" accept="image/*" capture="environment" multiple hidden onchange="handleBeforePhotos(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>Add</span>
+  </label>`;
+
+  grid.innerHTML = html;
+  const valid = beforePhotos.length >= 1;
+  countEl.textContent = `${beforePhotos.length} / 1 photos`;
+  countEl.className = `photo-count ${valid ? 'valid' : ''}`;
+  btn.disabled = !valid;
+}
+
+async function confirmStartJob() {
+  if (beforePhotos.length < 1) return;
+  const btn = document.getElementById('btnStartConfirm');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
   try {
+    const jobId = pendingStartJobId;
+    const jobType = pendingStartJobType;
+    const urls = await uploadPhotos(beforePhotos, jobId, 'before');
+
     const now = new Date().toISOString();
-    const { error } = await sb.from('cleaning_schedule').update({
+    const table = jobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+
+    const { error } = await sb.from(table).update({
       status: 'in_progress',
-      actual_start: now
+      actual_start: now,
+      before_photos: urls
     }).eq('id', jobId);
-    
+
     if (error) throw error;
-    
+
     activeJobId = jobId;
+    activeJobType = jobType;
     jobStartTime = new Date();
     startTimer();
+    closeBeforeModal();
     showToast('Job started! 🚀', 'success');
     loadTodayJobs();
   } catch(e) {
     showToast('Failed to start job', 'error');
     console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Start Job';
   }
 }
 
@@ -1334,10 +1400,12 @@ function startTimer() {
   }, 1000);
 }
 
-function openCompleteModal(jobId) {
+function openCompleteModal(jobId, jobType = 'cleaning') {
   activeJobId = jobId;
+  activeJobType = jobType;
   photos = [];
   updatePhotoGrid();
+  document.getElementById('workerNotes').value = '';
   document.getElementById('completeModal').classList.add('open');
 }
 
@@ -1347,9 +1415,10 @@ function closeCompleteModal() {
 
 function handlePhotos(input) {
   Array.from(input.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => { photos.push(e.target.result); updatePhotoGrid(); };
-    reader.readAsDataURL(file);
+    resizeImage(file, 1200, 0.8).then(blob => {
+      photos.push(blob);
+      updatePhotoGrid();
+    });
   });
   input.value = '';
 }
@@ -1359,9 +1428,9 @@ function updatePhotoGrid() {
   const countEl = document.getElementById('photoCount');
   const btn = document.getElementById('btnComplete');
   
-  let html = photos.map((src, i) => `
+  let html = photos.map((blob, i) => `
     <div class="photo-item">
-      <img src="${src}">
+      <img src="${URL.createObjectURL(blob)}">
       <button class="photo-remove" onclick="photos.splice(${i},1);updatePhotoGrid()">×</button>
     </div>`).join('');
   
@@ -1380,28 +1449,31 @@ function updatePhotoGrid() {
 
 async function confirmComplete() {
   if (photos.length < 3) return;
-  
+
   const btn = document.getElementById('btnComplete');
   btn.disabled = true;
-  btn.textContent = 'Saving...';
-  
+  btn.textContent = 'Uploading...';
+
   try {
+    const urls = await uploadPhotos(photos, activeJobId, 'after');
+    const notes = document.getElementById('workerNotes').value.trim();
     const now = new Date().toISOString();
     const duration = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : null;
-    
-    const { error } = await sb.from('cleaning_schedule').update({
-      status: 'completed',
-      actual_end: now,
-      actual_duration: duration,
-      after_photos: photos
-    }).eq('id', activeJobId);
-    
+
+    const table = activeJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+
+    const updateData = activeJobType === 'service'
+      ? { status: 'completed', actual_end: now, sh_used: duration, after_photos: urls, worker_notes: notes }
+      : { status: 'completed', actual_end: now, actual_duration: duration, after_photos: urls, worker_notes: notes };
+
+    const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     if (error) throw error;
-    
+
     if (timerInterval) clearInterval(timerInterval);
     activeJobId = null;
+    activeJobType = 'cleaning';
     jobStartTime = null;
-    
+
     closeCompleteModal();
     showToast('Job completed! 🎉', 'success');
     loadAllData();
@@ -1412,6 +1484,43 @@ async function confirmComplete() {
     btn.disabled = false;
     btn.textContent = 'Complete';
   }
+}
+
+/* ── Image resize utility ── */
+function resizeImage(file, maxSize, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const ratio = Math.min(maxSize / w, maxSize / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ── Upload photos to Supabase Storage ── */
+async function uploadPhotos(blobs, jobId, prefix) {
+  const urls = [];
+  for (let i = 0; i < blobs.length; i++) {
+    const ts = Date.now();
+    const path = `${jobId}/${prefix}_${ts}_${i}.jpg`;
+    const { error } = await sb.storage.from('job-photos').upload(path, blobs[i], {
+      contentType: 'image/jpeg',
+      upsert: false,
+    });
+    if (error) throw error;
+    const { data: { publicUrl } } = sb.storage.from('job-photos').getPublicUrl(path);
+    urls.push(publicUrl);
+  }
+  return urls;
 }
 
 function navigate(address) {
