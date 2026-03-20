@@ -1256,6 +1256,17 @@
         <div style="font-size:11px;color:var(--text-light);margin-top:4px;">💡 Status auto-updates to "Scheduled" when team is assigned.</div>
       </div>
       
+      <!-- Reset Schedule -->
+      <div id="schedResetSection" style="margin-top:12px;padding:14px;background:#fff3e0;border-radius:10px;border:1px solid #ffcc80;display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.05em;">Reset Cleaning Schedule</div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Clears start month & deletes future visits. Customer can re-select from dashboard.</div>
+          </div>
+          <button class="btn-action-sm" onclick="resetScheduleFromCleaning()" style="background:#e65100;color:white;border:none;font-size:11px;white-space:nowrap;">Reset Schedule</button>
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeSchedEditModal()">Cancel</button>
         <button class="modal-btn modal-btn-primary" id="btnSaveSched" onclick="saveSchedEdit()">Save Changes</button>
@@ -2970,7 +2981,10 @@ async function openSchedEditModal(schedId) {
   await loadWorkerSchedulesForDate(sched.planned_date);
   renderWorkerCheckboxList(prop.area);
   updateChCalculation();
-  
+
+  // Show reset section only if subscription linked
+  document.getElementById('schedResetSection').style.display = sched.subscription_id ? 'block' : 'none';
+
   document.getElementById('schedEditModal').classList.add('open');
 }
 
@@ -3248,6 +3262,33 @@ function closeSchedEditModal() {
   document.getElementById('schedEditModal').classList.remove('open');
   currentSchedData = null;
   selectedWorkerIds = [];
+}
+
+async function resetScheduleFromCleaning() {
+  if (!currentSchedData) return;
+  const subId = currentSchedData.subscription_id;
+  if (!subId) { showToast('No subscription linked to this cleaning.', true); return; }
+  if (!confirm('Reset cleaning schedule?\n\nThis will:\n• Clear the cleaning start month\n• Delete all future visits (requested/scheduled/confirmed)\n• Customer will need to re-select from dashboard')) return;
+
+  try {
+    const { error } = await sb.from('subscriptions')
+      .update({ cleaning_start_month: null, preferred_week: null, confirmed_date: null })
+      .eq('id', subId);
+    if (error) throw error;
+
+    await sb.from('cleaning_schedule')
+      .delete()
+      .eq('subscription_id', subId)
+      .in('status', ['requested', 'scheduled', 'confirmed']);
+
+    showToast('Cleaning schedule reset. Customer can re-select start month.');
+    closeSchedEditModal();
+    loadSchedules();
+    if (typeof loadCalendar === 'function') loadCalendar();
+  } catch(e) {
+    showToast('Failed to reset: ' + e.message, true);
+    console.error(e);
+  }
 }
 
 async function saveSchedEdit() {
