@@ -1741,12 +1741,11 @@ function renderNotificationsW(notifications) {
   }
   const show = notifShowAllW ? notifications : notifications.slice(0, 5);
   list.innerHTML = show.map(n => {
-    const subtitle = n.message && n.message !== n.title ? n.message.replace(n.title + ' — ', '') : '';
+    const displayTitle = n.message && n.message !== n.title ? n.message : n.title;
     return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markReadW('${n.id}', this)">
       ${notifIconW(n.type)}
       <div class="notif-content">
-        <div class="notif-title">${n.title}</div>
-        ${subtitle ? `<div class="notif-message">${subtitle}</div>` : ''}
+        <div class="notif-title">${displayTitle}</div>
         <div class="notif-time">${timeAgoW(n.created_at)}</div>
       </div>
     </div>`;
