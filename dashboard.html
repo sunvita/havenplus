@@ -2227,6 +2227,7 @@ function renderJobEntry(j) {
       <div class="sh-job-summary-left">
         <div class="sh-job-date">${dateStr}</div>
         <span class="sh-job-type ${typeClass}">${j.label}</span>
+        ${j.duration ? `<span style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-left:6px;">Used ${j.type === 'service' ? 'SH' : 'CH'}: ${j.duration}h</span>` : ''}
       </div>
       <div class="sh-job-summary-right">
         <span class="sh-status ${statusClass}">${statusLabel}</span>

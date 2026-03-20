@@ -1619,20 +1619,48 @@ async function confirmComplete() {
     const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     if (error) throw error;
 
-    // ── Deduct SH from customer's subscription balance ──
+    // ── Deduct hours from customer's balance ──
     const completedJob = allMyJobs.find(j => j.id === activeJobId);
     if (completedJob?.user_id && actualSH) {
-      const { data: sub } = await sb
-        .from('subscriptions')
-        .select('sh_balance')
-        .eq('user_id', completedJob.user_id)
-        .maybeSingle();
+      if (activeJobType === 'service') {
+        // Service: deduct from subscriptions.sh_hours_used first, then sh_balance.purchased_used
+        const { data: sub } = await sb.from('subscriptions')
+          .select('id, sh_hours_total, sh_hours_used')
+          .eq('user_id', completedJob.user_id).eq('status','active')
+          .maybeSingle();
 
-      if (sub) {
-        const newBalance = Math.max(0, (sub.sh_balance || 0) - actualSH);
-        await sb.from('subscriptions')
-          .update({ sh_balance: newBalance })
-          .eq('user_id', completedJob.user_id);
+        let remaining = actualSH;
+        if (sub) {
+          const voucherAvail = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
+          const fromVoucher = Math.min(remaining, voucherAvail);
+          if (fromVoucher > 0) {
+            await sb.from('subscriptions')
+              .update({ sh_hours_used: (sub.sh_hours_used || 0) + fromVoucher })
+              .eq('id', sub.id);
+            remaining -= fromVoucher;
+          }
+        }
+        if (remaining > 0) {
+          const { data: shBal } = await sb.from('sh_balance')
+            .select('purchased_total, purchased_used')
+            .eq('user_id', completedJob.user_id).maybeSingle();
+          if (shBal) {
+            await sb.from('sh_balance')
+              .update({ purchased_used: (shBal.purchased_used || 0) + remaining })
+              .eq('user_id', completedJob.user_id);
+          }
+        }
+      } else {
+        // Cleaning: deduct from subscriptions.cleaning_hours_used
+        const { data: sub } = await sb.from('subscriptions')
+          .select('id, cleaning_hours_used')
+          .eq('user_id', completedJob.user_id).eq('status','active')
+          .maybeSingle();
+        if (sub) {
+          await sb.from('subscriptions')
+            .update({ cleaning_hours_used: (sub.cleaning_hours_used || 0) + actualSH })
+            .eq('id', sub.id);
+        }
       }
     }
 
