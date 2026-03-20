@@ -5050,7 +5050,7 @@ function renderNotifPage(items) {
       ${icon}
       <div class="np-content">
         <div class="np-title">${n.title || 'Notification'}</div>
-        ${n.message && n.message !== n.title ? `<div class="np-message">${n.message}</div>` : ''}
+        ${n.message && n.message !== n.title ? `<div class="np-message">${n.message.startsWith(n.title) ? n.message.replace(n.title + ' — ', '') : n.message}</div>` : ''}
         <div class="np-time">${time}</div>
       </div>
       <div class="np-actions">
