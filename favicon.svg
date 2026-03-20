@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6.4" fill="#1B2A4A"/>
+  <g transform="translate(16.0, 14.08) scale(0.25)">
+    <!-- Simplified house -->
+    <path d="M0,-38 L-35,0 L-26,0 L-26,28 L26,28 L26,0 L35,0 Z" fill="#FFFFFF" opacity="0.95"/>
+    <rect x="-9" y="4" width="18" height="24" rx="2" fill="#1B2A4A"/>
+    <!-- Plus -->
+    <g transform="translate(28, 28)">
+      <circle r="16" fill="#D4790B"/>
+      <rect x="-7" y="-2" width="14" height="4" rx="1" fill="#FFFFFF"/>
+      <rect x="-2" y="-7" width="4" height="14" rx="1" fill="#FFFFFF"/>
+    </g>
+  </g>
+</svg>

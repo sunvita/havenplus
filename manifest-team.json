@@ -1,0 +1,33 @@
+{
+  "name": "HavenPlus Team",
+  "short_name": "HP Team",
+  "description": "HavenPlus Property Care — Team Dashboard",
+  "start_url": "/haventeam.html",
+  "display": "standalone",
+  "background_color": "#1D3D2A",
+  "theme_color": "#1D3D2A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-team-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-team-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-team-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
