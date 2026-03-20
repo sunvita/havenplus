@@ -1111,8 +1111,7 @@ function showMainApp() {
   document.getElementById('profileName').textContent = currentWorker.full_name;
   document.getElementById('profileCode').textContent = currentWorker.worker_code;
   document.getElementById('profileArea').textContent = (currentWorker.area || 'No Area').replace(/_/g, ' ');
-  document.getElementById('statTotal').textContent = currentWorker.total_jobs_completed || 0;
-  document.getElementById('statRating').textContent = currentWorker.rating ? currentWorker.rating.toFixed(1) + '⭐' : '—';
+  document.getElementById('statRating').textContent = (currentWorker.rating || 0).toFixed(1) + ' ⭐';
 }
 
 // ═══ Tabs ═══
@@ -1388,6 +1387,7 @@ async function loadMeTab() {
     const monthStartStr = monthStart.toISOString().split('T')[0];
     const thisMonthJobs = allEarningsJobs.filter(j => j.planned_date >= monthStartStr);
     document.getElementById('statMonth').textContent = thisMonthJobs.length;
+    document.getElementById('statTotal').textContent = allEarningsJobs.length;
 
     renderEarningsPage();
   } catch(e) {
@@ -1411,7 +1411,9 @@ function renderEarningsPage() {
   recentEl.innerHTML = visible.map(job => {
     const d = new Date(job.planned_date + 'T00:00:00');
     const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const earnings = (job.duration_hours || 2) * rate;
+    const hours = job.duration_hours || 2;
+    const jobRate = job.job_type === 'service' ? (currentWorker.tech_rate || rate) : rate;
+    const earnings = hours * jobRate;
     const typeIcon = job.job_type === 'service' ? '🔧' : '🧹';
     const typeLabel = job.job_type === 'service'
       ? (job.category ? job.category.replace(/_/g, ' ') : 'Service')
@@ -1423,7 +1425,10 @@ function renderEarningsPage() {
         <div class="recent-date">${dateStr}</div>
         <div class="recent-address">${typeIcon} ${typeLabel} · ${suburb}</div>
       </div>
-      <div class="recent-amount">$${earnings}</div>
+      <div style="text-align:right;">
+        <div class="recent-amount">$${earnings}</div>
+        <div style="font-size:11px;color:var(--text-secondary);">${hours}h</div>
+      </div>
     </div>`;
   }).join('');
 
