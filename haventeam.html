@@ -139,6 +139,28 @@ body {
   font-weight: 700;
 }
 
+/* ── Notification Bell (Worker) ─────────────────── */
+.header-right { display: flex; align-items: center; }
+.notif-bell-worker { position: relative; cursor: pointer; margin-right: 10px; }
+.notif-bell-worker svg { width: 22px; height: 22px; color: var(--text-secondary); }
+.notif-badge-w { position: absolute; top: -3px; right: -3px; background: #ff4757; color: white; font-size: 8px; font-weight: 700; min-width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+.notif-badge-w:empty { display: none; }
+.notif-dropdown-w { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.15); width: 320px; max-height: 380px; overflow-y: auto; z-index: 400; border: 1px solid var(--border); }
+.notif-dropdown-w.open { display: block; }
+.notif-dropdown-w .notif-dropdown-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.notif-dropdown-w .notif-dropdown-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.notif-dropdown-w .notif-mark-all { font-size: 11px; color: var(--text-secondary); cursor: pointer; background: none; border: none; font-family: inherit; }
+.notif-dropdown-w .notif-item { padding: 10px 14px; border-bottom: 1px solid var(--border-light, #f0f0f0); cursor: pointer; transition: background .15s; display: flex; gap: 8px; align-items: flex-start; }
+.notif-dropdown-w .notif-item:hover { background: rgba(0,0,0,.03); }
+.notif-dropdown-w .notif-item.unread { background: rgba(76,175,80,.08); }
+.notif-dropdown-w .notif-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+.notif-dropdown-w .notif-icon.scheduled { background: #e8f5e9; }
+.notif-dropdown-w .notif-icon.reminder { background: #fff3e0; }
+.notif-dropdown-w .notif-content { flex: 1; min-width: 0; }
+.notif-dropdown-w .notif-title { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-dropdown-w .notif-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.notif-dropdown-w .notif-empty { padding: 28px 14px; text-align: center; color: var(--text-secondary); font-size: 12px; }
+
 /* Content */
 .content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
 .tab-content { display: none; }
@@ -738,7 +760,22 @@ body {
         <div class="header-hello" id="headerHello">Good morning</div>
         <div class="header-name" id="headerName">—</div>
       </div>
-      <div class="header-avatar" id="headerAvatar">?</div>
+      <div class="header-right">
+        <div class="notif-bell-worker" id="notifBellW" onclick="toggleNotifW(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-badge-w" id="notifBadgeW"></span>
+          <div class="notif-dropdown-w" id="notifDropdownW">
+            <div class="notif-dropdown-header">
+              <span class="notif-dropdown-title">Notifications</span>
+              <button class="notif-mark-all" onclick="markAllReadW(event)">Mark all read</button>
+            </div>
+            <div id="notifListW">
+              <div class="notif-empty">No notifications yet</div>
+            </div>
+          </div>
+        </div>
+        <div class="header-avatar" id="headerAvatar">?</div>
+      </div>
     </header>
 
     <!-- Content -->
@@ -977,6 +1014,8 @@ document.addEventListener('DOMContentLoaded', () => {
       currentWorker = JSON.parse(saved);
       showMainApp();
       loadAllData();
+      loadNotificationsW();
+      setupNotifRealtimeW();
     } catch(e) { localStorage.removeItem('hp_worker'); }
   }
   
@@ -1554,6 +1593,24 @@ async function confirmComplete() {
     const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     if (error) throw error;
 
+    // ── Send completion notification to customer ──
+    const completedJob = allMyJobs.find(j => j.id === activeJobId);
+    if (completedJob?.user_id) {
+      const prop = completedJob.properties || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || 'Property';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'completed',
+          recipients: [{ id: completedJob.user_id, type: 'customer' }],
+          reference_id: activeJobId,
+          reference_type: activeJobType === 'service' ? 'service' : 'cleaning',
+          details: { address: addr, date: completedJob.planned_date || '', time: completedJob.planned_time || '' },
+        }),
+      }).catch(e => console.warn('Notification send failed:', e));
+    }
+
     if (timerInterval) clearInterval(timerInterval);
     activeJobId = null;
     activeJobType = 'cleaning';
@@ -1628,6 +1685,114 @@ function showToast(msg, type = '') {
   el.textContent = msg;
   el.className = `toast ${type} show`;
   setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ═══ Notifications (Worker) ═════════════════════════ */
+let notifOpenW = false;
+
+function toggleNotifW(e) {
+  e.stopPropagation();
+  notifOpenW = !notifOpenW;
+  document.getElementById('notifDropdownW').classList.toggle('open', notifOpenW);
+}
+
+document.addEventListener('click', (e) => {
+  if (notifOpenW && !e.target.closest('.notif-bell-worker')) {
+    notifOpenW = false;
+    document.getElementById('notifDropdownW').classList.remove('open');
+  }
+});
+
+function timeAgoW(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+function notifIconW(type) {
+  if (type === 'scheduled') return '<div class="notif-icon scheduled">📋</div>';
+  if (type === 'reminder')  return '<div class="notif-icon reminder">⏰</div>';
+  return '<div class="notif-icon scheduled">🔔</div>';
+}
+
+function renderNotificationsW(notifications) {
+  const list = document.getElementById('notifListW');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markReadW('${n.id}', this)">
+      ${notifIconW(n.type)}
+      <div class="notif-content">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-time">${timeAgoW(n.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const unread = notifications.filter(n => !n.is_read).length;
+  const badge = document.getElementById('notifBadgeW');
+  badge.textContent = unread > 0 ? (unread > 9 ? '9+' : unread) : '';
+}
+
+async function loadNotificationsW() {
+  if (!currentWorker) return;
+  try {
+    const { data, error } = await sb.from('notifications')
+      .select('*')
+      .eq('user_id', currentWorker.id)
+      .eq('recipient_type', 'worker')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    renderNotificationsW(data || []);
+  } catch(e) {
+    console.warn('Failed to load worker notifications:', e);
+  }
+}
+
+async function markReadW(id, el) {
+  if (el) el.classList.remove('unread');
+  try {
+    await sb.from('notifications').update({ is_read: true }).eq('id', id);
+    const badge = document.getElementById('notifBadgeW');
+    const current = parseInt(badge.textContent) || 0;
+    if (current > 1) badge.textContent = current - 1;
+    else badge.textContent = '';
+  } catch(e) { console.warn('markReadW error:', e); }
+}
+
+async function markAllReadW(e) {
+  e.stopPropagation();
+  if (!currentWorker) return;
+  try {
+    await sb.from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', currentWorker.id)
+      .eq('is_read', false);
+    document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+    document.getElementById('notifBadgeW').textContent = '';
+  } catch(e) { console.warn('markAllReadW error:', e); }
+}
+
+function setupNotifRealtimeW() {
+  if (!currentWorker) return;
+  sb.channel('notif-worker')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `user_id=eq.${currentWorker.id}`,
+    }, (payload) => {
+      loadNotificationsW();
+    })
+    .subscribe();
 }
 </script>
 </body>
