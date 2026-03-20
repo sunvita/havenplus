@@ -1,39 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <clipPath id="roundedSquare">
-      <rect x="0" y="0" width="512" height="512" rx="112.64" ry="112.64"/>
-    </clipPath>
-  </defs>
-
-  <!-- Rounded square background -->
-  <rect x="0" y="0" width="512" height="512" rx="112.64" ry="112.64" fill="#1B2A4A"/>
-
-  <!-- Hexagonal shield shape (slightly elongated vertically) -->
-  <g transform="translate(256.0, 245.76) scale(1.0)">
-    <!-- Shield / hexagon outline -->
-    <path d="M0,-155 L134,-77.5 L134,77.5 L0,155 L-134,77.5 L-134,-77.5 Z"
-          fill="none" stroke="#FFFFFF" stroke-width="8" opacity="0.3"/>
-    <path d="M0,-145 L125,-72.5 L125,72.5 L0,145 L-125,72.5 L-125,-72.5 Z"
-          fill="#FFFFFF" fill-opacity="0.08"/>
-
-    <!-- House icon -->
-    <g transform="translate(0, -8)">
-      <!-- Roof -->
-      <path d="M0,-85 L-80,0 L-60,0 L-60,65 L60,65 L60,0 L80,0 Z"
-            fill="#FFFFFF" opacity="0.95"/>
-
-      <!-- Door / window cutout -->
-      <rect x="-22" y="10" width="44" height="55" rx="4" fill="#1B2A4A"/>
-
-      <!-- Chimney -->
-      <rect x="25" y="-60" width="20" height="35" rx="2" fill="#FFFFFF" opacity="0.95"/>
-    </g>
-
-    <!-- Amber Plus sign (bottom-right of house) -->
-    <g transform="translate(68, 68)">
-      <circle cx="0" cy="0" r="35" fill="#D4790B"/>
-      <rect x="-15" y="-4" width="30" height="8" rx="2" fill="#FFFFFF"/>
-      <rect x="-4" y="-15" width="8" height="30" rx="2" fill="#FFFFFF"/>
-    </g>
-  </g>
+  <rect width="512" height="512" rx="112.6" ry="112.6" fill="#1B2A4A"/>
+  <polygon points="256.00,115.86 396.80,196.30 396.80,373.33 256.00,453.78 115.20,373.33 115.20,196.30" fill="none" stroke="#FFFFFF" stroke-width="12.07" stroke-linejoin="round"/>
+  <path d="M256.00,184.29 L183.63,240.61 L183.63,304.90 L235.91,304.90 L235.91,268.77 L276.09,268.77 L276.09,304.90 L328.47,304.90 L328.47,240.61 Z" fill="#D4790B" fill-rule="evenodd"/>
+  <rect x="227.84" y="339.17" width="56.32" height="18.02" rx="8.11" fill="#FFFFFF"/>
+  <rect x="246.99" y="321.05" width="18.12" height="56.32" rx="8.15" fill="#FFFFFF"/>
 </svg>
