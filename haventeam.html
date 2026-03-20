@@ -1715,8 +1715,9 @@ function timeAgoW(dateStr) {
 }
 
 function notifIconW(type) {
-  if (type === 'scheduled') return '<div class="notif-icon scheduled">📋</div>';
-  if (type === 'reminder')  return '<div class="notif-icon reminder">⏰</div>';
+  if (type === 'cleaning_scheduled' || type === 'service_confirmed' || type === 'job_assigned') return '<div class="notif-icon scheduled">📋</div>';
+  if (type === 'cleaning_reminder'  || type === 'job_reminder')      return '<div class="notif-icon reminder">⏰</div>';
+  if (type === 'cleaning_completed' || type === 'service_completed') return '<div class="notif-icon completed">✅</div>';
   return '<div class="notif-icon scheduled">🔔</div>';
 }
 

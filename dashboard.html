@@ -2277,9 +2277,11 @@ function timeAgo(dateStr) {
 }
 
 function notifIcon(type) {
-  if (type === 'scheduled') return '<div class="notif-icon scheduled">📅</div>';
-  if (type === 'reminder')  return '<div class="notif-icon reminder">⏰</div>';
-  if (type === 'completed') return '<div class="notif-icon completed">✅</div>';
+  if (type === 'cleaning_scheduled' || type === 'service_confirmed') return '<div class="notif-icon scheduled">📅</div>';
+  if (type === 'cleaning_reminder'  || type === 'job_reminder')      return '<div class="notif-icon reminder">⏰</div>';
+  if (type === 'cleaning_completed' || type === 'service_completed') return '<div class="notif-icon completed">✅</div>';
+  if (type === 'payment_received')  return '<div class="notif-icon scheduled">💳</div>';
+  if (type === 'payment_failed')    return '<div class="notif-icon reminder">⚠️</div>';
   return '<div class="notif-icon scheduled">🔔</div>';
 }
 
