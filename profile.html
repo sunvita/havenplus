@@ -4893,6 +4893,12 @@ function notifIcon(type) {
   if (type === 'payment_failed')    return '<div class="notif-icon reminder">⚠️</div>';
   return '<div class="notif-icon scheduled">🔔</div>';
 }
+function notifTypeBadge(type) {
+  if (type?.startsWith('cleaning_')) return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#e8f5e9;color:#2e7d32;margin-right:4px;vertical-align:middle;">Cleaning</span>';
+  if (type?.startsWith('service_') || type === 'job_assigned' || type === 'job_reminder') return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#e3f2fd;color:#1565c0;margin-right:4px;vertical-align:middle;">Service</span>';
+  if (type?.startsWith('payment_')) return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#f3e5f5;color:#6a1b9a;margin-right:4px;vertical-align:middle;">Payment</span>';
+  return '';
+}
 
 function renderNotifications(notifications) {
   const list = document.getElementById('notifList');
@@ -4906,7 +4912,7 @@ function renderNotifications(notifications) {
     return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
       ${notifIcon(n.type)}
       <div class="notif-content">
-        <div class="notif-title">${displayTitle}</div>
+        <div class="notif-title">${notifTypeBadge(n.type)}${displayTitle}</div>
         <div class="notif-time">${timeAgo(n.created_at)}</div>
       </div>
     </div>`;
@@ -4923,6 +4929,7 @@ async function loadNotifications() {
       .select('*')
       .eq('user_id', currentUser.id)
       .eq('recipient_type', 'customer')
+      .eq('is_read', false)
       .order('created_at', { ascending: false })
       .limit(20);
     if (error) throw error;
@@ -5048,7 +5055,7 @@ function renderNotifPage(items) {
     return `<div class="notif-page-item${unread}" data-id="${n.id}">
       ${icon}
       <div class="np-content">
-        <div class="np-title">${n.message && n.message !== n.title ? n.message : (n.title || 'Notification')}</div>
+        <div class="np-title">${notifTypeBadge(n.type)}${n.message && n.message !== n.title ? n.message : (n.title || 'Notification')}</div>
         <div class="np-time">${time}</div>
       </div>
       <div class="np-actions">

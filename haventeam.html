@@ -1723,6 +1723,11 @@ function notifIconW(type) {
   if (type === 'cleaning_completed' || type === 'service_completed') return '<div class="notif-icon completed">✅</div>';
   return '<div class="notif-icon scheduled">🔔</div>';
 }
+function notifTypeBadgeW(type) {
+  if (type?.startsWith('cleaning_')) return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#e8f5e9;color:#2e7d32;margin-right:4px;vertical-align:middle;">Cleaning</span>';
+  if (type?.startsWith('service_') || type === 'job_assigned' || type === 'job_reminder') return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:#e3f2fd;color:#1565c0;margin-right:4px;vertical-align:middle;">Service</span>';
+  return '';
+}
 
 let notifShowAllW = false;
 let cachedNotifsW = [];
@@ -1745,7 +1750,7 @@ function renderNotificationsW(notifications) {
     return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markReadW('${n.id}', this)">
       ${notifIconW(n.type)}
       <div class="notif-content">
-        <div class="notif-title">${displayTitle}</div>
+        <div class="notif-title">${notifTypeBadgeW(n.type)}${displayTitle}</div>
         <div class="notif-time">${timeAgoW(n.created_at)}</div>
       </div>
     </div>`;
@@ -1769,6 +1774,7 @@ async function loadNotificationsW() {
       .select('*')
       .eq('user_id', currentWorker.id)
       .eq('recipient_type', 'worker')
+      .eq('is_read', false)
       .order('created_at', { ascending: false })
       .limit(20);
     if (error) throw error;
