@@ -972,6 +972,15 @@ body {
         <div class="photo-count" id="photoCount">0 / 3 photos</div>
       </div>
       <div class="photo-section" style="margin-top:12px;">
+        <div class="photo-title">⏱️ Actual Service Hours</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="number" id="actualSH" step="0.5" min="0.5" max="24" placeholder="0.0"
+            style="width:90px;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:16px;font-weight:600;text-align:center;">
+          <span style="font-size:13px;color:var(--text-light);">SH  —  Timer: <span id="timerSH" style="font-weight:600;">0.0</span> SH</span>
+        </div>
+        <p style="font-size:11px;color:var(--text-light);margin:4px 0 0;">Review and adjust if needed (timer value shown as reference)</p>
+      </div>
+      <div class="photo-section" style="margin-top:12px;">
         <div class="photo-title">📝 Notes (optional)</div>
         <textarea id="workerNotes" placeholder="Any notes about this job..." style="width:100%;min-height:70px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
       </div>
@@ -1533,6 +1542,11 @@ function openCompleteModal(jobId, jobType = 'cleaning') {
   photos = [];
   updatePhotoGrid();
   document.getElementById('workerNotes').value = '';
+  // Pre-fill timer-based SH as default
+  const timerDuration = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : 0;
+  const rounded = Math.round(timerDuration * 2) / 2; // round to nearest 0.5
+  document.getElementById('actualSH').value = rounded || '';
+  document.getElementById('timerSH').textContent = timerDuration.toFixed(1);
   document.getElementById('completeModal').classList.add('open');
 }
 
@@ -1585,19 +1599,39 @@ async function confirmComplete() {
     const urls = await uploadPhotos(photos, activeJobId, 'after');
     const notes = document.getElementById('workerNotes').value.trim();
     const now = new Date().toISOString();
-    const duration = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : null;
+
+    // Use worker-entered SH (with timer as fallback)
+    const inputSH = parseFloat(document.getElementById('actualSH').value);
+    const timerSH = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : null;
+    const actualSH = !isNaN(inputSH) && inputSH > 0 ? inputSH : timerSH;
 
     const table = activeJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
 
     const updateData = activeJobType === 'service'
-      ? { status: 'completed', actual_end: now, sh_used: duration, after_photos: urls, worker_notes: notes }
-      : { status: 'completed', actual_end: now, actual_duration: duration, after_photos: urls, worker_notes: notes };
+      ? { status: 'completed', actual_end: now, sh_used: actualSH, after_photos: urls, worker_notes: notes }
+      : { status: 'completed', actual_end: now, actual_duration: actualSH, after_photos: urls, worker_notes: notes };
 
     const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     if (error) throw error;
 
-    // ── Send completion notification to customer ──
+    // ── Deduct SH from customer's subscription balance ──
     const completedJob = allMyJobs.find(j => j.id === activeJobId);
+    if (completedJob?.user_id && actualSH) {
+      const { data: sub } = await sb
+        .from('subscriptions')
+        .select('sh_balance')
+        .eq('user_id', completedJob.user_id)
+        .maybeSingle();
+
+      if (sub) {
+        const newBalance = Math.max(0, (sub.sh_balance || 0) - actualSH);
+        await sb.from('subscriptions')
+          .update({ sh_balance: newBalance })
+          .eq('user_id', completedJob.user_id);
+      }
+    }
+
+    // ── Send completion notification to customer ──
     if (completedJob?.user_id) {
       const prop = completedJob.properties || {};
       const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || 'Property';
