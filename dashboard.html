@@ -75,9 +75,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .notif-icon.reminder { background: #fff3e0; }
 .notif-icon.completed { background: #e3f2fd; }
 .notif-content { flex: 1; min-width: 0; }
-.notif-title { font-size: 13px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-title { font-size: 13px; font-weight: 600; color: #1a1a1a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+.notif-message { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .notif-time { font-size: 11px; color: #999; margin-top: 2px; }
 .notif-empty { padding: 32px 16px; text-align: center; color: #aaa; font-size: 13px; }
+.notif-view-all { display: block; text-align: center; padding: 12px; font-size: 12px; font-weight: 600; color: var(--navy); text-decoration: none; border-top: 1px solid #f0f0f0; }
+.notif-view-all:hover { background: #f9fafb; }
 @media (max-width: 480px) { .notif-dropdown { width: 300px; right: -40px; } }
 
 /* ── Profile Dropdown ─────────────────────────────────── */
@@ -2291,15 +2294,18 @@ function renderNotifications(notifications) {
     list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
     return;
   }
-  list.innerHTML = notifications.map(n => `
-    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
+  const show = notifications.slice(0, 5);
+  list.innerHTML = show.map(n => {
+    const subtitle = n.message && n.message !== n.title ? n.message.replace(n.title + ' — ', '') : '';
+    return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
       ${notifIcon(n.type)}
       <div class="notif-content">
         <div class="notif-title">${n.title}</div>
+        ${subtitle ? `<div class="notif-message">${subtitle}</div>` : ''}
         <div class="notif-time">${timeAgo(n.created_at)}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('') + '<a class="notif-view-all" href="profile.html?section=notifications">View all notifications</a>';
 
   const unread = notifications.filter(n => !n.is_read).length;
   const badge = document.getElementById('notifBadge');

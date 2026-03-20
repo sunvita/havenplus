@@ -71,10 +71,28 @@
   .notif-icon.reminder { background: #fff3e0; }
   .notif-icon.completed { background: #e3f2fd; }
   .notif-content { flex: 1; min-width: 0; }
-  .notif-title { font-size: 13px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notif-title { font-size: 13px; font-weight: 600; color: #1a1a1a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+  .notif-message { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .notif-time { font-size: 11px; color: #999; margin-top: 2px; }
   .notif-empty { padding: 32px 16px; text-align: center; color: #aaa; font-size: 13px; }
+  .notif-view-all { display: block; text-align: center; padding: 12px; font-size: 12px; font-weight: 600; color: var(--navy); text-decoration: none; border-top: 1px solid #f0f0f0; }
+  .notif-view-all:hover { background: #f9fafb; }
   @media (max-width: 480px) { .notif-dropdown { width: 300px; right: -40px; } }
+
+  /* ── Notifications Page ──────────────────────────────── */
+  .notif-filter-btn { padding: 7px 14px; font-size: 12px; font-weight: 600; font-family: inherit; border: none; background: white; color: var(--text-light); cursor: pointer; transition: all .15s; }
+  .notif-filter-btn:not(:last-child) { border-right: 1px solid var(--border); }
+  .notif-filter-btn.active { background: var(--navy); color: white; }
+  .notif-filter-btn:hover:not(.active) { background: #f5f5f5; }
+  .notif-page-item { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; gap: 14px; align-items: flex-start; transition: background .15s; cursor: default; }
+  .notif-page-item:last-child { border-bottom: none; }
+  .notif-page-item.unread { background: #f0f7ff; }
+  .notif-page-item .notif-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .notif-page-item .np-content { flex: 1; min-width: 0; }
+  .notif-page-item .np-title { font-size: 14px; font-weight: 600; color: #1a1a1a; line-height: 1.4; }
+  .notif-page-item .np-message { font-size: 12px; color: var(--text-light); margin-top: 3px; line-height: 1.4; }
+  .notif-page-item .np-time { font-size: 11px; color: #aaa; margin-top: 4px; }
+  .notif-page-item .np-actions { flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
 
   /* ── Layout ── */
   .page { max-width: 1000px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
@@ -491,6 +509,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <span class="lang-en">Personal Info</span><span class="lang-ko" style="display:none;">개인정보</span>
       </button>
+      <button class="sidebar-item" data-section="notifications" onclick="switchSection('notifications')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="lang-en">Notifications</span><span class="lang-ko" style="display:none;">알림</span>
+      </button>
       <button class="sidebar-item" data-section="subscription" onclick="switchSection('subscription')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="14" x2="10" y2="14"/></svg>
         <span class="lang-en">Subscription</span><span class="lang-ko" style="display:none;">구독</span>
@@ -597,6 +619,35 @@
         </div>
         <div class="form-actions">
           <button class="btn-save" id="btnSavePersonal" onclick="savePersonalInfo()">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Notifications ═══ -->
+    <section class="section" id="section-notifications">
+      <div class="section-card">
+        <div class="section-title"><span class="lang-en">Notifications</span><span class="lang-ko" style="display:none;">알림</span></div>
+        <div class="section-desc"><span class="lang-en">All your notifications.</span><span class="lang-ko" style="display:none;">모든 알림.</span></div>
+
+        <!-- Filters -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            <button class="notif-filter-btn active" data-filter="all" onclick="setNotifFilter('all',this)">All</button>
+            <button class="notif-filter-btn" data-filter="unread" onclick="setNotifFilter('unread',this)">Unread</button>
+            <button class="notif-filter-btn" data-filter="read" onclick="setNotifFilter('read',this)">Read</button>
+          </div>
+          <select id="notifPeriodFilter" onchange="loadNotifPage()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:white;cursor:pointer;">
+            <option value="this_month">This Month</option>
+            <option value="this_year">This Year</option>
+            <option value="custom">Select Month…</option>
+          </select>
+          <input type="month" id="notifMonthPicker" onchange="loadNotifPage()" style="display:none;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:white;">
+          <button onclick="markAllReadPage()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;font-family:inherit;color:var(--text-light);cursor:pointer;">Mark all read</button>
+        </div>
+
+        <!-- Notification list -->
+        <div id="notifPageList" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div style="padding:32px;text-align:center;color:#aaa;font-size:13px;">Loading…</div>
         </div>
       </div>
     </section>
@@ -1844,6 +1895,7 @@ function switchSection(name) {
   if (name === 'workers')      loadWorkers();
   if (name === 'properties')   loadProperties();
   if (name === 'customers')    loadCustomers();
+  if (name === 'notifications') loadNotifPage();
   if (name === 'manage') {
     if (!manageUnlocked) { openPinGate(); return; }
     loadManageData();
@@ -4848,15 +4900,18 @@ function renderNotifications(notifications) {
     list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
     return;
   }
-  list.innerHTML = notifications.map(n => `
-    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
+  const show = notifications.slice(0, 5);
+  list.innerHTML = show.map(n => {
+    const subtitle = n.message && n.message !== n.title ? n.message.replace(n.title + ' — ', '') : '';
+    return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
       ${notifIcon(n.type)}
       <div class="notif-content">
         <div class="notif-title">${n.title}</div>
+        ${subtitle ? `<div class="notif-message">${subtitle}</div>` : ''}
         <div class="notif-time">${timeAgo(n.created_at)}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('') + `<a class="notif-view-all" href="javascript:void(0)" onclick="switchSection('notifications');toggleNotifDropdown(event);">View all notifications</a>`;
 
   const unread = notifications.filter(n => !n.is_read).length;
   const badge = document.getElementById('notifBadge');
@@ -4910,8 +4965,122 @@ function setupNotifRealtime() {
       filter: `user_id=eq.${currentUser.id}`,
     }, (payload) => {
       loadNotifications();
+      // Also refresh page view if visible
+      if (document.getElementById('section-notifications')?.classList.contains('active')) loadNotifPage();
     })
     .subscribe();
+}
+
+/* ── Notifications Full Page ─────────────────────────── */
+let notifPageFilter = 'all'; // 'all' | 'unread' | 'read'
+
+function setNotifFilter(filter, btn) {
+  notifPageFilter = filter;
+  document.querySelectorAll('.notif-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  loadNotifPage();
+}
+
+function getNotifPeriodRange() {
+  const sel = document.getElementById('notifPeriodFilter')?.value || 'this_month';
+  const picker = document.getElementById('notifMonthPicker');
+  const now = new Date();
+
+  if (sel === 'this_month') {
+    picker.style.display = 'none';
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { from: start.toISOString(), to: null };
+  }
+  if (sel === 'this_year') {
+    picker.style.display = 'none';
+    const start = new Date(now.getFullYear(), 0, 1);
+    return { from: start.toISOString(), to: null };
+  }
+  // custom month
+  picker.style.display = '';
+  const val = picker.value; // "2026-03"
+  if (!val) return { from: null, to: null };
+  const [y, m] = val.split('-').map(Number);
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 1);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+async function loadNotifPage() {
+  if (!currentUser) return;
+  const list = document.getElementById('notifPageList');
+  list.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:13px;">Loading…</div>';
+
+  try {
+    let query = sb.from('notifications')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('recipient_type', 'customer')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (notifPageFilter === 'unread') query = query.eq('is_read', false);
+    if (notifPageFilter === 'read') query = query.eq('is_read', true);
+
+    const range = getNotifPeriodRange();
+    if (range.from) query = query.gte('created_at', range.from);
+    if (range.to) query = query.lt('created_at', range.to);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    renderNotifPage(data || []);
+  } catch(e) {
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:#e74c3c;font-size:13px;">Failed to load notifications.</div>';
+    console.error('loadNotifPage error:', e);
+  }
+}
+
+function renderNotifPage(items) {
+  const list = document.getElementById('notifPageList');
+  if (!items.length) {
+    list.innerHTML = '<div style="padding:48px 32px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">🔔</div><div style="color:#aaa;font-size:14px;">No notifications found</div></div>';
+    return;
+  }
+
+  list.innerHTML = items.map(n => {
+    const icon = notifIcon(n.type);
+    const time = new Date(n.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const unread = n.is_read ? '' : ' unread';
+    return `<div class="notif-page-item${unread}" data-id="${n.id}">
+      ${icon}
+      <div class="np-content">
+        <div class="np-title">${n.title || 'Notification'}</div>
+        ${n.message && n.message !== n.title ? `<div class="np-message">${n.message}</div>` : ''}
+        <div class="np-time">${time}</div>
+      </div>
+      <div class="np-actions">
+        ${!n.is_read ? `<button onclick="markReadPage('${n.id}',this)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-family:inherit;color:var(--text-light);cursor:pointer;" title="Mark as read">✓</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markReadPage(id, btn) {
+  try {
+    await sb.from('notifications').update({ is_read: true }).eq('id', id);
+    const item = btn.closest('.notif-page-item');
+    if (item) { item.classList.remove('unread'); btn.remove(); }
+    // Also update bell badge
+    loadNotifications();
+  } catch(e) { console.warn('markReadPage error:', e); }
+}
+
+async function markAllReadPage() {
+  try {
+    await sb.from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', currentUser.id)
+      .eq('is_read', false);
+    document.querySelectorAll('.notif-page-item.unread').forEach(el => el.classList.remove('unread'));
+    document.querySelectorAll('.notif-page-item .np-actions button').forEach(b => b.remove());
+    loadNotifications(); // refresh bell badge
+    showToast('All notifications marked as read.');
+  } catch(e) { console.warn('markAllReadPage error:', e); }
 }
 </script>
 </body>
