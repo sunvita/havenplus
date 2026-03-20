@@ -2116,7 +2116,7 @@ async function openServiceHistory(propertyId, address) {
         .eq('property_id', propertyId)
         .order('planned_date', { ascending: false }),
       sb.from('service_requests')
-        .select('id, scheduled_date, preferred_date, status, category, sh_used, description, urgency, assigned_worker_id')
+        .select('id, scheduled_date, preferred_date, status, category, sh_used, description, urgency, assigned_worker_id, before_photos, after_photos, worker_notes')
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false })
     ]);
