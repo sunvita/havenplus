@@ -909,8 +909,8 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Customer</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="jobsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th>Date</th><th>Customer</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Actual</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="jobsBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -953,8 +953,8 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Team</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="schedulesBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Team</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="schedulesBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -2478,7 +2478,7 @@ async function loadSchedules() {
   const area = document.getElementById('schedAreaFilter').value;
   const period = document.getElementById('schedPeriodFilter').value;
   
-  body.innerHTML = '<tr><td colspan="8" class="empty-state">Loading…</td></tr>';
+  body.innerHTML = '<tr><td colspan="9" class="empty-state">Loading…</td></tr>';
 
   // Load workers for dropdown if not already loaded
   if (!allWorkers.length) await loadWorkersForDropdowns();
@@ -2508,7 +2508,7 @@ async function loadSchedules() {
   // 'all' = no date filter
 
   /* Fetch two sets: overdue incomplete + date-filtered */
-  const selectCols = 'id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes';
+  const selectCols = 'id, planned_date, planned_time, duration_hours, actual_duration, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes';
   const todayStr = new Date().toISOString().split('T')[0];
 
   let q = sb.from('cleaning_schedule').select(selectCols)
@@ -2541,7 +2541,7 @@ async function loadSchedules() {
   data.sort((a, b) => new Date(a.planned_date) - new Date(b.planned_date));
 
   if (!data?.length) {
-    body.innerHTML = '<tr><td colspan="8" class="empty-state">No schedules found for this period.</td></tr>'; 
+    body.innerHTML = '<tr><td colspan="9" class="empty-state">No schedules found for this period.</td></tr>'; 
     return; 
   }
 
@@ -2604,7 +2604,7 @@ async function loadSchedules() {
   allSchedules = data.map(r => ({ ...r, prop: propMap[r.property_id] }));
 
   if (!filteredData.length) {
-    body.innerHTML = '<tr><td colspan="8" class="empty-state">No schedules found for selected filters.</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" class="empty-state">No schedules found for selected filters.</td></tr>';
     return;
   }
 
@@ -2638,6 +2638,7 @@ async function loadSchedules() {
       <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
       <td>${customer}</td>
       <td>${workerDisplay}</td>
+      <td style="font-size:12px;white-space:nowrap;">${r.duration_hours || '—'}h${r.actual_duration ? ' → <strong>' + (Math.round(r.actual_duration * 10) / 10) + 'h</strong>' : ''}</td>
       <td><span class="badge badge-${badgeClass}">${r.status || '—'}</span></td>
       <td class="action-cell">
         <button class="btn-action-sm" onclick="openSchedEditModal('${r.id}')">Edit</button>
@@ -3437,7 +3438,7 @@ async function loadJobRequests() {
   if (status) q = q.eq('status', status);
   const { data } = await q;
 
-  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No job requests found.</td></tr>'; return; }
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="9" class="empty-state">No job requests found.</td></tr>'; return; }
 
   // Get user info
   const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
@@ -3464,22 +3465,29 @@ async function loadJobRequests() {
 
 function renderJobRequests(list) {
   const body = document.getElementById('jobsBody');
-  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  if (!list.length) { body.innerHTML = '<tr><td colspan="9" class="empty-state">No results.</td></tr>'; return; }
   
+  const workerMap = {};
+  allWorkers.forEach(w => workerMap[w.id] = w);
+
   body.innerHTML = list.map(j => {
     const d = new Date(j.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'});
     const customer = j.profile?.full_name || '—';
     const category = (j.category || '—').replace(/_/g, ' ');
     const urgency = j.urgency === 'same_day' ? '⚡ Same Day' : j.urgency === 'after_hours' ? '🌙 After Hrs' : 'Standard';
     const estimate = j.sh_estimate ? `${j.sh_estimate}${j.sh_multiplier > 1 ? '×'+j.sh_multiplier : ''}` : '—';
+    const actualSH = j.sh_used ? Math.round(j.sh_used * 10) / 10 + ' SH' : '—';
+    const workerName = j.assigned_worker_id ? (workerMap[j.assigned_worker_id]?.full_name || '—') : '—';
     const badgeClass = j.status || 'requested';
-    
+
     return `<tr>
       <td style="color:var(--text-light);">${d}</td>
       <td style="font-weight:600;">${customer}</td>
       <td style="text-transform:capitalize;">${category}</td>
       <td style="font-size:12px;">${urgency}</td>
       <td>${estimate} SH</td>
+      <td style="font-weight:600;">${actualSH}</td>
+      <td>${workerName}</td>
       <td><span class="badge badge-${badgeClass}">${j.status || 'requested'}</span></td>
       <td class="action-cell">
         <button class="btn-action-sm" onclick="openJobEditModal('${j.id}')">Edit</button>

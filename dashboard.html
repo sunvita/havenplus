@@ -1041,12 +1041,12 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
   const planWord = activePlanCount === 1 ? 'plan' : 'plans';
   setText('ovPropCount', allProperties.length);
   setText('ovPropSub', `${activePlanCount} active ${planWord}`);
-  setText('ovCleanRem', totalCleanRem);
-  setText('ovCleanSub', `of ${totalCleanTotal} total hrs`);
+  setText('ovCleanRem', r1(totalCleanRem));
+  setText('ovCleanSub', `of ${r1(totalCleanTotal)} total hrs`);
   const shGrantLabel = shBal?.override_label || 'Bonus';
-  setText('ovSHRem', totalSHVouchRem + shPurchasedRem + (shGrantedRem || 0));
-  const shParts = [`${totalSHVouchRem} voucher`, `${shPurchasedRem} purchased`];
-  if (shGrantedRem > 0) shParts.push(`${shGrantedRem} ${shGrantLabel.toLowerCase()}`);
+  setText('ovSHRem', r1(totalSHVouchRem + shPurchasedRem + (shGrantedRem || 0)));
+  const shParts = [`${r1(totalSHVouchRem)} voucher`, `${r1(shPurchasedRem)} purchased`];
+  if (shGrantedRem > 0) shParts.push(`${r1(shGrantedRem)} ${shGrantLabel.toLowerCase()}`);
   setText('ovSHSub', shParts.join(' + '));
 
   // Render property hub cards
@@ -1060,10 +1060,10 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     // Cleaning hours for this property
     const cleanT = sub ? (sub.cleaning_hours_total || 0) : 0;
     const cleanU = sub ? (sub.cleaning_hours_used || 0) : 0;
-    const cleanR = cleanT - cleanU;
+    const cleanR = r1(cleanT - cleanU);
     const shVT = sub ? (sub.sh_hours_total || sub.voucher_sh_total || 0) : 0;
     const shVU = sub ? (sub.sh_hours_used || 0) : 0;
-    const shVR = shVT - shVU;
+    const shVR = r1(shVT - shVU);
 
     // Next visit & schedule
     const cleaningStartMonth = sub ? sub.cleaning_start_month : null;
@@ -1127,8 +1127,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     const summaryMeta = hasSub
       ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
          ${bedBath}
-         <span><strong>Cleaning:</strong> ${cleanR}/${cleanT}h</span>
-         <span><strong>Service Hour:</strong> ${shVR}/${shVT}SH</span>
+         <span><strong>Cleaning:</strong> ${r1(cleanR)}/${r1(cleanT)}h</span>
+         <span><strong>Service Hour:</strong> ${r1(shVR)}/${r1(shVT)}SH</span>
          ${nextVisitText ? `<span><strong>Next Visit:</strong> ${nextVisitText}</span>` : ''}`
       : `<span class="prop-hub-plan-pill pill-none">No plan</span>
          ${bedBath}`;
@@ -1146,8 +1146,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
       <div class="pd-grid" style="margin-bottom:16px">
         <div><div class="pd-item-label">Plan</div><div class="pd-item-val">${m.name || planKey}</div></div>
         <div><div class="pd-item-label">Visits / yr</div><div class="pd-item-val">${m.visits || '—'}</div></div>
-        <div><div class="pd-item-label">Cleaning hrs</div><div class="pd-item-val">${cleanU} used / ${cleanT}</div></div>
-        <div><div class="pd-item-label">SH vouchers</div><div class="pd-item-val">${shVU} used / ${shVT}</div></div>
+        <div><div class="pd-item-label">Cleaning hrs</div><div class="pd-item-val">${r1(cleanU)} used / ${r1(cleanT)}</div></div>
+        <div><div class="pd-item-label">SH vouchers</div><div class="pd-item-val">${r1(shVU)} used / ${r1(shVT)}</div></div>
         <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
         <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
       </div>
@@ -1364,12 +1364,12 @@ async function confirmStartSchedule(subId) {
 function showStateSHOnly(shPurchasedRem, shGrantedRem, shBal) {
   document.getElementById('welcomeSub').textContent = 'You have Service Hours available.';
   document.getElementById('stateSHOnly').classList.add('show');
-  setText('shOnlyTotal', shPurchasedRem + shGrantedRem);
-  setText('shOnlyPurchased', shPurchasedRem);
+  setText('shOnlyTotal', r1(shPurchasedRem + shGrantedRem));
+  setText('shOnlyPurchased', r1(shPurchasedRem));
   // Show granted SH if any
   if (shGrantedRem > 0) {
     document.getElementById('shOnlyGrantedItem').style.display = '';
-    setText('shOnlyGranted', shGrantedRem);
+    setText('shOnlyGranted', r1(shGrantedRem));
     const label = shBal?.override_label || 'Bonus';
     document.getElementById('shOnlyGrantLabel').textContent = label;
   }
@@ -1833,6 +1833,7 @@ async function handleLogout() { await sb.auth.signOut(); window.location.href = 
 
 /* ── Helpers ──────────────────────────────────────────── */
 function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function r1(n) { return Math.round((n || 0) * 10) / 10; } // round to 1 decimal
 
 function showToast(msg, isErr = false) {
   const el = document.getElementById('toast');
