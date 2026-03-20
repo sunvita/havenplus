@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <rect width="512" height="512" rx="112.6" ry="112.6" fill="#1B2A4A"/>
-  <polygon points="256.00,115.86 396.80,196.30 396.80,373.33 256.00,453.78 115.20,373.33 115.20,196.30" fill="none" stroke="#FFFFFF" stroke-width="12.07" stroke-linejoin="round"/>
-  <path d="M256.00,184.29 L183.63,240.61 L183.63,304.90 L235.91,304.90 L235.91,268.77 L276.09,268.77 L276.09,304.90 L328.47,304.90 L328.47,240.61 Z" fill="#D4790B" fill-rule="evenodd"/>
-  <rect x="227.84" y="339.17" width="56.32" height="18.02" rx="8.11" fill="#FFFFFF"/>
-  <rect x="246.99" y="321.05" width="18.12" height="56.32" rx="8.15" fill="#FFFFFF"/>
+  <polygon points="256.00,64.00 416.00,155.41 416.00,356.59 256.00,448.00 96.00,356.59 96.00,155.41" fill="none" stroke="#FFFFFF" stroke-width="13.72" stroke-linejoin="round"/>
+  <path d="M256.00,141.76 L173.76,205.76 L173.76,278.83 L233.17,278.83 L233.17,237.76 L278.83,237.76 L278.83,278.83 L338.35,278.83 L338.35,205.76 Z" fill="#D4790B" fill-rule="evenodd"/>
+  <rect x="224.00" y="317.76" width="64.00" height="20.48" rx="9.22" fill="#FFFFFF"/>
+  <rect x="245.76" y="297.17" width="20.59" height="64.00" rx="9.26" fill="#FFFFFF"/>
 </svg>

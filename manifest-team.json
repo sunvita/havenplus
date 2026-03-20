@@ -4,7 +4,7 @@
   "description": "HavenPlus Property Care — Team Dashboard",
   "start_url": "/haventeam.html",
   "display": "standalone",
-  "background_color": "#1D3D2A",
+  "background_color": "#F5F4F0",
   "theme_color": "#1D3D2A",
   "orientation": "portrait",
   "icons": [
