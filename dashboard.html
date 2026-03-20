@@ -1196,8 +1196,23 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
 
 function togglePropHub(propId) {
   const card = document.getElementById('phub_' + propId);
-  if (card) card.classList.toggle('expanded');
+  if (!card) return;
+  // Close other expanded cards first
+  document.querySelectorAll('.prop-hub-card.expanded').forEach(c => {
+    if (c !== card) c.classList.remove('expanded');
+  });
+  card.classList.toggle('expanded');
 }
+
+/* ── Click outside to close expanded prop-hub-card ───── */
+document.addEventListener('click', function(e) {
+  const expandedCards = document.querySelectorAll('.prop-hub-card.expanded');
+  expandedCards.forEach(card => {
+    if (!card.contains(e.target)) {
+      card.classList.remove('expanded');
+    }
+  });
+});
 
 function buildStartMonthSelector(propertyId, subId) {
   const now = new Date();
