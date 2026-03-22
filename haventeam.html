@@ -1037,6 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loadAllData();
       loadNotificationsW();
       setupNotifRealtimeW();
+      setupJobRealtimeW();
     } catch(e) { localStorage.removeItem('hp_worker'); }
   }
   
@@ -1083,6 +1084,9 @@ async function handleLogin() {
     localStorage.setItem('hp_worker', JSON.stringify(data));
     showMainApp();
     loadAllData();
+    loadNotificationsW();
+    setupNotifRealtimeW();
+    setupJobRealtimeW();
   } catch(e) {
     errorEl.textContent = 'Connection error. Please try again.';
     errorEl.classList.add('show');
@@ -1293,14 +1297,18 @@ function renderJobCard(job, isNext, todayStr) {
 
   let actions = '';
   if (isInProgress) {
+    const iAmStarter = job.assigned_worker_id === currentWorker.id;
     actions = '<div class="job-timer">'
       + '<span class="job-timer-label">Elapsed</span>'
       + '<span class="job-timer-value" id="timer-' + job.id + '">00:00:00</span>'
       + '</div>'
       + '<div class="job-actions">'
-      + '<button class="job-btn job-btn-complete" onclick="openCompleteModal(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
-      + ' Complete Job</button></div>';
+      + (iAmStarter
+        ? '<button class="job-btn job-btn-complete" onclick="openCompleteModal(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+          + ' Complete Job</button>'
+        : '<span style="font-size:13px;color:#888;padding:8px;">In progress (started by co-worker)</span>')
+      + '</div>';
   } else if (isToday) {
     actions = '<div class="job-actions">'
       + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
@@ -1515,7 +1523,8 @@ async function confirmStartJob() {
     const { error } = await sb.from(table).update({
       status: 'in_progress',
       actual_start: now,
-      before_photos: urls
+      before_photos: urls,
+      assigned_worker_id: currentWorker.id  // track who started the job
     }).eq('id', jobId);
 
     if (error) throw error;
@@ -1610,6 +1619,25 @@ async function confirmComplete() {
   btn.textContent = 'Uploading...';
 
   try {
+    const table = activeJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+
+    // ── Guard: prevent double-completion + only starter can complete ──
+    const { data: freshJob } = await sb.from(table).select('status, assigned_workers, assigned_worker_id').eq('id', activeJobId).maybeSingle();
+    if (freshJob?.status === 'completed') {
+      showToast('Already completed by co-worker', 'info');
+      if (timerInterval) clearInterval(timerInterval);
+      activeJobId = null; jobStartTime = null;
+      closeCompleteModal();
+      loadAllData();
+      return;
+    }
+    if (freshJob?.assigned_worker_id && freshJob.assigned_worker_id !== currentWorker.id) {
+      showToast('Only the worker who started can complete this job', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Complete';
+      return;
+    }
+
     const urls = await uploadPhotos(photos, activeJobId, 'after');
     const notes = document.getElementById('workerNotes').value.trim();
     const now = new Date().toISOString();
@@ -1617,20 +1645,22 @@ async function confirmComplete() {
     // Use worker-entered SH (with timer as fallback)
     const inputSH = parseFloat(document.getElementById('actualSH').value);
     const timerSH = jobStartTime ? Math.round((Date.now() - jobStartTime.getTime()) / (1000 * 60 * 60) * 10) / 10 : null;
-    const actualSH = !isNaN(inputSH) && inputSH > 0 ? inputSH : timerSH;
+    const totalSH = !isNaN(inputSH) && inputSH > 0 ? inputSH : timerSH;
 
-    const table = activeJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+    // ── Determine worker count for time division ──
+    const completedJob = allMyJobs.find(j => j.id === activeJobId);
+    const workerCount = (completedJob?.assigned_workers?.length) || 1;
+    const perWorkerSH = workerCount > 1 ? Math.round((totalSH / workerCount) * 10) / 10 : totalSH;
 
     const updateData = activeJobType === 'service'
-      ? { status: 'completed', actual_end: now, sh_used: actualSH, after_photos: urls, worker_notes: notes }
-      : { status: 'completed', actual_end: now, actual_duration: actualSH, after_photos: urls, worker_notes: notes };
+      ? { status: 'completed', actual_end: now, sh_used: perWorkerSH, after_photos: urls, worker_notes: notes }
+      : { status: 'completed', actual_end: now, actual_duration: perWorkerSH, after_photos: urls, worker_notes: notes };
 
     const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     if (error) throw error;
 
-    // ── Deduct hours from customer's balance ──
-    const completedJob = allMyJobs.find(j => j.id === activeJobId);
-    if (completedJob?.user_id && actualSH) {
+    // ── Deduct hours from customer's balance (use TOTAL hours, not per-worker) ──
+    if (completedJob?.user_id && totalSH) {
       if (activeJobType === 'service') {
         // Service: deduct from subscriptions.sh_hours_used first, then sh_balance.purchased_used
         const { data: sub } = await sb.from('subscriptions')
@@ -1638,7 +1668,7 @@ async function confirmComplete() {
           .eq('user_id', completedJob.user_id).eq('status','active')
           .maybeSingle();
 
-        let remaining = actualSH;
+        let remaining = totalSH;
         if (sub) {
           const voucherAvail = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
           const fromVoucher = Math.min(remaining, voucherAvail);
@@ -1667,7 +1697,7 @@ async function confirmComplete() {
           .maybeSingle();
         if (sub) {
           await sb.from('subscriptions')
-            .update({ cleaning_hours_used: (sub.cleaning_hours_used || 0) + actualSH })
+            .update({ cleaning_hours_used: (sub.cleaning_hours_used || 0) + totalSH })
             .eq('id', sub.id);
         }
       }
@@ -1685,7 +1715,15 @@ async function confirmComplete() {
           recipients: [{ id: completedJob.user_id, type: 'customer' }],
           reference_id: activeJobId,
           reference_type: activeJobType === 'service' ? 'service' : 'cleaning',
-          details: { address: addr, date: completedJob.planned_date || '', time: completedJob.planned_time || '', completed_date: now, actual_hours: actualSH },
+          details: {
+            address: addr,
+            date: completedJob.planned_date || '',
+            time: completedJob.planned_time || '',
+            completed_date: now,
+            actual_hours: totalSH,
+            per_worker_hours: perWorkerSH,
+            worker_count: workerCount
+          },
         }),
       }).catch(e => console.warn('Notification send failed:', e));
     }
@@ -1696,7 +1734,7 @@ async function confirmComplete() {
     jobStartTime = null;
 
     closeCompleteModal();
-    showToast('Job completed! 🎉', 'success');
+    showToast(`Job completed! ${workerCount > 1 ? `(${totalSH}h total ÷ ${workerCount} = ${perWorkerSH}h each)` : ''} 🎉`, 'success');
     loadAllData();
   } catch(e) {
     showToast('Failed to complete', 'error');
@@ -1894,6 +1932,70 @@ function setupNotifRealtimeW() {
       filter: `user_id=eq.${currentWorker.id}`,
     }, (payload) => {
       loadNotificationsW();
+    })
+    .subscribe();
+}
+
+/* ── Realtime: sync job state across multiple workers ── */
+function setupJobRealtimeW() {
+  if (!currentWorker) return;
+
+  // Listen for cleaning_schedule changes (supports multi-worker)
+  sb.channel('job-sync-cleaning')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'cleaning_schedule',
+    }, (payload) => {
+      const updated = payload.new;
+      // Only react if this job is assigned to me
+      if (!updated.assigned_workers?.includes(currentWorker.id) && updated.assigned_worker_id !== currentWorker.id) return;
+
+      if (updated.status === 'in_progress' && updated.id !== activeJobId && updated.actual_start) {
+        // Another worker started this job → sync my timer
+        activeJobId = updated.id;
+        activeJobType = 'cleaning';
+        jobStartTime = new Date(updated.actual_start);
+        startTimer();
+        showToast('Co-worker started the job — timer synced', 'info');
+        loadAllData();
+      } else if (updated.status === 'completed' && updated.id === activeJobId) {
+        // Another worker completed this job → auto-complete my view
+        if (timerInterval) clearInterval(timerInterval);
+        activeJobId = null;
+        jobStartTime = null;
+        closeCompleteModal();
+        showToast('Job completed by co-worker', 'success');
+        loadAllData();
+      }
+    })
+    .subscribe();
+
+  // Listen for service_requests changes
+  sb.channel('job-sync-service')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'service_requests',
+    }, (payload) => {
+      const updated = payload.new;
+      if (updated.assigned_worker_id !== currentWorker.id) return;
+
+      if (updated.status === 'in_progress' && updated.id !== activeJobId && updated.actual_start) {
+        activeJobId = updated.id;
+        activeJobType = 'service';
+        jobStartTime = new Date(updated.actual_start);
+        startTimer();
+        showToast('Co-worker started the job — timer synced', 'info');
+        loadAllData();
+      } else if (updated.status === 'completed' && updated.id === activeJobId) {
+        if (timerInterval) clearInterval(timerInterval);
+        activeJobId = null;
+        jobStartTime = null;
+        closeCompleteModal();
+        showToast('Job completed by co-worker', 'success');
+        loadAllData();
+      }
     })
     .subscribe();
 }
