@@ -1007,7 +1007,7 @@ body {
 <script>
 const SUPABASE_URL = 'https://rtkgnlcgepromqtoelre.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
-const HOURLY_RATE = 40;
+const HOURLY_RATE = 35;
 
 const TRAINING_DOCS = {
   checklist: 'https://docs.google.com/document/d/YOUR_DOC_ID_1/preview',
@@ -1428,7 +1428,9 @@ function renderEarningsPage() {
   recentEl.innerHTML = visible.map(job => {
     const d = new Date(job.planned_date + 'T00:00:00');
     const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const hours = job.actual_duration || job.duration_hours || 2;
+    const totalHours = job.actual_duration || job.duration_hours || 2;
+    const workerCount = (job.assigned_workers?.length) || 1;
+    const hours = workerCount > 1 ? Math.round((totalHours / workerCount) * 10) / 10 : totalHours;
     const jobRate = job.job_type === 'service' ? (currentWorker.tech_rate || rate) : rate;
     const earnings = hours * jobRate;
     const typeIcon = job.job_type === 'service' ? '🔧' : '🧹';
@@ -1653,8 +1655,8 @@ async function confirmComplete() {
     const perWorkerSH = workerCount > 1 ? Math.round((totalSH / workerCount) * 10) / 10 : totalSH;
 
     const updateData = activeJobType === 'service'
-      ? { status: 'completed', actual_end: now, sh_used: perWorkerSH, after_photos: urls, worker_notes: notes }
-      : { status: 'completed', actual_end: now, actual_duration: perWorkerSH, after_photos: urls, worker_notes: notes };
+      ? { status: 'completed', actual_end: now, sh_used: totalSH, after_photos: urls, worker_notes: notes }
+      : { status: 'completed', actual_end: now, actual_duration: totalSH, after_photos: urls, worker_notes: notes };
 
     const { error } = await sb.from(table).update(updateData).eq('id', activeJobId);
     if (error) throw error;
