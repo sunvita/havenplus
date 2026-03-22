@@ -1026,14 +1026,29 @@ let pendingStartJobId = null;
 let pendingStartJobType = 'cleaning';
 
 // ═══ Init ═══
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   
   const saved = localStorage.getItem('hp_worker');
   if (saved) {
     try {
-      currentWorker = JSON.parse(saved);
+      const cached = JSON.parse(saved);
+      currentWorker = cached;
       showMainApp();
+      // Refresh worker data from DB to get latest rates
+      const { data: fresh } = await sb.from('workers')
+        .select('id, full_name, worker_code, area, is_active, cleaning_rate, tech_rate, total_jobs_completed, rating')
+        .eq('id', cached.id)
+        .maybeSingle();
+      if (fresh && fresh.is_active) {
+        currentWorker = fresh;
+        localStorage.setItem('hp_worker', JSON.stringify(fresh));
+      } else if (fresh && !fresh.is_active) {
+        currentWorker = null;
+        localStorage.removeItem('hp_worker');
+        location.reload();
+        return;
+      }
       loadAllData();
       loadNotificationsW();
       setupNotifRealtimeW();
