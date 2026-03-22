@@ -1373,7 +1373,7 @@ async function loadMeTab() {
     earningsPage = 0;
     const [cleanRes, srRes] = await Promise.all([
       sb.from('cleaning_schedule')
-        .select('id, planned_date, duration_hours, assigned_worker_id, assigned_workers, properties(address, suburb)')
+        .select('id, planned_date, duration_hours, actual_duration, assigned_worker_id, assigned_workers, properties(address, suburb)')
         .eq('status', 'completed')
         .order('planned_date', { ascending: false }).limit(100),
       sb.from('service_requests')
@@ -1428,7 +1428,7 @@ function renderEarningsPage() {
   recentEl.innerHTML = visible.map(job => {
     const d = new Date(job.planned_date + 'T00:00:00');
     const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const hours = job.duration_hours || 2;
+    const hours = job.actual_duration || job.duration_hours || 2;
     const jobRate = job.job_type === 'service' ? (currentWorker.tech_rate || rate) : rate;
     const earnings = hours * jobRate;
     const typeIcon = job.job_type === 'service' ? '🔧' : '🧹';

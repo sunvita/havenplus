@@ -938,8 +938,8 @@
         </div>
         <div class="filter-bar">
           <select class="filter-input" id="schedPeriodFilter" onchange="handlePeriodChange()">
-            <option value="1m">Next 1 month</option>
-            <option value="2m">Next 2 months</option>
+            <option value="1m">This month</option>
+            <option value="2m">Until next month</option>
             <option value="all">All (past & future)</option>
             <option value="custom">Custom range</option>
           </select>
@@ -2501,13 +2501,13 @@ async function loadSchedules() {
   today.setHours(0, 0, 0, 0);
   
   if (period === '1m') {
-    dateFrom = today;
-    dateTo = new Date(today);
-    dateTo.setMonth(dateTo.getMonth() + 1);
+    // This month: from 1st of current month to end of current month
+    dateFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+    dateTo = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
   } else if (period === '2m') {
-    dateFrom = today;
-    dateTo = new Date(today);
-    dateTo.setMonth(dateTo.getMonth() + 2);
+    // Until next month: from 1st of current month to end of next month
+    dateFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+    dateTo = new Date(today.getFullYear(), today.getMonth() + 2, 0);
   } else if (period === 'custom') {
     const fromVal = document.getElementById('schedDateFrom').value;
     const toVal = document.getElementById('schedDateTo').value;
