@@ -293,6 +293,10 @@ body {
 }
 .job-badge.next { background: var(--accent); color: white; }
 .job-badge.progress { background: var(--green); color: white; }
+.job-badge.completed { background: #e8f5e9; color: #28a745; }
+.job-card.completed { opacity: 0.7; border-color: #c8e6c9; }
+.job-badge.overdue { background: #fff3e0; color: #e65100; }
+.job-card.overdue { border-color: #ffcc80; }
 .job-address {
   font-size: 15px;
   font-weight: 600;
@@ -1183,12 +1187,12 @@ async function loadAllJobs() {
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('planned_date', monthStartStr)
         .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
-        .order('planned_date').order('planned_time'),
+        .order('planned_date', { ascending: false }).order('planned_time', { ascending: false }),
       sb.from('service_requests')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('scheduled_date', monthStartStr)
         .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
-        .order('scheduled_date')
+        .order('scheduled_date', { ascending: false })
     ]);
 
     const myJobs = [
@@ -1204,9 +1208,9 @@ async function loadAllJobs() {
         duration_hours: j.sh_estimate || 1
       }))
     ].sort((a, b) => {
-      const da = a.planned_date || '9999'; const db = b.planned_date || '9999';
-      if (da !== db) return da.localeCompare(db);
-      return (a.planned_time || '99:99').localeCompare(b.planned_time || '99:99');
+      const da = a.planned_date || '0000'; const db = b.planned_date || '0000';
+      if (da !== db) return db.localeCompare(da);
+      return (b.planned_time || '00:00').localeCompare(a.planned_time || '00:00');
     });
 
     allMyJobs = myJobs;
@@ -1226,13 +1230,14 @@ async function loadAllJobs() {
     document.getElementById('summaryMonth').textContent = monthCount;
 
     /* Smart headline */
+    const futureJobs = activeJobs.filter(j => j.planned_date >= todayStr);
     if (todayCount) {
       document.getElementById('summaryHeadline').textContent = 'You have ' + todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today';
-    } else if (activeJobs.length) {
-      const nextJob = activeJobs[0];
+    } else if (futureJobs.length) {
+      const nextJob = futureJobs[0];
       const nextDate = new Date(nextJob.planned_date + 'T00:00:00');
       const diffDays = Math.ceil((nextDate - new Date(todayStr + 'T00:00:00')) / 86400000);
-      document.getElementById('summaryHeadline').textContent = diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' to next job, ' + monthCount + ' this month';
+      document.getElementById('summaryHeadline').textContent = diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' to next job';
     } else {
       document.getElementById('summaryHeadline').textContent = myJobs.length ? myJobs.length + ' job' + (myJobs.length > 1 ? 's' : '') + ' this month' : 'No upcoming jobs';
     }
@@ -1259,7 +1264,7 @@ function renderAllJobs() {
   const jobs = currentJobFilter === 'all' ? allMyJobs : allMyJobs.filter(j => j.job_type === currentJobFilter);
 
   if (!jobs.length) {
-    const msg = currentJobFilter === 'all' ? 'No upcoming jobs assigned to you.' : 'No ' + currentJobFilter + ' jobs.';
+    const msg = currentJobFilter === 'all' ? 'No jobs this month.' : 'No ' + currentJobFilter + ' jobs this month.';
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">' + msg + '</div></div>';
     return;
   }
@@ -1292,9 +1297,14 @@ function renderAllJobs() {
 function renderJobCard(job, isNext, todayStr) {
   const prop = job.properties || {};
   const isInProgress = job.status === 'in_progress';
+  const isCompleted = job.status === 'completed';
   const isToday = job.planned_date === todayStr;
-  const cardClass = isInProgress ? 'in-progress' : (isNext ? 'next-up' : '');
-  const badge = isInProgress ? '<span class="job-badge progress">In Progress</span>'
+  const isPast = job.planned_date < todayStr;
+  const isOverdue = isPast && !isCompleted && !isInProgress;
+  const cardClass = isCompleted ? 'completed' : isOverdue ? 'overdue' : (isInProgress ? 'in-progress' : (isNext ? 'next-up' : ''));
+  const badge = isCompleted ? '<span class="job-badge completed">✓ Completed</span>'
+    : isOverdue ? '<span class="job-badge overdue">Overdue</span>'
+    : isInProgress ? '<span class="job-badge progress">In Progress</span>'
     : (isNext ? '<span class="job-badge next">Next</span>' : '');
 
   const isService = job.job_type === 'service';
@@ -1326,6 +1336,19 @@ function renderJobCard(job, isNext, todayStr) {
           + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
           + ' Complete Job</button>'
         : '<span style="font-size:13px;color:#888;padding:8px;">In progress (started by co-worker)</span>')
+      + '</div>';
+  } else if (isOverdue) {
+    actions = '<div class="job-actions">'
+      + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      + ' Navigate</button>'
+      + '<button class="job-btn job-btn-primary" onclick="startJob(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
+      + ' Start</button></div>';
+  } else if (isCompleted) {
+    const completedDate = job.completed_at ? new Date(job.completed_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : '';
+    actions = '<div class="job-actions">'
+      + '<span style="font-size:13px;color:#28a745;padding:8px;">✓ Completed' + (completedDate ? ' · ' + completedDate : '') + '</span>'
       + '</div>';
   } else if (isToday) {
     actions = '<div class="job-actions">'
@@ -1365,7 +1388,7 @@ function renderJobCard(job, isNext, todayStr) {
   let propInfo = '<span class="job-prop-tag">' + propTypeLabel + '</span>'
     + '<span>🛏 ' + (prop.bedrooms || '?') + '</span>'
     + '<span>🚿 ' + (prop.bathrooms || '?') + '</span>'
-    + '<span>⏱ ' + (job.duration_hours || (isService ? 1 : 2)) + 'h</span>';
+    + '<span>⏱ ' + (isCompleted && job.actual_duration ? job.actual_duration : (job.duration_hours || (isService ? 1 : 2))) + 'h</span>';
   if (isService && categoryLabel) {
     propInfo += '<span>' + categoryLabel.replace(' · ','') + '</span>';
   }
@@ -1400,17 +1423,9 @@ async function loadMeTab() {
         .order('scheduled_date', { ascending: false }).limit(100)
     ]);
 
-    console.log('[Earnings] cleanRes:', cleanRes.data?.length, 'rows, error:', cleanRes.error);
-    console.log('[Earnings] srRes:', srRes.data?.length, 'rows, error:', srRes.error);
-    console.log('[Earnings] currentWorker.id:', currentWorker.id);
-
-    const myCleaningJobs = (cleanRes.data || []).filter(j => {
-      const inArray = Array.isArray(j.assigned_workers) && j.assigned_workers.includes(currentWorker.id);
-      const isAssigned = j.assigned_worker_id === currentWorker.id;
-      return inArray || isAssigned;
-    }).map(j => ({ ...j, job_type: 'cleaning' }));
-
-    console.log('[Earnings] myCleaningJobs:', myCleaningJobs.length);
+    const myCleaningJobs = (cleanRes.data || []).filter(j =>
+      (Array.isArray(j.assigned_workers) && j.assigned_workers.includes(currentWorker.id)) || j.assigned_worker_id === currentWorker.id
+    ).map(j => ({ ...j, job_type: 'cleaning' }));
 
     const myServiceJobs = (srRes.data || []).filter(j =>
       j.assigned_worker_id === currentWorker.id
@@ -1423,7 +1438,6 @@ async function loadMeTab() {
     allEarningsJobs = [...myCleaningJobs, ...myServiceJobs].sort((a, b) =>
       new Date(b.planned_date) - new Date(a.planned_date)
     );
-    console.log('[Earnings] total:', allEarningsJobs.length);
 
     /* This month count */
     const monthStart = new Date();
