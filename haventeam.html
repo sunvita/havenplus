@@ -1186,12 +1186,12 @@ async function loadAllJobs() {
       sb.from('cleaning_schedule')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('planned_date', monthStartStr)
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
         .order('planned_date', { ascending: false }).order('planned_time', { ascending: false }),
       sb.from('service_requests')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('scheduled_date', monthStartStr)
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
         .order('scheduled_date', { ascending: false })
     ]);
 
@@ -1219,27 +1219,28 @@ async function loadAllJobs() {
     weekEnd.setDate(weekEnd.getDate() + 7);
     const weekEndStr = weekEnd.toISOString().split('T')[0];
 
-    /* Summary counts — exclude completed from upcoming counts */
+    /* Summary counts — this month total includes completed */
     const activeJobs = myJobs.filter(j => j.status !== 'completed');
+    const completedJobs = myJobs.filter(j => j.status === 'completed');
     const todayCount = activeJobs.filter(j => j.planned_date === todayStr).length;
     const weekCount = activeJobs.filter(j => j.planned_date >= todayStr && j.planned_date <= weekEndStr).length;
-    const monthCount = activeJobs.length;
+    const monthTotal = myJobs.length;
 
     document.getElementById('summaryToday').textContent = todayCount;
     document.getElementById('summaryWeek').textContent = weekCount;
-    document.getElementById('summaryMonth').textContent = monthCount;
+    document.getElementById('summaryMonth').textContent = monthTotal;
 
     /* Smart headline */
     const futureJobs = activeJobs.filter(j => j.planned_date >= todayStr);
+    const doneLabel = completedJobs.length ? completedJobs.length + ' done' : '';
+    const pendingLabel = activeJobs.length ? activeJobs.length + ' upcoming' : '';
+    const parts = [pendingLabel, doneLabel].filter(Boolean).join(', ');
     if (todayCount) {
-      document.getElementById('summaryHeadline').textContent = 'You have ' + todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today';
-    } else if (futureJobs.length) {
-      const nextJob = futureJobs[0];
-      const nextDate = new Date(nextJob.planned_date + 'T00:00:00');
-      const diffDays = Math.ceil((nextDate - new Date(todayStr + 'T00:00:00')) / 86400000);
-      document.getElementById('summaryHeadline').textContent = diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' to next job';
+      document.getElementById('summaryHeadline').textContent = todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today' + (doneLabel ? ', ' + doneLabel : '');
+    } else if (parts) {
+      document.getElementById('summaryHeadline').textContent = monthTotal + ' job' + (monthTotal > 1 ? 's' : '') + ' this month — ' + parts;
     } else {
-      document.getElementById('summaryHeadline').textContent = myJobs.length ? myJobs.length + ' job' + (myJobs.length > 1 ? 's' : '') + ' this month' : 'No upcoming jobs';
+      document.getElementById('summaryHeadline').textContent = 'No jobs this month';
     }
 
     /* Detect in-progress job */
@@ -1261,10 +1262,11 @@ async function loadAllJobs() {
 function renderAllJobs() {
   const container = document.getElementById('allJobsList');
   const todayStr = window._todayStr;
-  const jobs = currentJobFilter === 'all' ? allMyJobs : allMyJobs.filter(j => j.job_type === currentJobFilter);
+  const filtered = currentJobFilter === 'all' ? allMyJobs : allMyJobs.filter(j => j.job_type === currentJobFilter);
+  const jobs = filtered.filter(j => j.status !== 'completed');
 
   if (!jobs.length) {
-    const msg = currentJobFilter === 'all' ? 'No jobs this month.' : 'No ' + currentJobFilter + ' jobs this month.';
+    const msg = currentJobFilter === 'all' ? 'No active jobs this month.' : 'No active ' + currentJobFilter + ' jobs this month.';
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">' + msg + '</div></div>';
     return;
   }
