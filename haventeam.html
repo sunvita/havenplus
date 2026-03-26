@@ -1174,20 +1174,20 @@ async function loadAllJobs() {
   try {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    const weekEnd = new Date(today);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    const weekEndStr = weekEnd.toISOString().split('T')[0];
+    // Show jobs from 1st of current month (includes past completed this month)
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthStartStr = monthStart.toISOString().split('T')[0];
 
     const [cleanRes, srRes] = await Promise.all([
       sb.from('cleaning_schedule')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
-        .gte('planned_date', todayStr)
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
+        .gte('planned_date', monthStartStr)
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
         .order('planned_date').order('planned_time'),
       sb.from('service_requests')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
-        .gte('scheduled_date', todayStr)
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
+        .gte('scheduled_date', monthStartStr)
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
         .order('scheduled_date')
     ]);
 
@@ -1211,12 +1211,15 @@ async function loadAllJobs() {
 
     allMyJobs = myJobs;
     window._todayStr = todayStr;
-    window._weekEndStr = weekEndStr;
+    const weekEnd = new Date(today);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekEndStr = weekEnd.toISOString().split('T')[0];
 
-    /* Summary counts */
-    const todayCount = myJobs.filter(j => j.planned_date === todayStr).length;
-    const weekCount = myJobs.filter(j => j.planned_date <= weekEndStr).length;
-    const monthCount = myJobs.length;
+    /* Summary counts — exclude completed from upcoming counts */
+    const activeJobs = myJobs.filter(j => j.status !== 'completed');
+    const todayCount = activeJobs.filter(j => j.planned_date === todayStr).length;
+    const weekCount = activeJobs.filter(j => j.planned_date >= todayStr && j.planned_date <= weekEndStr).length;
+    const monthCount = activeJobs.length;
 
     document.getElementById('summaryToday').textContent = todayCount;
     document.getElementById('summaryWeek').textContent = weekCount;
@@ -1225,13 +1228,13 @@ async function loadAllJobs() {
     /* Smart headline */
     if (todayCount) {
       document.getElementById('summaryHeadline').textContent = 'You have ' + todayCount + ' job' + (todayCount > 1 ? 's' : '') + ' today';
-    } else if (myJobs.length) {
-      const nextJob = myJobs[0];
+    } else if (activeJobs.length) {
+      const nextJob = activeJobs[0];
       const nextDate = new Date(nextJob.planned_date + 'T00:00:00');
       const diffDays = Math.ceil((nextDate - new Date(todayStr + 'T00:00:00')) / 86400000);
-      document.getElementById('summaryHeadline').textContent = '1 job in ' + diffDays + ' day' + (diffDays > 1 ? 's' : '') + ', ' + monthCount + ' this month';
+      document.getElementById('summaryHeadline').textContent = diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' to next job, ' + monthCount + ' this month';
     } else {
-      document.getElementById('summaryHeadline').textContent = 'No upcoming jobs';
+      document.getElementById('summaryHeadline').textContent = myJobs.length ? myJobs.length + ' job' + (myJobs.length > 1 ? 's' : '') + ' this month' : 'No upcoming jobs';
     }
 
     /* Detect in-progress job */
@@ -1397,9 +1400,17 @@ async function loadMeTab() {
         .order('scheduled_date', { ascending: false }).limit(100)
     ]);
 
-    const myCleaningJobs = (cleanRes.data || []).filter(j =>
-      j.assigned_workers?.includes(currentWorker.id) || j.assigned_worker_id === currentWorker.id
-    ).map(j => ({ ...j, job_type: 'cleaning' }));
+    console.log('[Earnings] cleanRes:', cleanRes.data?.length, 'rows, error:', cleanRes.error);
+    console.log('[Earnings] srRes:', srRes.data?.length, 'rows, error:', srRes.error);
+    console.log('[Earnings] currentWorker.id:', currentWorker.id);
+
+    const myCleaningJobs = (cleanRes.data || []).filter(j => {
+      const inArray = Array.isArray(j.assigned_workers) && j.assigned_workers.includes(currentWorker.id);
+      const isAssigned = j.assigned_worker_id === currentWorker.id;
+      return inArray || isAssigned;
+    }).map(j => ({ ...j, job_type: 'cleaning' }));
+
+    console.log('[Earnings] myCleaningJobs:', myCleaningJobs.length);
 
     const myServiceJobs = (srRes.data || []).filter(j =>
       j.assigned_worker_id === currentWorker.id
@@ -1412,6 +1423,7 @@ async function loadMeTab() {
     allEarningsJobs = [...myCleaningJobs, ...myServiceJobs].sort((a, b) =>
       new Date(b.planned_date) - new Date(a.planned_date)
     );
+    console.log('[Earnings] total:', allEarningsJobs.length);
 
     /* This month count */
     const monthStart = new Date();
