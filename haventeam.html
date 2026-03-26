@@ -1186,12 +1186,12 @@ async function loadAllJobs() {
       sb.from('cleaning_schedule')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('planned_date', monthStartStr)
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
         .order('planned_date', { ascending: false }).order('planned_time', { ascending: false }),
       sb.from('service_requests')
         .select('*, properties(address, suburb, area, bedrooms, bathrooms, property_type, notes)')
         .gte('scheduled_date', monthStartStr)
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
+        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
         .order('scheduled_date', { ascending: false })
     ]);
 
