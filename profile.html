@@ -3811,7 +3811,7 @@ async function loadDashboard() {
       // All properties
       sb.from('properties').select('id, address, suburb, user_id'),
       // Cleanings this month
-      sb.from('cleaning_schedule').select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers, ch_deducted, duration_hours')
+      sb.from('cleaning_schedule').select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers, ch_deducted, duration_hours, actual_duration')
         .gte('planned_date', getMonthStart())
         .lte('planned_date', getMonthEnd())
     ]);
@@ -3821,15 +3821,12 @@ async function loadDashboard() {
     const props = propsRes.data || [];
     const cleanings = cleaningsRes.data || [];
     
-    // Debug errors
     if (subsRes.error) console.error('Subs error:', subsRes.error);
     if (jobsRes.error) console.error('Jobs error:', jobsRes.error);
     
-    console.log('Dashboard subs:', subs.length, subs);
-    console.log('Active subs:', subs.filter(s => s.status === 'active').length);
-    
-    // 1. Pending Jobs
-    const pendingJobs = jobs.length;
+    // 1. Pending Jobs (service requests + cleanings pending/requested)
+    const pendingCleanings = cleanings.filter(c => c.status === 'requested' || c.status === 'pending').length;
+    const pendingJobs = jobs.length + pendingCleanings;
     document.getElementById('ctaPendingJobs').textContent = pendingJobs;
     updateCtaCardState('cta-pending', pendingJobs);
     
@@ -3872,18 +3869,19 @@ async function loadDashboard() {
     
     // This Month Stats
     const completedCleanings = cleanings.filter(c => c.status === 'completed').length;
-    const totalChUsed = cleanings.filter(c => c.status === 'completed').reduce((sum, c) => sum + (c.ch_deducted || c.duration_hours || 2), 0);
+    const totalChUsed = cleanings.filter(c => c.status === 'completed').reduce((sum, c) => sum + (c.actual_duration || c.ch_deducted || c.duration_hours || 2), 0);
     
     document.getElementById('dashCleaningsMonth').textContent = cleanings.length;
     document.getElementById('dashActiveSubs').textContent = subs.filter(s => s.status === 'active').length;
     document.getElementById('dashChUsed').textContent = `${totalChUsed.toFixed(1)} hrs`;
     
-    // Jobs completed this month
-    const jobsMonthRes = await sb.from('service_requests').select('id')
+    // Jobs completed this month (cleanings + service requests)
+    const completedServices = await sb.from('service_requests').select('id')
       .eq('status', 'completed')
-      .gte('created_at', getMonthStart())
-      .lte('created_at', getMonthEnd());
-    document.getElementById('dashJobsMonth').textContent = (jobsMonthRes.data || []).length;
+      .gte('scheduled_date', getMonthStart())
+      .lte('scheduled_date', getMonthEnd());
+    const totalCompleted = completedCleanings + (completedServices.data || []).length;
+    document.getElementById('dashJobsMonth').textContent = totalCompleted;
     
     // Upcoming Cleanings (next 7 days)
     await loadUpcomingCleanings();
