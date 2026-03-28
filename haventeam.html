@@ -815,6 +815,10 @@ body {
                 <div class="summary-stat-value" id="summaryMonth">0</div>
                 <div class="summary-stat-label">this month</div>
               </div>
+              <div class="summary-stat" id="summaryOverdueStat" style="display:none;">
+                <div class="summary-stat-value" id="summaryOverdue" style="color:#e65100;">0</div>
+                <div class="summary-stat-label" style="color:#e65100;">overdue</div>
+              </div>
             </div>
           </div>
 
@@ -1146,7 +1150,8 @@ function showMainApp() {
   document.getElementById('profileName').textContent = currentWorker.full_name;
   document.getElementById('profileCode').textContent = currentWorker.worker_code;
   document.getElementById('profileArea').textContent = (currentWorker.area || 'No Area').replace(/_/g, ' ');
-  document.getElementById('statRating').textContent = (currentWorker.rating || 0).toFixed(1) + ' ⭐';
+  const rating = (currentWorker.rating !== null && currentWorker.rating !== undefined) ? currentWorker.rating : 0;
+  document.getElementById('statRating').textContent = parseFloat(rating).toFixed(1) + ' ⭐';
 }
 
 // ═══ Tabs ═══
@@ -1225,6 +1230,7 @@ async function loadAllJobs() {
     /* Summary counts — this month total includes completed */
     const activeJobs = myJobs.filter(j => j.status !== 'completed');
     const completedJobs = myJobs.filter(j => j.status === 'completed');
+    const overdueJobs = activeJobs.filter(j => j.planned_date < todayStr);
     const todayCount = activeJobs.filter(j => j.planned_date === todayStr).length;
     const weekCount = activeJobs.filter(j => j.planned_date >= todayStr && j.planned_date <= weekEndStr).length;
     const monthTotal = myJobs.length;
@@ -1232,6 +1238,11 @@ async function loadAllJobs() {
     document.getElementById('summaryToday').textContent = todayCount;
     document.getElementById('summaryWeek').textContent = weekCount;
     document.getElementById('summaryMonth').textContent = monthTotal;
+
+    /* Overdue — show only if > 0 */
+    const overdueCount = overdueJobs.length;
+    document.getElementById('summaryOverdue').textContent = overdueCount;
+    document.getElementById('summaryOverdueStat').style.display = overdueCount > 0 ? '' : 'none';
 
     /* Smart headline */
     const futureJobs = activeJobs.filter(j => j.planned_date >= todayStr);
