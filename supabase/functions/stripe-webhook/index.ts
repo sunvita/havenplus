@@ -24,16 +24,33 @@ const SH_PRICES: Record<string, number> = {
   'price_1T7pvURVro18Xo3KNLzwtH2Z': 8,  // 8 SH Bundle
 }
 
+// Plan별 바우처 SH 수량
+const VOUCHER_MAP: Record<string, number> = {
+  essential: 2,
+  smart: 3,
+  premium: 6,
+}
+
+// ── 내부 subscription UUID 조회 헬퍼 ──
+async function getSubscriptionUUID(stripeSubId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('stripe_subscription_id', stripeSubId)
+    .maybeSingle()
+  return data?.id || null
+}
+
 // ── 결제 기록 헬퍼 함수 ──
 async function recordPayment(opts: {
   userId: string
   stripePaymentId?: string | null
   stripeInvoiceId?: string | null
-  amount: number          // cents → dollars 변환 전 원본
+  amount: number          // cents (Stripe 원본)
   currency: string
   paymentType: string     // 'subscription' | 'sh_bundle'
   shBundleSize?: number | null
-  subscriptionId?: string | null
+  subscriptionUUID?: string | null  // 내부 UUID
   stripeChargeId?: string | null
   description?: string | null
 }) {
@@ -49,7 +66,7 @@ async function recordPayment(opts: {
       })
       const balanceTx = charge.balance_transaction as Stripe.BalanceTransaction
       if (balanceTx) {
-        stripeFee = balanceTx.fee / 100      // cents → dollars
+        stripeFee = balanceTx.fee / 100
         netAmount = balanceTx.net / 100
         balanceTxId = balanceTx.id
       }
@@ -68,9 +85,9 @@ async function recordPayment(opts: {
     currency: opts.currency || 'aud',
     payment_type: opts.paymentType,
     sh_bundle_size: opts.shBundleSize || null,
-    status: 'succeeded',
+    status: 'paid',
     paid_at: new Date().toISOString(),
-    subscription_id: opts.subscriptionId || null,
+    subscription_id: opts.subscriptionUUID || null,
     stripe_charge_id: opts.stripeChargeId || null,
     stripe_balance_transaction_id: balanceTxId,
     stripe_fee: stripeFee,
@@ -115,22 +132,16 @@ serve(async (req) => {
           const plan = PRICE_TO_PLAN[priceId]
           const stripeSubId = session.subscription as string
 
-          // SH 바우처 수량 설정
-          const voucherMap: Record<string, number> = {
-            essential: 2,
-            smart: 3,
-            premium: 6,
-          }
-
           const { error } = await supabase.from('subscriptions').upsert({
             user_id: userId,
-            plan: plan,
+            plan_type: plan,
             status: 'active',
             stripe_subscription_id: stripeSubId,
             stripe_customer_id: session.customer as string,
-            sh_balance: voucherMap[plan],
-            started_at: new Date().toISOString(),
-            current_period_end: null,
+            voucher_sh_total: VOUCHER_MAP[plan],
+            voucher_sh_period: 0,
+            start_date: new Date().toISOString(),
+            end_date: null,
           }, { onConflict: 'user_id' })
 
           if (error) console.error('subscriptions upsert error:', error)
@@ -147,13 +158,15 @@ serve(async (req) => {
             }
           }
 
+          const subUUID = await getSubscriptionUUID(stripeSubId)
+
           await recordPayment({
             userId,
             stripePaymentId: paymentIntentId,
             amount: session.amount_total || 0,
             currency: session.currency || 'aud',
             paymentType: 'subscription',
-            subscriptionId: stripeSubId,
+            subscriptionUUID: subUUID,
             stripeChargeId: chargeId,
             description: `${plan} plan subscription`,
           })
@@ -163,21 +176,21 @@ serve(async (req) => {
         if (SH_PRICES[priceId]) {
           const shAmount = SH_PRICES[priceId]
 
-          // 기존 sh_balance에 추가
+          // 기존 sh_hours_total에 추가
           const { data: sub } = await supabase
             .from('subscriptions')
-            .select('sh_balance')
+            .select('id, sh_hours_total')
             .eq('user_id', userId)
             .maybeSingle()
 
-          const currentBalance = sub?.sh_balance ?? 0
+          const currentSH = sub?.sh_hours_total ?? 0
 
           const { error } = await supabase
             .from('subscriptions')
-            .update({ sh_balance: currentBalance + shAmount })
+            .update({ sh_hours_total: currentSH + shAmount })
             .eq('user_id', userId)
 
-          if (error) console.error('sh_balance update error:', error)
+          if (error) console.error('sh_hours_total update error:', error)
 
           // ── 결제 기록 → payments 테이블 ──
           const paymentIntentId = session.payment_intent as string
@@ -198,6 +211,7 @@ serve(async (req) => {
             currency: session.currency || 'aud',
             paymentType: 'sh_bundle',
             shBundleSize: shAmount,
+            subscriptionUUID: sub?.id || null,
             stripeChargeId: chargeId,
             description: `${shAmount} SH bundle purchase`,
           })
@@ -217,50 +231,42 @@ serve(async (req) => {
         const plan = PRICE_TO_PLAN[priceId]
         if (!plan) break
 
-        const voucherMap: Record<string, number> = {
-          essential: 2,
-          smart: 3,
-          premium: 6,
-        }
+        // 내부 subscription 조회
+        const { data: subRecord } = await supabase
+          .from('subscriptions')
+          .select('id, user_id, voucher_sh_total')
+          .eq('stripe_subscription_id', stripeSubId)
+          .maybeSingle()
 
-        // period_end 업데이트 + 갱신 시 바우처 지급
+        if (!subRecord) break
+
+        // period_end 업데이트 + 갱신 시 바우처 추가 지급
+        const newVoucherTotal = (subRecord.voucher_sh_total ?? 0) + VOUCHER_MAP[plan]
         const { error } = await supabase
           .from('subscriptions')
           .update({
             status: 'active',
-            current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
-            sh_balance: supabase.rpc('increment_sh', {
-              p_stripe_sub_id: stripeSubId,
-              p_amount: voucherMap[plan],
-            }),
+            end_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+            voucher_sh_total: newVoucherTotal,
           })
           .eq('stripe_subscription_id', stripeSubId)
 
         if (error) console.error('invoice renewal update error:', error)
 
         // ── 결제 기록 → payments 테이블 ──
-        // invoice에서 user_id 조회 (subscriptions 테이블에서)
-        const { data: subRecord } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', stripeSubId)
-          .maybeSingle()
+        const chargeId = invoice.charge as string || null
 
-        if (subRecord?.user_id) {
-          const chargeId = invoice.charge as string || null
-
-          await recordPayment({
-            userId: subRecord.user_id,
-            stripePaymentId: invoice.payment_intent as string,
-            stripeInvoiceId: invoice.id,
-            amount: invoice.amount_paid || 0,
-            currency: invoice.currency || 'aud',
-            paymentType: 'subscription',
-            subscriptionId: stripeSubId,
-            stripeChargeId: chargeId,
-            description: `${plan} plan renewal`,
-          })
-        }
+        await recordPayment({
+          userId: subRecord.user_id,
+          stripePaymentId: invoice.payment_intent as string,
+          stripeInvoiceId: invoice.id,
+          amount: invoice.amount_paid || 0,
+          currency: invoice.currency || 'aud',
+          paymentType: 'subscription',
+          subscriptionUUID: subRecord.id,
+          stripeChargeId: chargeId,
+          description: `${plan} plan renewal`,
+        })
         break
       }
 
