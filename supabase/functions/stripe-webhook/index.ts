@@ -41,6 +41,10 @@ async function getSubscriptionUUID(stripeSubId: string): Promise<string | null> 
   return data?.id || null
 }
 
+// Stripe Billing Usage Fee (인보이스당 고정 비용: $1.05 + 수수료 $0.11 = $1.16)
+// Stripe Billing 기능 사용 시 인보이스당 자동 부과됨
+const STRIPE_BILLING_FEE = 1.16
+
 // ── 결제 기록 헬퍼 함수 ──
 async function recordPayment(opts: {
   userId: string
@@ -53,10 +57,10 @@ async function recordPayment(opts: {
   subscriptionUUID?: string | null  // 내부 UUID
   stripeChargeId?: string | null
   description?: string | null
+  isSubscriptionInvoice?: boolean   // Billing Usage Fee 포함 여부
 }) {
-  // Stripe charge에서 수수료 정보 조회
-  let stripeFee = null
-  let netAmount = null
+  // Stripe charge에서 결제 수수료 조회
+  let chargeFee = 0
   let balanceTxId = null
 
   if (opts.stripeChargeId) {
@@ -66,8 +70,7 @@ async function recordPayment(opts: {
       })
       const balanceTx = charge.balance_transaction as Stripe.BalanceTransaction
       if (balanceTx) {
-        stripeFee = balanceTx.fee / 100
-        netAmount = balanceTx.net / 100
+        chargeFee = balanceTx.fee / 100       // 결제 수수료 (예: $2.85)
         balanceTxId = balanceTx.id
       }
     } catch (e) {
@@ -75,7 +78,12 @@ async function recordPayment(opts: {
     }
   }
 
+  // 총 수수료 = 결제 수수료 + Billing Usage Fee (구독 인보이스인 경우)
+  const billingFee = opts.isSubscriptionInvoice ? STRIPE_BILLING_FEE : 0
+  const totalFee = chargeFee + billingFee
+
   const amountDollars = opts.amount / 100
+  const netAmount = amountDollars - totalFee
 
   const { error } = await supabase.from('payments').insert({
     user_id: opts.userId,
@@ -90,8 +98,8 @@ async function recordPayment(opts: {
     subscription_id: opts.subscriptionUUID || null,
     stripe_charge_id: opts.stripeChargeId || null,
     stripe_balance_transaction_id: balanceTxId,
-    stripe_fee: stripeFee,
-    net_amount: netAmount ?? amountDollars,
+    stripe_fee: totalFee,
+    net_amount: netAmount,
     description: opts.description || null,
   })
 
@@ -169,6 +177,7 @@ serve(async (req) => {
             subscriptionUUID: subUUID,
             stripeChargeId: chargeId,
             description: `${plan} plan subscription`,
+            isSubscriptionInvoice: true,
           })
         }
 
@@ -214,6 +223,7 @@ serve(async (req) => {
             subscriptionUUID: sub?.id || null,
             stripeChargeId: chargeId,
             description: `${shAmount} SH bundle purchase`,
+            isSubscriptionInvoice: false,
           })
         }
         break
@@ -266,6 +276,7 @@ serve(async (req) => {
           subscriptionUUID: subRecord.id,
           stripeChargeId: chargeId,
           description: `${plan} plan renewal`,
+          isSubscriptionInvoice: true,
         })
         break
       }
