@@ -295,8 +295,8 @@ body {
 .job-badge.progress { background: var(--green); color: white; }
 .job-badge.completed { background: #e8f5e9; color: #28a745; }
 .job-card.completed { opacity: 0.7; border-color: #c8e6c9; }
-.job-badge.overdue { background: #fff3e0; color: #e65100; }
-.job-card.overdue { border-color: #ffcc80; }
+.job-badge.overdue { background: #fef9c3; color: #b45309; }
+.job-card.overdue { border-color: #fde68a; }
 .job-address {
   font-size: 15px;
   font-weight: 600;
@@ -332,7 +332,7 @@ body {
 }
 .job-type-tag.service {
   background: #fff3e0;
-  color: #e65100;
+  color: #f59e0b;
 }
 .job-prop-info {
   display: flex;
@@ -415,6 +415,8 @@ body {
 .job-btn-complete { background: var(--accent); color: white; }
 .job-btn-complete:hover { background: #e55d2b; }
 .job-btn-locked { background: #f0f0f0; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; font-size: 11px; }
+.job-btn-reschedule { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.job-btn-reschedule:hover { background: #fde68a; }
 
 /* Filter chips */
 .filter-chip {
@@ -816,8 +818,8 @@ body {
                 <div class="summary-stat-label">this month</div>
               </div>
               <div class="summary-stat" id="summaryOverdueStat" style="display:none;">
-                <div class="summary-stat-value" id="summaryOverdue" style="color:#e65100;">0</div>
-                <div class="summary-stat-label" style="color:#e65100;">overdue</div>
+                <div class="summary-stat-value" id="summaryOverdue" style="color:#f59e0b;">0</div>
+                <div class="summary-stat-label" style="color:#f59e0b;">overdue</div>
               </div>
             </div>
           </div>
@@ -1008,6 +1010,35 @@ body {
         <button class="modal-btn modal-btn-secondary" onclick="closeCompleteModal()">Cancel</button>
         <button class="modal-btn modal-btn-primary" id="btnComplete" onclick="confirmComplete()" disabled>Complete</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Reschedule Modal ══════════════════════════════════════ -->
+<div class="modal-overlay" id="rescheduleModal" onclick="if(event.target===this)closeRescheduleModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">📅 Request Reschedule</div>
+      <button class="modal-close" onclick="closeRescheduleModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 16px;font-size:13px;color:var(--text-secondary);">Propose a new date for this job. A conflict check will be run for all assigned workers.</p>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">New Date</label>
+        <input type="date" id="rescheduleDate" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);">
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Note for Admin <span style="font-weight:400;color:var(--text-secondary)">(optional)</span></label>
+        <textarea id="rescheduleNote" rows="3" placeholder="Reason for rescheduling…" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text);resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+      <div id="rescheduleConflictAlert" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;"></div>
+      <div id="rescheduleApprovalNote" style="display:none;background:#fef9c3;border:1px solid #fde68a;color:#92400e;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:4px;">
+        ⚠️ This reschedule requires admin approval (same-day or repeat request). The admin will be notified.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="closeRescheduleModal()">Cancel</button>
+      <button class="modal-btn modal-btn-primary" id="btnRescheduleConfirm" onclick="confirmReschedule()">Submit Request</button>
     </div>
   </div>
 </div>
@@ -1358,6 +1389,9 @@ function renderJobCard(job, isNext, todayStr) {
       + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
       + ' Navigate</button>'
+      + '<button class="job-btn job-btn-reschedule" onclick="openRescheduleModal(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>'
+      + ' Reschedule</button>'
       + '<button class="job-btn job-btn-primary" onclick="startJob(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
       + ' Start</button></div>';
@@ -1371,6 +1405,9 @@ function renderJobCard(job, isNext, todayStr) {
       + '<button class="job-btn job-btn-secondary" onclick="navigate(\'' + navAddr + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
       + ' Navigate</button>'
+      + '<button class="job-btn job-btn-reschedule" onclick="openRescheduleModal(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>'
+      + ' Reschedule</button>'
       + '<button class="job-btn job-btn-primary" onclick="startJob(\'' + job.id + '\',\'' + (job.job_type || 'cleaning') + '\')">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
       + ' Start</button></div>';
@@ -1865,6 +1902,208 @@ async function uploadPhotos(blobs, jobId, prefix) {
 
 function navigate(address) {
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
+}
+
+// ═══ Reschedule ═══════════════════════════════════════════
+let rescheduleJobId = null;
+let rescheduleJobType = 'cleaning';
+let rescheduleJobData = null;
+
+function openRescheduleModal(jobId, jobType) {
+  rescheduleJobId = jobId;
+  rescheduleJobType = jobType || 'cleaning';
+
+  // Find job in current list
+  const table = rescheduleJobType === 'service' ? weekJobs : weekJobs;
+  rescheduleJobData = [...todayJobs, ...weekJobs].find(j => j.id === jobId) || null;
+
+  // Set minimum date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const dateInput = document.getElementById('rescheduleDate');
+  dateInput.min = tomorrowStr;
+  dateInput.value = '';
+
+  document.getElementById('rescheduleNote').value = '';
+  document.getElementById('rescheduleConflictAlert').style.display = 'none';
+  document.getElementById('rescheduleApprovalNote').style.display = 'none';
+  document.getElementById('btnRescheduleConfirm').disabled = false;
+  document.getElementById('btnRescheduleConfirm').textContent = 'Submit Request';
+
+  // Show admin approval warning for same-day reschedule or repeat (count >= 1)
+  const todayStr = window._todayStr || new Date().toISOString().split('T')[0];
+  const originalDate = rescheduleJobData?.planned_date || '';
+  const rescheduleCount = rescheduleJobData?.reschedule_count || 0;
+  const isSameDay = originalDate === todayStr;
+  if (isSameDay || rescheduleCount >= 1) {
+    document.getElementById('rescheduleApprovalNote').style.display = '';
+  }
+
+  document.getElementById('rescheduleModal').classList.add('open');
+}
+
+function closeRescheduleModal() {
+  document.getElementById('rescheduleModal').classList.remove('open');
+  rescheduleJobId = null;
+  rescheduleJobData = null;
+}
+
+async function confirmReschedule() {
+  const newDate = document.getElementById('rescheduleDate').value;
+  const note = document.getElementById('rescheduleNote').value.trim();
+  const conflictEl = document.getElementById('rescheduleConflictAlert');
+  const btn = document.getElementById('btnRescheduleConfirm');
+
+  if (!newDate) {
+    conflictEl.textContent = 'Please select a new date.';
+    conflictEl.style.cssText = 'display:block;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  conflictEl.style.display = 'none';
+
+  try {
+    // ── Worker conflict check: any assigned worker has a job on newDate? ──
+    const job = rescheduleJobData;
+    const assignedWorkers = (job?.assigned_workers && job.assigned_workers.length > 0)
+      ? job.assigned_workers
+      : (job?.assigned_worker_id ? [job.assigned_worker_id] : [currentWorker.id]);
+
+    const table = rescheduleJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
+    const dateField = rescheduleJobType === 'service' ? 'scheduled_date' : 'planned_date';
+
+    // Check each worker for conflicts on the proposed date
+    let conflictFound = false;
+    for (const wid of assignedWorkers) {
+      const { data: conflicts } = await sb
+        .from('cleaning_schedule')
+        .select('id, planned_date')
+        .contains('assigned_workers', [wid])
+        .eq('planned_date', newDate)
+        .neq('id', rescheduleJobId)
+        .in('status', ['scheduled', 'confirmed', 'in_progress'])
+        .limit(1);
+
+      if (conflicts && conflicts.length > 0) {
+        conflictFound = true;
+        break;
+      }
+
+      // Also check service_requests for the same worker
+      const { data: srConflicts } = await sb
+        .from('service_requests')
+        .select('id, scheduled_date')
+        .eq('assigned_worker_id', wid)
+        .eq('scheduled_date', newDate)
+        .neq('id', rescheduleJobId)
+        .in('status', ['scheduled', 'confirmed', 'in_progress'])
+        .limit(1);
+
+      if (srConflicts && srConflicts.length > 0) {
+        conflictFound = true;
+        break;
+      }
+    }
+
+    if (conflictFound) {
+      conflictEl.textContent = '⚠️ One or more assigned workers already have a job on this date. Please choose a different date.';
+      conflictEl.style.cssText = 'display:block;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;';
+      btn.disabled = false;
+      btn.textContent = 'Submit Request';
+      return;
+    }
+
+    // ── Determine approval mode ──
+    const todayStr = window._todayStr || new Date().toISOString().split('T')[0];
+    const originalDate = job?.planned_date || '';
+    const rescheduleCount = job?.reschedule_count || 0;
+    const isSameDay = originalDate === todayStr;
+    const needsAdminApproval = isSameDay || rescheduleCount >= 1;
+
+    btn.textContent = 'Saving…';
+
+    if (needsAdminApproval) {
+      // ── Pending admin approval: mark request, don't change date yet ──
+      const updateObj = {
+        reschedule_requested: true,
+        reschedule_proposed_date: newDate,
+        reschedule_note: note || null,
+        reschedule_requested_at: new Date().toISOString(),
+        reschedule_count: rescheduleCount + 1,
+      };
+
+      const { error } = await sb.from(table).update(updateObj).eq('id', rescheduleJobId);
+      if (error) throw error;
+
+      // Notify admins
+      const prop = job?.properties || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'reschedule_request',
+          notify_admins: true,
+          reference_id: rescheduleJobId,
+          reference_type: rescheduleJobType,
+          details: {
+            address: addr,
+            date: newDate,
+            original_date: originalDate,
+            note: note || '',
+            worker_name: currentWorker.full_name || '',
+            is_same_day: isSameDay,
+            reschedule_count: rescheduleCount + 1,
+          },
+        }),
+      }).catch(e => console.warn('Reschedule notification failed:', e));
+
+      showToast('Reschedule request submitted — awaiting admin approval');
+    } else {
+      // ── Auto-approve: update planned_date directly ──
+      const updateFields = rescheduleJobType === 'service'
+        ? { scheduled_date: newDate, reschedule_count: rescheduleCount + 1, reschedule_note: note || null, reschedule_requested_at: new Date().toISOString(), reschedule_requested: false, reschedule_proposed_date: null }
+        : { planned_date: newDate, reschedule_count: rescheduleCount + 1, reschedule_note: note || null, reschedule_requested_at: new Date().toISOString(), reschedule_requested: false, reschedule_proposed_date: null };
+
+      const { error } = await sb.from(table).update(updateFields).eq('id', rescheduleJobId);
+      if (error) throw error;
+
+      // Notify admins of the auto-approved reschedule
+      const prop = job?.properties || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'reschedule_request',
+          notify_admins: true,
+          reference_id: rescheduleJobId,
+          reference_type: rescheduleJobType,
+          details: {
+            address: addr,
+            date: newDate,
+            original_date: originalDate,
+            note: note || '',
+            worker_name: currentWorker.full_name || '',
+            auto_approved: true,
+          },
+        }),
+      }).catch(e => console.warn('Reschedule notification failed:', e));
+
+      showToast('Job rescheduled to ' + new Date(newDate + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }));
+      loadAllJobs(); // Refresh job list
+    }
+
+    closeRescheduleModal();
+  } catch(e) {
+    conflictEl.textContent = e.message || 'Failed to submit reschedule request';
+    conflictEl.style.cssText = 'display:block;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;';
+    btn.disabled = false;
+    btn.textContent = 'Submit Request';
+  }
 }
 
 // ═══ Training ═══

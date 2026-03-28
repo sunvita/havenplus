@@ -121,7 +121,16 @@ function buildEmail(
     amount?: number
     plan?: string
     customer_name?: string
+    customer_email?: string
+    payment_id?: string
+    paid_at?: string
     category?: string
+    original_date?: string
+    note?: string
+    worker_name?: string
+    is_same_day?: boolean
+    reschedule_count?: number
+    auto_approved?: boolean
   },
   refType: string = 'cleaning'
 ): { subject: string; html: string } {
@@ -259,6 +268,39 @@ function buildEmail(
       }
     }
 
+    // ── Reschedule Request ──
+    case 'reschedule_request': {
+      const workerName = details.worker_name || 'A worker'
+      const originalDate = details.original_date || ''
+      const newDate = details.date || ''
+      const note = details.note || ''
+      const autoApproved = details.auto_approved === true
+      const isSameDay = details.is_same_day === true
+      const rescheduleCount = details.reschedule_count || 1
+      const adminUrl = isService ? ADMIN_URL_JOBS : ADMIN_URL_CLEANINGS
+      const menuLabel = isService ? 'View Job Requests' : 'View Cleanings'
+      const statusTag = autoApproved
+        ? `<span style="background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Auto-approved</span>`
+        : `<span style="background:#fef9c3;color:#92400e;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Pending Approval</span>`
+      return {
+        subject: `Haven Plus — ${autoApproved ? '' : '⚠️ '}Reschedule Request${autoApproved ? ' (Auto-approved)' : ' Requires Approval'}`,
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#0f2b46;">Job reschedule request 📅</h2>
+          <p style="color:#555;margin:0 0 24px;">${workerName} has requested to reschedule a ${jobLabel.toLowerCase()} job. ${statusTag}</p>
+          <div style="background:#f5f8fa;border-radius:8px;padding:20px 24px;margin-bottom:8px;">
+            <p style="margin:0 0 8px;"><strong>Worker:</strong> ${workerName}</p>
+            <p style="margin:0 0 8px;"><strong>Property:</strong> ${addr}</p>
+            ${originalDate ? `<p style="margin:0 0 8px;"><strong>Original date:</strong> ${originalDate}</p>` : ''}
+            ${newDate ? `<p style="margin:0 0 8px;"><strong>Proposed date:</strong> <span style="color:#059669;font-weight:700;">${newDate}</span></p>` : ''}
+            ${isSameDay ? `<p style="margin:0 0 8px;color:#b45309;"><strong>⚠️ Same-day reschedule</strong></p>` : ''}
+            ${rescheduleCount > 1 ? `<p style="margin:0 0 8px;color:#b45309;"><strong>Reschedule count:</strong> ${rescheduleCount}</p>` : ''}
+            ${note ? `<p style="margin:0;font-size:12px;color:#555;"><strong>Note:</strong> ${note}</p>` : ''}
+          </div>
+          ${adminButton(menuLabel, adminUrl)}
+        `)
+      }
+    }
+
     default:
       return {
         subject: 'Haven Plus — Notification',
@@ -268,7 +310,7 @@ function buildEmail(
 }
 
 // ── Build in-app notification title ──
-function buildTitle(type: string, recipientType: string, details: { date?: string; time?: string; amount?: number; customer_name?: string }, refType: string = 'cleaning'): string {
+function buildTitle(type: string, recipientType: string, details: { date?: string; time?: string; amount?: number; customer_name?: string; worker_name?: string }, refType: string = 'cleaning'): string {
   const dateStr = details.date && details.time
     ? `${details.date} at ${details.time}`
     : details.date || ''
@@ -288,6 +330,8 @@ function buildTitle(type: string, recipientType: string, details: { date?: strin
       return `Payment received${details.amount ? ': $' + details.amount.toFixed(2) : ''}${details.customer_name ? ' from ' + details.customer_name : ''}`
     case 'new_request':
       return `New ${jobLabel.toLowerCase()} request${details.customer_name ? ' from ' + details.customer_name : ''}`
+    case 'reschedule_request':
+      return `Reschedule request${details.worker_name ? ' from ' + details.worker_name : ''}${details.date ? ' → ' + details.date : ''}`
     default:
       return 'New notification'
   }
@@ -335,7 +379,8 @@ serve(async (req) => {
       reminder:         { cleaning: 'cleaning_reminder',  service: 'job_reminder' },
       completed:        { cleaning: 'cleaning_completed', service: 'service_completed' },
       payment_received: { cleaning: 'payment_received',   service: 'payment_received' },
-      new_request:      { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
+      new_request:         { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
+      reschedule_request:  { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
     }
     const refType = reference_type || 'cleaning'
     const dbType = dbTypeMap[type]?.[refType] || type

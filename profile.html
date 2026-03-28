@@ -3608,7 +3608,7 @@ async function saveJobEdit() {
 
     // ── Admin alert when job request is updated to requested/confirmed ──
     if (status === 'requested' || status === 'confirmed') {
-      const jobData = allJobsData?.find(j => j.id === id);
+      const jobData = allJobRequests?.find(j => j.id === id);
       const prop = jobData?.property || {};
       const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
       fetch(SUPABASE_URL + '/functions/v1/send-notification', {
