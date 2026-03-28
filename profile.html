@@ -877,16 +877,28 @@
           </div>
         </div>
         
-        <!-- Upcoming Cleanings Preview -->
+        <!-- Cleanings & Job Requests -->
         <div style="margin-top:24px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <div style="font-size:13px;font-weight:700;color:var(--navy);">📅 Upcoming Cleanings (Next 7 Days)</div>
-            <button class="btn-action-sm" onclick="switchSection('calendar')">View Calendar</button>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);">📅 Cleanings & Job Requests</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="dashJobTypeFilter" onchange="loadDashboardJobs()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+                <option value="all">All Types</option>
+                <option value="cleaning">Cleanings</option>
+                <option value="service">Job Requests</option>
+              </select>
+              <select id="dashPeriodFilter" onchange="loadDashboardJobs()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+                <option value="7days">Next 7 Days</option>
+                <option value="month">This Month</option>
+                <option value="all">All</option>
+              </select>
+              <button class="btn-action-sm" onclick="switchSection('calendar')">View Calendar</button>
+            </div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Date</th><th>Time</th><th>Property</th><th>Team</th><th>Status</th></tr></thead>
-              <tbody id="dashUpcomingBody"><tr><td colspan="5" class="empty-state">Loading…</td></tr></tbody>
+              <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Property / Description</th><th>Team</th><th>Status</th></tr></thead>
+              <tbody id="dashUpcomingBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -3883,8 +3895,8 @@ async function loadDashboard() {
     const totalCompleted = completedCleanings + (completedServices.data || []).length;
     document.getElementById('dashJobsMonth').textContent = totalCompleted;
     
-    // Upcoming Cleanings (next 7 days)
-    await loadUpcomingCleanings();
+    // Cleanings & Job Requests
+    await loadDashboardJobs();
     
   } catch(e) {
     console.error('Dashboard load error:', e);
@@ -3912,61 +3924,109 @@ function getMonthEnd() {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
 }
 
-async function loadUpcomingCleanings() {
+async function loadDashboardJobs() {
   const body = document.getElementById('dashUpcomingBody');
-  
+  const typeFilter = document.getElementById('dashJobTypeFilter')?.value || 'all';
+  const periodFilter = document.getElementById('dashPeriodFilter')?.value || '7days';
+
   const today = new Date().toISOString().split('T')[0];
   const weekLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  
-  const { data } = await sb.from('cleaning_schedule')
-    .select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers')
-    .gte('planned_date', today)
-    .lte('planned_date', weekLater)
-    .in('status', ['requested', 'scheduled', 'confirmed'])
-    .order('planned_date', { ascending: true })
-    .order('planned_time', { ascending: true })
-    .limit(10);
-  
-  if (!data?.length) {
-    body.innerHTML = '<tr><td colspan="5" class="empty-state">No upcoming cleanings.</td></tr>';
+
+  let allItems = [];
+
+  // ── Cleanings ──
+  if (typeFilter === 'all' || typeFilter === 'cleaning') {
+    let q = sb.from('cleaning_schedule')
+      .select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers')
+      .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
+      .order('planned_date', { ascending: true });
+
+    if (periodFilter === '7days') {
+      q = q.gte('planned_date', today).lte('planned_date', weekLater);
+    } else if (periodFilter === 'month') {
+      q = q.gte('planned_date', getMonthStart()).lte('planned_date', getMonthEnd());
+    }
+
+    const { data } = await q.limit(50);
+    (data || []).forEach(c => allItems.push({ ...c, _type: 'cleaning', _desc: null }));
+  }
+
+  // ── Job Requests (Service Requests) ──
+  if (typeFilter === 'all' || typeFilter === 'service') {
+    let q = sb.from('service_requests')
+      .select('id, scheduled_date, scheduled_time, status, property_id, assigned_worker_id, assigned_workers, category, description')
+      .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
+      .order('scheduled_date', { ascending: true });
+
+    if (periodFilter === '7days') {
+      q = q.gte('scheduled_date', today).lte('scheduled_date', weekLater);
+    } else if (periodFilter === 'month') {
+      q = q.gte('scheduled_date', getMonthStart()).lte('scheduled_date', getMonthEnd());
+    }
+
+    const { data } = await q.limit(50);
+    (data || []).forEach(s => allItems.push({
+      id: s.id,
+      planned_date: s.scheduled_date,
+      planned_time: s.scheduled_time,
+      status: s.status,
+      property_id: s.property_id,
+      assigned_worker_id: s.assigned_worker_id,
+      assigned_workers: s.assigned_workers,
+      _type: 'service',
+      _desc: s.category || s.description || 'Service'
+    }));
+  }
+
+  // Sort by date ascending
+  allItems.sort((a, b) => (a.planned_date || '9999').localeCompare(b.planned_date || '9999'));
+
+  if (!allItems.length) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-state">No jobs found.</td></tr>';
     return;
   }
-  
+
   // Get property and worker info
-  const propIds = [...new Set(data.map(c => c.property_id).filter(Boolean))];
+  const propIds = [...new Set(allItems.map(c => c.property_id).filter(Boolean))];
   let propMap = {};
   if (propIds.length) {
     const { data: props } = await sb.from('properties').select('id, address, suburb').in('id', propIds);
     (props || []).forEach(p => propMap[p.id] = p);
   }
-  
-  // Load workers if not already loaded
+
   if (!allWorkers.length) await loadWorkersForDropdowns();
   const workerMap = {};
   allWorkers.forEach(w => workerMap[w.id] = w);
-  
-  body.innerHTML = data.map(c => {
+
+  body.innerHTML = allItems.map(c => {
     const d = c.planned_date ? new Date(c.planned_date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
     const prop = propMap[c.property_id];
-    const propLabel = prop ? `${prop.address}, ${prop.suburb}` : '—';
-    
-    // Worker display
+    const propLabel = c._type === 'service' && c._desc
+      ? c._desc
+      : (prop ? `${prop.address}, ${prop.suburb}` : '—');
+
     const workerIds = (c.assigned_workers && Array.isArray(c.assigned_workers) && c.assigned_workers.length > 0)
       ? c.assigned_workers
       : (c.assigned_worker_id ? [c.assigned_worker_id] : []);
-    
+
     let workerDisplay = 'Unassigned';
     if (workerIds.length === 1) {
       workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unknown';
     } else if (workerIds.length > 1) {
       workerDisplay = `${workerMap[workerIds[0]]?.full_name || '?'} +${workerIds.length - 1}`;
     }
-    
-    const badgeClass = c.status === 'requested' ? 'pending' : 'scheduled';
-    
+
+    const typeLabel = c._type === 'cleaning'
+      ? '<span style="color:#1976d2;font-weight:600;font-size:11px;">🧹 Cleaning</span>'
+      : '<span style="color:#e65100;font-weight:600;font-size:11px;">🔧 Service</span>';
+
+    const badgeMap = { requested: 'pending', scheduled: 'scheduled', confirmed: 'scheduled', in_progress: 'active', completed: 'completed' };
+    const badgeClass = badgeMap[c.status] || 'pending';
+
     return `<tr>
       <td style="font-weight:600;">${d}</td>
       <td>${c.planned_time || '—'}</td>
+      <td>${typeLabel}</td>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
       <td>${workerDisplay}</td>
       <td><span class="badge badge-${badgeClass}">${c.status}</span></td>
