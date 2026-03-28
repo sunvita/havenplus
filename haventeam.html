@@ -897,7 +897,7 @@ body {
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-value" id="statMonth">0</div>
-              <div class="stat-label">This Month</div>
+              <div class="stat-label">Completed</div>
             </div>
             <div class="stat-card">
               <div class="stat-value" id="statTotal">0</div>
@@ -910,7 +910,10 @@ body {
           </div>
 
           <div class="recent-list">
-            <div class="recent-header">Earnings History</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="recent-header">Earnings History</div>
+              <input type="month" id="earningsMonthPicker" onchange="filterEarningsByMonth()" style="padding:4px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-secondary);background:white;">
+            </div>
             <div id="recentEarnings"></div>
             <button class="btn-load-more" id="btnLoadMoreEarnings" onclick="loadMoreEarnings()" style="display:none;width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:white;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-top:8px;">Load more</button>
           </div>
@@ -1441,18 +1444,40 @@ async function loadMeTab() {
       new Date(b.planned_date) - new Date(a.planned_date)
     );
 
-    /* This month count */
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    const monthStartStr = monthStart.toISOString().split('T')[0];
-    const thisMonthJobs = allEarningsJobs.filter(j => j.planned_date >= monthStartStr);
-    document.getElementById('statMonth').textContent = thisMonthJobs.length;
-    document.getElementById('statTotal').textContent = allEarningsJobs.length;
+    /* Set month picker to current month */
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const picker = document.getElementById('earningsMonthPicker');
+    if (picker) picker.value = currentMonth;
 
-    renderEarningsPage();
+    filterEarningsByMonth();
   } catch(e) {
     console.error(e);
   }
+}
+
+let filteredEarningsJobs = [];
+
+function filterEarningsByMonth() {
+  const picker = document.getElementById('earningsMonthPicker');
+  const selectedMonth = picker?.value; // "2026-03"
+  earningsPage = 0;
+
+  if (selectedMonth) {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+    const monthEnd = `${year}-${String(month).padStart(2, '0')}-31`;
+    filteredEarningsJobs = allEarningsJobs.filter(j => j.planned_date >= monthStart && j.planned_date <= monthEnd);
+  } else {
+    filteredEarningsJobs = [...allEarningsJobs];
+  }
+
+  /* Completed = completed jobs in selected month */
+  document.getElementById('statMonth').textContent = filteredEarningsJobs.length;
+  /* Total Jobs = all completed jobs across all time */
+  document.getElementById('statTotal').textContent = allEarningsJobs.length;
+
+  renderEarningsPage();
 }
 
 function renderEarningsPage() {
@@ -1460,7 +1485,7 @@ function renderEarningsPage() {
   const recentEl = document.getElementById('recentEarnings');
   const btnMore = document.getElementById('btnLoadMoreEarnings');
   const end = (earningsPage + 1) * EARNINGS_PER_PAGE;
-  const visible = allEarningsJobs.slice(0, end);
+  const visible = filteredEarningsJobs.slice(0, end);
 
   if (!visible.length) {
     recentEl.innerHTML = '<div class="recent-item"><div class="recent-date">No completed jobs yet</div></div>';
@@ -1494,7 +1519,7 @@ function renderEarningsPage() {
     </div>`;
   }).join('');
 
-  btnMore.style.display = end < allEarningsJobs.length ? '' : 'none';
+  btnMore.style.display = end < filteredEarningsJobs.length ? '' : 'none';
 }
 
 function loadMoreEarnings() {
