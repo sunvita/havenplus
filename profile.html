@@ -3865,19 +3865,19 @@ async function loadDashboard() {
     // 5. Revenue this month (from payments table)
     const paymentsRes = await sb.from('payments')
       .select('amount, stripe_fee, net_amount')
-      .eq('status', 'succeeded')
+      .eq('status', 'paid')
       .gte('paid_at', getMonthStart())
       .lte('paid_at', getMonthEnd() + 'T23:59:59');
-    
+
     const payments = paymentsRes.data || [];
-    const totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const totalFees = payments.reduce((sum, p) => sum + (p.stripe_fee || 0), 0);
-    const totalNet = payments.reduce((sum, p) => sum + (p.net_amount || 0), 0);
-    
-    // Display in dollars (amounts are in cents)
-    document.getElementById('ctaRevenueMonth').textContent = `$${(totalRevenue / 100).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    document.getElementById('ctaFeesMonth').textContent = `$${(totalFees / 100).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    document.getElementById('ctaNetMonth').textContent = `$${(totalNet / 100).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    const totalRevenue = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    const totalFees = payments.reduce((sum, p) => sum + (parseFloat(p.stripe_fee) || 0), 0);
+    const totalNet = payments.reduce((sum, p) => sum + (parseFloat(p.net_amount) || 0), 0);
+
+    // DB에 달러 단위로 저장됨 (cents 아님)
+    document.getElementById('ctaRevenueMonth').textContent = `$${totalRevenue.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    document.getElementById('ctaFeesMonth').textContent = `$${totalFees.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    document.getElementById('ctaNetMonth').textContent = `$${totalNet.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     
     // This Month Stats
     const completedCleanings = cleanings.filter(c => c.status === 'completed').length;
