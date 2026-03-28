@@ -3875,9 +3875,9 @@ async function loadDashboard() {
     const totalNet = payments.reduce((sum, p) => sum + (parseFloat(p.net_amount) || 0), 0);
 
     // DB에 달러 단위로 저장됨 (cents 아님)
-    document.getElementById('ctaRevenueMonth').textContent = `$${totalRevenue.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    document.getElementById('ctaFeesMonth').textContent = `$${totalFees.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    document.getElementById('ctaNetMonth').textContent = `$${totalNet.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    document.getElementById('ctaRevenueMonth').textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('ctaFeesMonth').textContent = `$${totalFees.toFixed(2)}`;
+    document.getElementById('ctaNetMonth').textContent = `$${totalNet.toFixed(2)}`;
     
     // This Month Stats
     const completedCleanings = cleanings.filter(c => c.status === 'completed').length;
