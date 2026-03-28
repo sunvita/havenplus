@@ -24,6 +24,63 @@ const SH_PRICES: Record<string, number> = {
   'price_1T7pvURVro18Xo3KNLzwtH2Z': 8,  // 8 SH Bundle
 }
 
+// ── 결제 기록 헬퍼 함수 ──
+async function recordPayment(opts: {
+  userId: string
+  stripePaymentId?: string | null
+  stripeInvoiceId?: string | null
+  amount: number          // cents → dollars 변환 전 원본
+  currency: string
+  paymentType: string     // 'subscription' | 'sh_bundle'
+  shBundleSize?: number | null
+  subscriptionId?: string | null
+  stripeChargeId?: string | null
+  description?: string | null
+}) {
+  // Stripe charge에서 수수료 정보 조회
+  let stripeFee = null
+  let netAmount = null
+  let balanceTxId = null
+
+  if (opts.stripeChargeId) {
+    try {
+      const charge = await stripe.charges.retrieve(opts.stripeChargeId, {
+        expand: ['balance_transaction'],
+      })
+      const balanceTx = charge.balance_transaction as Stripe.BalanceTransaction
+      if (balanceTx) {
+        stripeFee = balanceTx.fee / 100      // cents → dollars
+        netAmount = balanceTx.net / 100
+        balanceTxId = balanceTx.id
+      }
+    } catch (e) {
+      console.error('charge retrieve error:', e)
+    }
+  }
+
+  const amountDollars = opts.amount / 100
+
+  const { error } = await supabase.from('payments').insert({
+    user_id: opts.userId,
+    stripe_payment_id: opts.stripePaymentId || null,
+    stripe_invoice_id: opts.stripeInvoiceId || null,
+    amount: amountDollars,
+    currency: opts.currency || 'aud',
+    payment_type: opts.paymentType,
+    sh_bundle_size: opts.shBundleSize || null,
+    status: 'succeeded',
+    paid_at: new Date().toISOString(),
+    subscription_id: opts.subscriptionId || null,
+    stripe_charge_id: opts.stripeChargeId || null,
+    stripe_balance_transaction_id: balanceTxId,
+    stripe_fee: stripeFee,
+    net_amount: netAmount ?? amountDollars,
+    description: opts.description || null,
+  })
+
+  if (error) console.error('payments insert error:', error)
+}
+
 serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
@@ -73,10 +130,33 @@ serve(async (req) => {
             stripe_customer_id: session.customer as string,
             sh_balance: voucherMap[plan],
             started_at: new Date().toISOString(),
-            current_period_end: null, // subscription.updated 이벤트에서 업데이트
+            current_period_end: null,
           }, { onConflict: 'user_id' })
 
           if (error) console.error('subscriptions upsert error:', error)
+
+          // ── 결제 기록 → payments 테이블 ──
+          const paymentIntentId = session.payment_intent as string
+          let chargeId: string | null = null
+          if (paymentIntentId) {
+            try {
+              const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+              chargeId = pi.latest_charge as string || null
+            } catch (e) {
+              console.error('paymentIntent retrieve error:', e)
+            }
+          }
+
+          await recordPayment({
+            userId,
+            stripePaymentId: paymentIntentId,
+            amount: session.amount_total || 0,
+            currency: session.currency || 'aud',
+            paymentType: 'subscription',
+            subscriptionId: stripeSubId,
+            stripeChargeId: chargeId,
+            description: `${plan} plan subscription`,
+          })
         }
 
         // SH 번들 구매인 경우
@@ -98,6 +178,29 @@ serve(async (req) => {
             .eq('user_id', userId)
 
           if (error) console.error('sh_balance update error:', error)
+
+          // ── 결제 기록 → payments 테이블 ──
+          const paymentIntentId = session.payment_intent as string
+          let chargeId: string | null = null
+          if (paymentIntentId) {
+            try {
+              const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+              chargeId = pi.latest_charge as string || null
+            } catch (e) {
+              console.error('paymentIntent retrieve error:', e)
+            }
+          }
+
+          await recordPayment({
+            userId,
+            stripePaymentId: paymentIntentId,
+            amount: session.amount_total || 0,
+            currency: session.currency || 'aud',
+            paymentType: 'sh_bundle',
+            shBundleSize: shAmount,
+            stripeChargeId: chargeId,
+            description: `${shAmount} SH bundle purchase`,
+          })
         }
         break
       }
@@ -134,6 +237,30 @@ serve(async (req) => {
           .eq('stripe_subscription_id', stripeSubId)
 
         if (error) console.error('invoice renewal update error:', error)
+
+        // ── 결제 기록 → payments 테이블 ──
+        // invoice에서 user_id 조회 (subscriptions 테이블에서)
+        const { data: subRecord } = await supabase
+          .from('subscriptions')
+          .select('user_id')
+          .eq('stripe_subscription_id', stripeSubId)
+          .maybeSingle()
+
+        if (subRecord?.user_id) {
+          const chargeId = invoice.charge as string || null
+
+          await recordPayment({
+            userId: subRecord.user_id,
+            stripePaymentId: invoice.payment_intent as string,
+            stripeInvoiceId: invoice.id,
+            amount: invoice.amount_paid || 0,
+            currency: invoice.currency || 'aud',
+            paymentType: 'subscription',
+            subscriptionId: stripeSubId,
+            stripeChargeId: chargeId,
+            description: `${plan} plan renewal`,
+          })
+        }
         break
       }
 
