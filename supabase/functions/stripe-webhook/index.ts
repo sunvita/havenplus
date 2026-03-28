@@ -46,6 +46,56 @@ async function getSubscriptionUUID(stripeSubId: string): Promise<string | null> 
 const STRIPE_BILLING_FEE = 1.16
 
 // ── 결제 기록 헬퍼 함수 ──
+async function notifyAdminPayment(opts: {
+  userId: string
+  amount: number        // dollars
+  plan: string
+  paymentId?: string | null
+  paidAt: string
+}) {
+  try {
+    // Resolve customer name + email
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', opts.userId)
+      .maybeSingle()
+
+    let customerName = profile?.full_name || ''
+    let customerEmail = profile?.email || ''
+
+    if (!customerEmail) {
+      const { data: { user } } = await supabase.auth.admin.getUserById(opts.userId)
+      customerEmail = user?.email || ''
+      if (!customerName) customerName = user?.user_metadata?.full_name || user?.email || ''
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({
+        type: 'payment_received',
+        notify_admins: true,
+        reference_type: 'cleaning',
+        details: {
+          amount: opts.amount,
+          plan: opts.plan,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          payment_id: opts.paymentId,
+          paid_at: opts.paidAt,
+        },
+      }),
+    })
+  } catch (e) {
+    console.error('Admin payment notification failed:', e)
+  }
+}
+
 async function recordPayment(opts: {
   userId: string
   stripePaymentId?: string | null
@@ -58,6 +108,7 @@ async function recordPayment(opts: {
   stripeChargeId?: string | null
   description?: string | null
   isSubscriptionInvoice?: boolean   // Billing Usage Fee 포함 여부
+  plan?: string | null
 }) {
   // Stripe charge에서 결제 수수료 조회
   let chargeFee = 0
@@ -103,7 +154,21 @@ async function recordPayment(opts: {
     description: opts.description || null,
   })
 
-  if (error) console.error('payments insert error:', error)
+  if (error) {
+    console.error('payments insert error:', error)
+    return
+  }
+
+  // Notify admin emails after successful payment record
+  if (opts.paymentType === 'subscription' || opts.paymentType === 'sh_bundle') {
+    await notifyAdminPayment({
+      userId: opts.userId,
+      amount: amountDollars,
+      plan: opts.plan || opts.description || '',
+      paymentId: opts.stripePaymentId,
+      paidAt: new Date().toISOString(),
+    })
+  }
 }
 
 serve(async (req) => {
@@ -178,6 +243,7 @@ serve(async (req) => {
             stripeChargeId: chargeId,
             description: `${plan} plan subscription`,
             isSubscriptionInvoice: true,
+            plan: `${plan} plan`,
           })
         }
 
@@ -224,6 +290,7 @@ serve(async (req) => {
             stripeChargeId: chargeId,
             description: `${shAmount} SH bundle purchase`,
             isSubscriptionInvoice: false,
+            plan: `${shAmount} SH bundle`,
           })
         }
         break
@@ -277,6 +344,7 @@ serve(async (req) => {
           stripeChargeId: chargeId,
           description: `${plan} plan renewal`,
           isSubscriptionInvoice: true,
+          plan: `${plan} plan renewal`,
         })
         break
       }

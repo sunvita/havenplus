@@ -3430,6 +3430,24 @@ async function saveSchedEdit() {
       }).catch(e => console.warn('Notification send failed:', e));
     }
 
+    // ── Admin alert when new cleaning request arrives (status: requested) ──
+    if (status === 'requested') {
+      const sched = currentSchedData;
+      const prop = sched?.prop || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'new_request',
+          notify_admins: true,
+          reference_id: id,
+          reference_type: 'cleaning',
+          details: { address: addr, date: date || '', time: time || '' },
+        }),
+      }).catch(e => console.warn('Admin notification failed:', e));
+    }
+
     showToast('Cleaning updated successfully');
     closeSchedEditModal();
     loadSchedules();
@@ -3587,7 +3605,30 @@ async function saveJobEdit() {
     }).eq('id', id);
     
     if (error) throw error;
-    
+
+    // ── Admin alert when job request is updated to requested/confirmed ──
+    if (status === 'requested' || status === 'confirmed') {
+      const jobData = allJobsData?.find(j => j.id === id);
+      const prop = jobData?.property || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'new_request',
+          notify_admins: true,
+          reference_id: id,
+          reference_type: 'service',
+          details: {
+            address: addr,
+            date: date || '',
+            time: time || '',
+            category: jobData?.category || '',
+          },
+        }),
+      }).catch(e => console.warn('Admin notification failed:', e));
+    }
+
     showToast('Job request updated successfully');
     closeJobEditModal();
     loadJobRequests();
