@@ -930,7 +930,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Customer</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Actual</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Customer</th><th>Address</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Actual</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="jobsBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -3472,7 +3472,7 @@ async function loadJobRequests() {
   if (!allWorkers.length) await loadWorkersForDropdowns();
 
   let q = sb.from('service_requests')
-    .select('*')
+    .select('*, properties(address, suburb)')
     .order('created_at', { ascending: false }).limit(100);
   if (status) q = q.eq('status', status);
   const { data } = await q;
@@ -3512,6 +3512,8 @@ function renderJobRequests(list) {
   body.innerHTML = list.map(j => {
     const d = new Date(j.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'});
     const customer = j.profile?.full_name || '—';
+    const prop = j.properties || {};
+    const addrLine = prop.address ? `${prop.address}${prop.suburb ? ', ' + prop.suburb : ''}` : '—';
     const category = (j.category || '—').replace(/_/g, ' ');
     const urgency = j.urgency === 'same_day' ? '⚡ Same Day' : j.urgency === 'after_hours' ? '🌙 After Hrs' : 'Standard';
     const estimate = j.sh_estimate ? `${j.sh_estimate}${j.sh_multiplier > 1 ? '×'+j.sh_multiplier : ''}` : '—';
@@ -3522,6 +3524,7 @@ function renderJobRequests(list) {
     return `<tr>
       <td style="color:var(--text-light);">${d}</td>
       <td style="font-weight:600;">${customer}</td>
+      <td style="font-size:12px;color:var(--text-light);">${addrLine}</td>
       <td style="text-transform:capitalize;">${category}</td>
       <td style="font-size:12px;">${urgency}</td>
       <td>${estimate} SH</td>
