@@ -1181,6 +1181,19 @@
     <div class="modal-body">
       <div class="modal-alert" id="jobEditAlert"></div>
       <input type="hidden" id="jobEditId">
+
+      <!-- Reschedule Request Banner -->
+      <div id="jobRescheduleBanner" style="display:none;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📅 Reschedule Request Pending</div>
+        <div style="font-size:13px;color:#78350f;margin-bottom:10px;">
+          <span>Proposed date: <strong id="jobRescheduleProposedDate">—</strong></span>
+          <span id="jobRescheduleNoteWrap" style="display:none;"> · Note: <em id="jobRescheduleNote">—</em></span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="modal-btn modal-btn-primary" style="flex:1;background:#059669;" onclick="approveReschedule('service')">✓ Approve & Update Date</button>
+          <button class="modal-btn modal-btn-secondary" style="flex:1;" onclick="rejectReschedule('service')">✕ Reject</button>
+        </div>
+      </div>
       <div class="modal-form-group">
         <label>Status</label>
         <select id="jobEditStatus">
@@ -1316,6 +1329,19 @@
       <div id="schedNotesSection" style="margin-bottom:16px;display:none;">
         <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">📝 Worker Notes</div>
         <div id="schedNotesContent" style="font-size:13px;color:var(--text);background:var(--bg);border-radius:8px;padding:10px 12px;border-left:3px solid var(--orange);"></div>
+      </div>
+
+      <!-- Reschedule Request Banner -->
+      <div id="schedRescheduleBanner" style="display:none;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📅 Reschedule Request Pending</div>
+        <div style="font-size:13px;color:#78350f;margin-bottom:10px;">
+          <span>Proposed date: <strong id="schedRescheduleProposedDate">—</strong></span>
+          <span id="schedRescheduleNoteWrap" style="display:none;"> · Note: <em id="schedRescheduleNote">—</em></span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="modal-btn modal-btn-primary" style="flex:1;background:#059669;" onclick="approveReschedule('cleaning')">✓ Approve & Update Date</button>
+          <button class="modal-btn modal-btn-secondary" style="flex:1;" onclick="rejectReschedule('cleaning')">✕ Reject</button>
+        </div>
       </div>
 
       <!-- Status -->
@@ -2533,7 +2559,7 @@ async function loadSchedules() {
   // 'all' = no date filter
 
   /* Fetch two sets: overdue incomplete + date-filtered */
-  const selectCols = 'id, planned_date, planned_time, duration_hours, actual_duration, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes';
+  const selectCols = 'id, planned_date, planned_time, duration_hours, actual_duration, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes, reschedule_requested, reschedule_proposed_date, reschedule_note, reschedule_count';
   const todayStr = new Date().toISOString().split('T')[0];
 
   let q = sb.from('cleaning_schedule').select(selectCols)
@@ -3063,6 +3089,24 @@ async function openSchedEditModal(schedId) {
   // Show reset section only if subscription linked
   document.getElementById('schedResetSection').style.display = sched.subscription_id ? 'block' : 'none';
 
+  // Show reschedule banner if pending
+  const banner = document.getElementById('schedRescheduleBanner');
+  if (sched.reschedule_requested && sched.reschedule_proposed_date) {
+    const d = new Date(sched.reschedule_proposed_date + 'T00:00:00');
+    document.getElementById('schedRescheduleProposedDate').textContent =
+      d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const noteWrap = document.getElementById('schedRescheduleNoteWrap');
+    if (sched.reschedule_note) {
+      document.getElementById('schedRescheduleNote').textContent = sched.reschedule_note;
+      noteWrap.style.display = '';
+    } else {
+      noteWrap.style.display = 'none';
+    }
+    banner.style.display = '';
+  } else {
+    banner.style.display = 'none';
+  }
+
   document.getElementById('schedEditModal').classList.add('open');
 }
 
@@ -3342,6 +3386,93 @@ function closeSchedEditModal() {
   selectedWorkerIds = [];
 }
 
+// ── Reschedule Approval ──────────────────────────────────
+async function approveReschedule(type) {
+  const isCleaning = type === 'cleaning';
+  const id = isCleaning
+    ? document.getElementById('schedEditId').value
+    : document.getElementById('jobEditId').value;
+  const job = isCleaning ? currentSchedData : allJobRequests.find(j => j.id === id);
+  if (!job) return;
+
+  const proposedDate = job.reschedule_proposed_date;
+  if (!proposedDate) return;
+
+  const btn = isCleaning
+    ? document.querySelector('#schedRescheduleBanner .modal-btn-primary')
+    : document.querySelector('#jobRescheduleBanner .modal-btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Approving…';
+
+  try {
+    const table = isCleaning ? 'cleaning_schedule' : 'service_requests';
+    const dateField = isCleaning ? 'planned_date' : 'scheduled_date';
+
+    const { error } = await sb.from(table).update({
+      [dateField]: proposedDate,
+      reschedule_requested: false,
+      reschedule_proposed_date: null,
+      reschedule_approved_by: (await sb.auth.getUser()).data.user?.id || null,
+    }).eq('id', id);
+    if (error) throw error;
+
+    // Send confirmation email to customer
+    const prop = isCleaning ? (currentSchedData?.prop || {}) : (job.properties || {});
+    const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+    const customerId = job.user_id;
+    const refType = isCleaning ? 'cleaning' : 'service';
+    const d = new Date(proposedDate + 'T00:00:00');
+    const dateFormatted = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    if (customerId) {
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'reschedule_confirmed',
+          recipients: [{ id: customerId, type: 'customer' }],
+          reference_id: id,
+          reference_type: refType,
+          details: {
+            address: addr,
+            date: dateFormatted,
+            original_date: isCleaning ? job.planned_date : job.scheduled_date,
+          },
+        }),
+      }).catch(e => console.warn('Customer notification failed:', e));
+    }
+
+    showToast('Reschedule approved — customer will be notified');
+    if (isCleaning) { closeSchedEditModal(); loadSchedules(); }
+    else { closeJobEditModal(); loadJobRequests(); }
+
+  } catch(e) {
+    showToast('Error: ' + (e.message || 'Failed to approve'), 'error');
+    btn.disabled = false;
+    btn.textContent = '✓ Approve & Update Date';
+  }
+}
+
+async function rejectReschedule(type) {
+  const isCleaning = type === 'cleaning';
+  const id = isCleaning
+    ? document.getElementById('schedEditId').value
+    : document.getElementById('jobEditId').value;
+
+  const table = isCleaning ? 'cleaning_schedule' : 'service_requests';
+  const { error } = await sb.from(table).update({
+    reschedule_requested: false,
+    reschedule_proposed_date: null,
+    reschedule_note: null,
+  }).eq('id', id);
+
+  if (!error) {
+    showToast('Reschedule request rejected');
+    if (isCleaning) { closeSchedEditModal(); loadSchedules(); }
+    else { closeJobEditModal(); loadJobRequests(); }
+  }
+}
+
 async function resetScheduleFromCleaning() {
   if (!currentSchedData) return;
   const subId = currentSchedData.subscription_id;
@@ -3582,6 +3713,24 @@ async function openJobEditModal(jobId) {
     photoSection.style.display = '';
   } else {
     photoSection.style.display = 'none';
+  }
+
+  // Show reschedule banner if pending
+  const jobBanner = document.getElementById('jobRescheduleBanner');
+  if (job.reschedule_requested && job.reschedule_proposed_date) {
+    const d = new Date(job.reschedule_proposed_date + 'T00:00:00');
+    document.getElementById('jobRescheduleProposedDate').textContent =
+      d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const noteWrap = document.getElementById('jobRescheduleNoteWrap');
+    if (job.reschedule_note) {
+      document.getElementById('jobRescheduleNote').textContent = job.reschedule_note;
+      noteWrap.style.display = '';
+    } else {
+      noteWrap.style.display = 'none';
+    }
+    jobBanner.style.display = '';
+  } else {
+    jobBanner.style.display = 'none';
   }
 
   document.getElementById('jobEditModal').classList.add('open');

@@ -268,6 +268,23 @@ function buildEmail(
       }
     }
 
+    // ── Reschedule Confirmed (customer) ──
+    case 'reschedule_confirmed': {
+      const newDate = details.date || 'the new date'
+      return {
+        subject: `Haven Plus — Your ${jobLabel} Has Been Rescheduled`,
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#0f2b46;">Your ${jobLabel.toLowerCase()} has been rescheduled ✅</h2>
+          <p style="color:#555;margin:0 0 24px;">Your reschedule request has been approved. Here are your updated details:</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 8px;"><strong>Property:</strong> ${addr}</p>
+            <p style="margin:0;"><strong>New Date:</strong> <span style="color:#059669;font-weight:700;">${newDate}</span></p>
+          </div>
+          <p style="color:#555;margin:0;">We'll send you a reminder the day before. If you have any questions, please contact us.</p>
+        `)
+      }
+    }
+
     // ── Reschedule Request ──
     case 'reschedule_request': {
       const workerName = details.worker_name || 'A worker'
@@ -330,6 +347,8 @@ function buildTitle(type: string, recipientType: string, details: { date?: strin
       return `Payment received${details.amount ? ': $' + details.amount.toFixed(2) : ''}${details.customer_name ? ' from ' + details.customer_name : ''}`
     case 'new_request':
       return `New ${jobLabel.toLowerCase()} request${details.customer_name ? ' from ' + details.customer_name : ''}`
+    case 'reschedule_confirmed':
+      return `Your ${jobLabel.toLowerCase()} has been rescheduled to ${details.date || 'a new date'}`
     case 'reschedule_request':
       return `Reschedule request${details.worker_name ? ' from ' + details.worker_name : ''}${details.date ? ' → ' + details.date : ''}`
     default:
@@ -380,7 +399,8 @@ serve(async (req) => {
       completed:        { cleaning: 'cleaning_completed', service: 'service_completed' },
       payment_received: { cleaning: 'payment_received',   service: 'payment_received' },
       new_request:         { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
-      reschedule_request:  { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
+      reschedule_confirmed: { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
+      reschedule_request:   { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },
     }
     const refType = reference_type || 'cleaning'
     const dbType = dbTypeMap[type]?.[refType] || type

@@ -1988,7 +1988,7 @@ async function confirmReschedule() {
       const { data: conflicts } = await sb
         .from('cleaning_schedule')
         .select('id, planned_date')
-        .contains('assigned_workers', [wid])
+        .or(`assigned_workers.cs.{${wid}},assigned_worker_id.eq.${wid}`)
         .eq('planned_date', newDate)
         .neq('id', rescheduleJobId)
         .in('status', ['scheduled', 'confirmed', 'in_progress'])
