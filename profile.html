@@ -1223,6 +1223,10 @@
         <label>Admin Notes</label>
         <textarea id="jobEditNotes" placeholder="Internal notes…"></textarea>
       </div>
+      <div id="jobEditPhotosSection" style="display:none;margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-light);display:block;margin-bottom:8px;">📷 Customer Photos</label>
+        <div id="jobEditPhotosGrid" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeJobEditModal()">Cancel</button>
         <button class="modal-btn modal-btn-primary" id="btnSaveJob" onclick="saveJobEdit()">Save Changes</button>
@@ -3566,7 +3570,20 @@ async function openJobEditModal(jobId) {
   document.getElementById('jobEditNotes').value = job.admin_notes || '';
   document.getElementById('jobEditAlert').className = 'modal-alert';
   document.getElementById('jobEditAlert').textContent = '';
-  
+
+  // Show customer request photos if any
+  const photos = Array.isArray(job.request_photos) ? job.request_photos.filter(Boolean) : [];
+  const photoSection = document.getElementById('jobEditPhotosSection');
+  const photoGrid = document.getElementById('jobEditPhotosGrid');
+  if (photos.length) {
+    photoGrid.innerHTML = photos.map(url =>
+      `<a href="${url}" target="_blank"><img src="${url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;"></a>`
+    ).join('');
+    photoSection.style.display = '';
+  } else {
+    photoSection.style.display = 'none';
+  }
+
   document.getElementById('jobEditModal').classList.add('open');
 }
 

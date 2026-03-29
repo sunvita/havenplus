@@ -866,6 +866,17 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <label class="form-label">Description *</label>
         <textarea class="form-textarea" id="shReqDesc" placeholder="Describe the issue or service needed..."></textarea>
       </div>
+      <div class="form-group">
+        <label class="form-label">Photos <span style="font-weight:400;color:var(--text-light)">(optional — up to 5)</span></label>
+        <div id="shReqPhotoWrap" style="border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('shReqPhotoInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--navy)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleReqPhotoDrop(event)">
+          <input type="file" id="shReqPhotoInput" accept="image/*" multiple style="display:none" onchange="handleReqPhotoSelect(this.files)">
+          <div id="shReqPhotoPrompt" style="color:var(--text-light);font-size:13px;">
+            📷 Tap to add photos or drag &amp; drop<br>
+            <span style="font-size:11px;">Helps our team prepare for the job</span>
+          </div>
+          <div id="shReqPhotoPreview" style="display:none;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;"></div>
+        </div>
+      </div>
       <div class="form-row-half">
         <div class="form-group">
           <label class="form-label">Urgency</label>
@@ -1868,6 +1879,49 @@ function showToast(msg, isErr = false) {
 })();
 
 /* ── SH Job Request ───────────────────────────────────── */
+let shReqPhotos = []; // selected File objects
+
+function handleReqPhotoSelect(files) {
+  const newFiles = Array.from(files).slice(0, 5 - shReqPhotos.length);
+  shReqPhotos = [...shReqPhotos, ...newFiles].slice(0, 5);
+  renderReqPhotoPreview();
+}
+
+function handleReqPhotoDrop(e) {
+  e.preventDefault();
+  document.getElementById('shReqPhotoWrap').style.borderColor = 'var(--border)';
+  handleReqPhotoSelect(e.dataTransfer.files);
+}
+
+function removeReqPhoto(i) {
+  shReqPhotos.splice(i, 1);
+  renderReqPhotoPreview();
+}
+
+function renderReqPhotoPreview() {
+  const prompt = document.getElementById('shReqPhotoPrompt');
+  const preview = document.getElementById('shReqPhotoPreview');
+  if (!shReqPhotos.length) {
+    prompt.style.display = '';
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+    return;
+  }
+  prompt.style.display = 'none';
+  preview.style.display = 'flex';
+  preview.innerHTML = shReqPhotos.map((f, i) => {
+    const url = URL.createObjectURL(f);
+    return `<div style="position:relative;">
+      <img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+      <button onclick="event.stopPropagation();removeReqPhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#e53e3e;color:white;border:none;font-size:11px;cursor:pointer;line-height:18px;padding:0;">×</button>
+    </div>`;
+  }).join('');
+  // Show add more button if < 5
+  if (shReqPhotos.length < 5) {
+    preview.innerHTML += `<div onclick="document.getElementById('shReqPhotoInput').click()" style="width:72px;height:72px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:22px;cursor:pointer;">+</div>`;
+  }
+}
+
 function openShRequestModal() {
   document.getElementById('shReqError').style.display = 'none';
   document.getElementById('shReqSuccess').style.display = 'none';
@@ -1877,6 +1931,9 @@ function openShRequestModal() {
   document.getElementById('shReqDate').value = '';
   document.getElementById('emergencyNotice').style.display = 'none';
   document.getElementById('shReqEstimate').textContent = '1 SH~';
+  shReqPhotos = [];
+  renderReqPhotoPreview();
+  document.getElementById('shReqPhotoInput').value = '';
 
   // Populate property selector
   const sel = document.getElementById('shReqProperty');
@@ -2006,9 +2063,22 @@ async function submitShRequest() {
 
   const btn = document.getElementById('btnSubmitShReq');
   btn.disabled = true;
-  btn.textContent = 'Submitting…';
+  btn.textContent = shReqPhotos.length ? 'Uploading photos…' : 'Submitting…';
 
   try {
+    // Upload photos first if any
+    const photoUrls = [];
+    for (let i = 0; i < shReqPhotos.length; i++) {
+      const file = shReqPhotos[i];
+      const ext = file.name.split('.').pop();
+      const path = `${currentUser.id}/${Date.now()}-${i}.${ext}`;
+      const { error: upErr } = await sb.storage.from('request-photos').upload(path, file, { upsert: true });
+      if (upErr) { console.warn('Photo upload failed:', upErr.message); continue; }
+      const { data: { publicUrl } } = sb.storage.from('request-photos').getPublicUrl(path);
+      photoUrls.push(publicUrl);
+    }
+
+    btn.textContent = 'Submitting…';
     const { error } = await sb.from('service_requests').insert({
       user_id: currentUser.id,
       property_id: propId,
@@ -2019,6 +2089,7 @@ async function submitShRequest() {
       sh_estimate: Math.round(base * 10) / 10,
       sh_multiplier: mult,
       status: 'requested',
+      request_photos: photoUrls.length ? photoUrls : null,
     });
     if (error) throw error;
     sucEl.textContent = 'Service request submitted! We will confirm the estimate and schedule shortly.';

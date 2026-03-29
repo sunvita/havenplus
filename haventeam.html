@@ -1446,6 +1446,14 @@ function renderJobCard(job, isNext, todayStr) {
     propInfo += '<span>' + categoryLabel.replace(' · ','') + '</span>';
   }
 
+  /* Request photos (service jobs only) */
+  const reqPhotos = isService && Array.isArray(job.request_photos) && job.request_photos.length
+    ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px;">'
+      + job.request_photos.filter(Boolean).map(url =>
+        `<a href="${url}" target="_blank"><img src="${url}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;"></a>`
+      ).join('') + '</div>'
+    : '';
+
   return '<div class="job-card ' + cardClass + '">'
     + '<div class="job-card-top">'
     +   '<div class="job-time">' + dateTimeStr + '</div>'
@@ -1454,6 +1462,7 @@ function renderJobCard(job, isNext, todayStr) {
     + '<div class="job-address">' + addrLine + '</div>'
     + '<div class="job-prop-info">' + propInfo + '</div>'
     + notesHtml
+    + reqPhotos
     + actions + '</div>';
 }
 
