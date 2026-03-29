@@ -1923,8 +1923,7 @@ function openRescheduleModal(jobId, jobType) {
   rescheduleJobType = jobType || 'cleaning';
 
   // Find job in current list
-  const table = rescheduleJobType === 'service' ? weekJobs : weekJobs;
-  rescheduleJobData = [...todayJobs, ...weekJobs].find(j => j.id === jobId) || null;
+  rescheduleJobData = allMyJobs.find(j => j.id === jobId) || null;
 
   // Set minimum date to tomorrow
   const tomorrow = new Date();
@@ -1982,7 +1981,6 @@ async function confirmReschedule() {
       : (job?.assigned_worker_id ? [job.assigned_worker_id] : [currentWorker.id]);
 
     const table = rescheduleJobType === 'service' ? 'service_requests' : 'cleaning_schedule';
-    const dateField = rescheduleJobType === 'service' ? 'scheduled_date' : 'planned_date';
 
     // Check each worker for conflicts on the proposed date
     let conflictFound = false;
