@@ -2053,6 +2053,25 @@ async function submitShRequest() {
     return;
   }
 
+  // Validate preferred date meets minimum advance booking requirement
+  if (date) {
+    const selPropId = propId;
+    const selProp = allProperties.find(p => p.id === selPropId) || allProperties[0];
+    const tz = selProp ? getTimezoneByPostcode(selProp.postcode) : 'Australia/Perth';
+    const nowLocal = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+    const today = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate());
+    if (urg === 'standard' || urg === '') {
+      const minDate = new Date(today);
+      minDate.setDate(minDate.getDate() + 2);
+      const minStr = minDate.getFullYear() + '-' + String(minDate.getMonth()+1).padStart(2,'0') + '-' + String(minDate.getDate()).padStart(2,'0');
+      if (date < minStr) {
+        errEl.textContent = 'Standard requests require at least 2 days advance booking. Please select a later date.';
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+  }
+
   // Calculate estimate
   let base = 1;
   if (['electrical','plumbing','emergency'].includes(cat)) base = 2;
@@ -2094,11 +2113,12 @@ async function submitShRequest() {
     if (error) throw error;
     sucEl.textContent = 'Service request submitted! We will confirm the estimate and schedule shortly.';
     sucEl.style.display = 'block';
+    btn.textContent = 'Submitted ✓';
     setTimeout(() => closeShRequestModal(), 2000);
+    return; // leave button disabled — modal will close
   } catch(e) {
     errEl.textContent = e.message || 'Failed to submit. Please try again.';
     errEl.style.display = 'block';
-  } finally {
     btn.disabled = false;
     btn.textContent = 'Submit Request';
   }
