@@ -90,6 +90,7 @@ async function notifyAdminPayment(opts: {
       body: JSON.stringify({
         type: 'payment_received',
         notify_admins: true,
+        recipients: [{ id: opts.userId, type: 'customer' }],
         reference_type: 'cleaning',
         details: {
           amount: opts.amount,
