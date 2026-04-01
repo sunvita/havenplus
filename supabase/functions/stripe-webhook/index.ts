@@ -11,17 +11,20 @@ const supabase = createClient(
   Deno.env.get('SB_SERVICE_ROLE_KEY')!
 )
 
-// Price ID → plan 매핑
+// Price ID → plan 매핑 (monthly + annual)
 const PRICE_TO_PLAN: Record<string, string> = {
-  'price_1T7ppGRVro18Xo3KNaJj6ULN': 'essential',
-  'price_1T7pqHRVro18Xo3K2ZdYQDoo': 'smart',
-  'price_1T7psTRVro18Xo3KRUNcEcRZ': 'premium',
+  'price_1TAQ8eETHoBrxXOuBJykRrxO': 'essential',  // monthly
+  'price_1TByOdETHoBrxXOuP5mhiRTy': 'essential',  // annual
+  'price_1TAQ9ZETHoBrxXOuK0JnkQeb': 'smart',      // monthly
+  'price_1TByPYETHoBrxXOuSOpUL7pN': 'smart',      // annual
+  'price_1TAQAjETHoBrxXOuyhs48ER7': 'premium',    // monthly
+  'price_1TByPwETHoBrxXOuwNJ9BDuH': 'premium',    // annual
 }
 
 const SH_PRICES: Record<string, number> = {
-  'price_1T7ptdRVro18Xo3Kvz3Hh0jb': 1,  // 1 SH
-  'price_1T7pulRVro18Xo3KaZUWJBre': 4,  // 4 SH Bundle
-  'price_1T7pvURVro18Xo3KNLzwtH2Z': 8,  // 8 SH Bundle
+  'price_1TAQDNETHoBrxXOu9gW5qdjC': 1,  // 1 SH
+  'price_1TAQDtETHoBrxXOuCpFDkNCL': 4,  // 4 SH Bundle
+  'price_1TAQEMETHoBrxXOuJ1lTGqCb': 8,  // 8 SH Bundle
 }
 
 // Plan별 바우처 SH 수량
@@ -29,6 +32,13 @@ const VOUCHER_MAP: Record<string, number> = {
   essential: 2,
   smart: 3,
   premium: 6,
+}
+
+// Plan별 연간 청소 시간
+const CLEANING_HOURS_MAP: Record<string, number> = {
+  essential: 8,
+  smart: 12,
+  premium: 24,
 }
 
 // ── 내부 subscription UUID 조회 헬퍼 ──
@@ -175,10 +185,10 @@ serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
 
-  // Webhook 서명 검증
+  // Webhook 서명 검증 (async required in Deno/Supabase Edge Runtime)
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(
+    event = await stripe.webhooks.constructEventAsync(
       body,
       signature!,
       Deno.env.get('STRIPE_WEBHOOK_SECRET')!
@@ -197,6 +207,7 @@ serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session
         const userId = session.metadata?.user_id
         const priceId = session.metadata?.price_id
+        const propertyId = session.metadata?.property_id || null
 
         if (!userId || !priceId) break
 
@@ -205,17 +216,41 @@ serve(async (req) => {
           const plan = PRICE_TO_PLAN[priceId]
           const stripeSubId = session.subscription as string
 
-          const { error } = await supabase.from('subscriptions').upsert({
+          // Retrieve Stripe subscription to get period_end
+          const stripeSub = await stripe.subscriptions.retrieve(stripeSubId)
+
+          const subData: Record<string, unknown> = {
             user_id: userId,
             plan_type: plan,
             status: 'active',
             stripe_subscription_id: stripeSubId,
             stripe_customer_id: session.customer as string,
+            // Cleaning hours
+            cleaning_hours_total: CLEANING_HOURS_MAP[plan] || 0,
+            cleaning_hours_used: 0,
+            // Service hours (voucher)
             voucher_sh_total: VOUCHER_MAP[plan],
             voucher_sh_period: 0,
+            sh_hours_total: VOUCHER_MAP[plan],
+            sh_hours_used: 0,
+            // Dates
             start_date: new Date().toISOString(),
             end_date: null,
-          }, { onConflict: 'user_id' })
+            current_period_end: stripeSub.current_period_end,  // Unix timestamp
+          }
+          if (propertyId) subData.property_id = propertyId
+
+          // Use property-scoped upsert if property_id is present (multi-property),
+          // otherwise fall back to user-scoped upsert (legacy single-property)
+          const { error } = propertyId
+            ? await supabase.from('subscriptions').upsert(
+                subData,
+                { onConflict: 'user_id,property_id' }
+              )
+            : await supabase.from('subscriptions').upsert(
+                subData,
+                { onConflict: 'user_id' }
+              )
 
           if (error) console.error('subscriptions upsert error:', error)
 
@@ -251,19 +286,24 @@ serve(async (req) => {
         if (SH_PRICES[priceId]) {
           const shAmount = SH_PRICES[priceId]
 
-          // 기존 sh_hours_total에 추가
-          const { data: sub } = await supabase
+          // 기존 sh_hours_total에 추가 (property-scoped if property_id present)
+          let subQuery = supabase
             .from('subscriptions')
             .select('id, sh_hours_total')
             .eq('user_id', userId)
-            .maybeSingle()
+          if (propertyId) subQuery = subQuery.eq('property_id', propertyId)
+
+          const { data: sub } = await subQuery.maybeSingle()
 
           const currentSH = sub?.sh_hours_total ?? 0
 
-          const { error } = await supabase
+          let updateQuery = supabase
             .from('subscriptions')
             .update({ sh_hours_total: currentSH + shAmount })
             .eq('user_id', userId)
+          if (propertyId) updateQuery = updateQuery.eq('property_id', propertyId)
+
+          const { error } = await updateQuery
 
           if (error) console.error('sh_hours_total update error:', error)
 
@@ -311,20 +351,26 @@ serve(async (req) => {
         // 내부 subscription 조회
         const { data: subRecord } = await supabase
           .from('subscriptions')
-          .select('id, user_id, voucher_sh_total')
+          .select('id, user_id, voucher_sh_total, sh_hours_total')
           .eq('stripe_subscription_id', stripeSubId)
           .maybeSingle()
 
         if (!subRecord) break
 
-        // period_end 업데이트 + 갱신 시 바우처 추가 지급
+        // period_end 업데이트 + 갱신 시 바우처/시간 추가 지급
         const newVoucherTotal = (subRecord.voucher_sh_total ?? 0) + VOUCHER_MAP[plan]
+        const newSHTotal = (subRecord.sh_hours_total ?? 0) + VOUCHER_MAP[plan]
         const { error } = await supabase
           .from('subscriptions')
           .update({
             status: 'active',
             end_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+            current_period_end: stripeSub.current_period_end,
             voucher_sh_total: newVoucherTotal,
+            sh_hours_total: newSHTotal,
+            // Reset cleaning hours for new period
+            cleaning_hours_total: CLEANING_HOURS_MAP[plan] || 0,
+            cleaning_hours_used: 0,
           })
           .eq('stripe_subscription_id', stripeSubId)
 

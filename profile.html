@@ -2170,8 +2170,8 @@ async function loadSubscription() {
         const startDate = sub.start_date
           ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
           : '—';
-        const cleanRem   = (sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0);
-        const shVouchRem = (sub.sh_hours_total || 0) - (sub.sh_hours_used || 0);
+        const cleanRem   = Math.round(((sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0)) * 10) / 10;
+        const shVouchRem = Math.round(((sub.sh_hours_total || 0) - (sub.sh_hours_used || 0)) * 10) / 10;
         const propLabel  = sub.property_id && propMap[sub.property_id] ? propMap[sub.property_id] : '';
 
         // Next payment date calculation
@@ -2448,8 +2448,8 @@ function renderSubscribers(list) {
     const p = s.profile;
     const planBadge   = `<span class="badge badge-${s.plan_type}">${s.plan_type}</span>`;
     const statusBadge = `<span class="badge badge-${s.status === 'active' ? 'active' : 'inactive'}">${s.status}</span>`;
-    const cleanRem = (s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0);
-    const shRem    = (s.sh_hours_total || 0) - (s.sh_hours_used || 0);
+    const cleanRem = Math.round(((s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0)) * 10) / 10;
+    const shRem    = Math.round(((s.sh_hours_total || 0) - (s.sh_hours_used || 0)) * 10) / 10;
     const start    = s.start_date ? new Date(s.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
     return `<tr>
       <td style="font-weight:600;">${p.full_name || '—'}</td>
