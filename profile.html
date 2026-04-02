@@ -4128,27 +4128,43 @@ async function loadAIHistory() {
       const agentName = _agentLabel[a.requester] || a.requester || 'AI 에이전트';
       const deciderLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)' }[a.decided_by] || a.decided_by || '—';
       const decidedAt = a.decided_at ? new Date(a.decided_at).toLocaleDateString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+      const isModified = a.status === 'modified';
+      const proposals = task.proposals || [];
+      const proposalHTML = proposals.map((p, i) => `
+        <div style="padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:2px">제안 ${i+1}: ${p.title}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:4px">${p.description}</div>
+          <div style="font-size:11px;color:#888">난이도: ${p.effort} · 예상 효과: ${p.expected_impact}</div>
+        </div>`).join('');
+      const detailId = 'hist-detail-' + a.id;
       return `
-        <div style="border:1px solid ${a.status==='modified'?'#fde68a':'#e5e7eb'};border-radius:12px;padding:14px 16px;margin-bottom:8px;opacity:${a.status==='rejected'?'.65':'1'};background:${a.status==='modified'?'#fffdf5':'white'}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
-            <div style="flex:1">
-              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${_statusBg[a.status]||'#f9f9f9'};color:${_statusColor[a.status]||'#666'}">${_statusLabel[a.status]||a.status}</span>
-                <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#f0f4ff;color:#3730a3;font-weight:600">${agentName}</span>
-                <span style="font-size:11px;color:#aaa">${_sevLabel[task.severity]||task.severity}</span>
+        <div style="border:1px solid ${isModified?'#fde68a':'#e5e7eb'};border-radius:12px;margin-bottom:8px;opacity:${a.status==='rejected'?'.65':'1'};background:${isModified?'#fffdf5':'white'};overflow:hidden">
+          <div onclick="toggleHistDetail('${detailId}')" style="padding:14px 16px;cursor:${isModified?'pointer':'default'}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+              <div style="flex:1">
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                  <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${_statusBg[a.status]||'#f9f9f9'};color:${_statusColor[a.status]||'#666'}">${_statusLabel[a.status]||a.status}</span>
+                  <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#f0f4ff;color:#3730a3;font-weight:600">${agentName}</span>
+                  <span style="font-size:11px;color:#aaa">${_sevLabel[task.severity]||task.severity}</span>
+                  ${isModified ? '<span style="font-size:11px;color:#d97706">클릭하여 내용 보기 ›</span>' : ''}
+                </div>
+                <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">${task.title}</div>
+                ${a.comment ? `<div style="font-size:12px;color:#92400e;margin-top:4px;font-style:italic">💬 "${a.comment}"</div>` : ''}
               </div>
-              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">${task.title}</div>
-              ${a.comment ? `<div style="font-size:12px;color:#92400e;margin-top:4px;font-style:italic">💬 "${a.comment}"</div>` : ''}
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:11px;color:#aaa">${deciderLabel}</div>
-              <div style="font-size:11px;color:#aaa">${decidedAt}</div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:11px;color:#aaa">${deciderLabel}</div>
+                <div style="font-size:11px;color:#aaa">${decidedAt}</div>
+              </div>
             </div>
           </div>
-          ${a.status === 'modified' ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #fde68a;display:flex;gap:8px;flex-wrap:wrap">
-            <button onclick="reinstateTask('${a.id}','${task.id}')" style="padding:7px 14px;background:#ff6b35;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">↩ 검토 대기로 되돌리기</button>
-            <button onclick="rejectFromHistory('${a.id}','${task.id}')" style="padding:7px 12px;background:white;color:#666;border:1px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer">✗ 최종 거절</button>
+          ${isModified ? `
+          <div id="${detailId}" style="display:none;padding:0 16px 16px;border-top:1px solid #fde68a">
+            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:12px;padding-top:12px">${task.description||''}</div>
+            ${proposals.length > 0 ? `<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">제안 내용:</div>${proposalHTML}</div>` : ''}
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="reinstateTask('${a.id}','${task.id}')" style="padding:7px 14px;background:#ff6b35;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">↩ 검토 대기로 되돌리기</button>
+              <button onclick="rejectFromHistory('${a.id}','${task.id}')" style="padding:7px 12px;background:white;color:#666;border:1px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer">✗ 최종 거절</button>
+            </div>
           </div>` : ''}
         </div>`;
     }).join('');
@@ -4237,6 +4253,16 @@ async function rejectFromHistory(approvalId, taskId) {
     showToast('최종 거절되었습니다.');
     loadAIHistory();
   } catch(e) { showToast('처리 실패: ' + e.message, true); }
+}
+
+function toggleHistDetail(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  // 토글 텍스트 업데이트
+  const hint = el.previousElementSibling?.querySelector('span[style*="d97706"]');
+  if (hint) hint.textContent = isOpen ? '클릭하여 내용 보기 ›' : '닫기 ›';
 }
 
 /* ══ Admin: Dashboard ═══════════════════════════════════════ */
