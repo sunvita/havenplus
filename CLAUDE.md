@@ -18,7 +18,7 @@
 
 ---
 
-## 현재 상태 (2026-04-02 기준)
+## 현재 상태 (2026-04-03 기준)
 
 ### ✅ 완료된 작업
 
@@ -28,25 +28,36 @@
   - KPI 수집 + Claude 분석 + 이슈 감지 + admin_tasks/admin_approvals 생성
   - Sunny/Jaden 이메일 브리핑 발송
   - Rule-based fallback (ANTHROPIC_API_KEY 없을 때)
+  - 수동 테스트 완료: tasksCreated 2, email true 확인
 - ai-dev-agent Edge Function — 승인된 태스크 자동 실행
   - admin_approvals approved → GitHub API 코드 수정 → 자동 배포
   - 현재 구현: property card UX 개선 태스크
+  - 패턴 매칭 robust화 + alreadyPatched 체크 추가
 - profile.html AI Tasks (의사결정) 전용 메뉴 추가
   - 검토 대기 / 결정 내역 탭
   - 승인·거절·검토 보류 기능
   - 보류 카드 클릭 시 내용 펼치기 / 검토 대기로 되돌리기 / 최종 거절
-  - 에이전트 출처 배지, 실행 상태 배지 (대기중/실행중/배포완료)
-- Dashboard에 AI Tasks 요약 카드 (대기 건수 배지)
+  - 에이전트 출처 배지 (CEO 에이전트), 실행 상태 배지 (⏳대기중/⚙실행중/✓배포완료)
+  - Dashboard 아래 사이드바 메뉴, 대기 건수 배지
+  - Dashboard에 AI Tasks 요약 카드 (클릭 시 섹션 이동)
 
 #### 결제·이메일 시스템
 - send-notification resolveEmail — profiles.email 제거 → auth.users 직접 조회
-- 이메일 타입 4개 추가 (모두 로고 이미지 + Haven Plus 브랜드 템플릿):
+- 이메일 타입 4개 추가 (로고 이미지 + Haven Plus 브랜드 템플릿):
   - subscription_confirmed — 신규 구독 Welcome + View Receipt (Stripe invoice URL)
   - subscription_renewed — 구독 갱신 + View Receipt + 다음 갱신일
   - sh_bundle_confirmed — SH 번들 구매 + View Receipt (charge.receipt_url)
   - payment_failed — 결제 실패 + Update Payment Method (Stripe customer portal)
 - stripe-webhook에서 위 4개 이메일 자동 발송
 - Stripe에서 실제 amount, billing_cycle, receipt_url 조회해서 전달
+- Wealthstone Property 영수증 수동 재발송 완료
+
+#### create-portal-session 수정
+- JWT verification OFF (Supabase 대시보드 설정)
+- 구독 없는 고객: "No active subscription. Choose a plan →" 안내
+- stripe_customer_id 누락 고객 수동 업데이트 완료:
+  - ysland2033@gmail.com → cus_UDVlnt8zlcapPx
+  - jinhyunmail@gmail.com → cus_U8kwffowu63DfM
 
 #### dashboard.html
 - Property card a모드 (미결제) UX 개선
@@ -54,13 +65,13 @@
   - 펼쳤을 때: dimmed pd-grid + 스케줄 preview + CTA 버튼
   - EN/KO 이중언어 완전 적용
 - 언어 토글 시 location.reload()로 카드 재렌더링
-- SyntaxError 수정 (이스케이프 오류 12곳)
+- SyntaxError 수정 (이스케이프 오류 12곳) — 대시보드 로딩 불가 원인
 
 #### haventeam.html (워커 앱)
 - Start Job 실패 수정
   - Storage upsert: false → true (경로 충돌 방지)
   - service_requests UPDATE RLS with_check null 수정
-  - 에러 메시지 상세화
+  - 에러 메시지 상세화 (toast에 원인 표시)
 - Gallery PIN 기능
   - Before/After 사진 모달에 갤러리 선택 버튼 (PIN 필요)
   - 4자리 PIN 인증 모달
@@ -74,13 +85,13 @@
 ### Edge Functions
 | 함수 | 역할 | 최근 변경 |
 |------|------|-----------|
-| stripe-webhook | 결제·구독 자동화 + 이메일 발송 | 2026-04-02 |
-| send-notification | 이메일·인앱 알림 디스패처 | 2026-04-02 |
+| stripe-webhook | 결제·구독 자동화 + 이메일 발송 | 2026-04-03 |
+| send-notification | 이메일·인앱 알림 디스패처 | 2026-04-03 |
 | ai-ceo-weekly | 주간 KPI 분석 + 태스크 생성 | 2026-04-02 |
 | ai-dev-agent | 승인 태스크 자동 실행 | 2026-04-02 |
 | daily-reminder | 전날 방문 리마인더 (pg_cron) | Mar 20 |
 | create-checkout-session | Stripe 체크아웃 + 업그레이드 | Apr 1 |
-| create-portal-session | Stripe 포털 | Mar 20 |
+| create-portal-session | Stripe 포털 (JWT verify OFF) | 2026-04-03 |
 
 ### pg_cron Jobs
 | 이름 | 스케줄 | 역할 |
@@ -115,7 +126,7 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 |--------|------|
 | profiles | 사용자 프로필 (role: customer/worker/admin) ⚠️ email 컬럼 없음 — auth.users 사용 |
 | properties | 등록 부동산 |
-| subscriptions | 구독 현황 (plan_type, cleaning_hours, sh_hours, status) |
+| subscriptions | 구독 현황 (plan_type, cleaning_hours, sh_hours, status, stripe_customer_id) |
 | cleaning_schedule | 방문 일정 |
 | service_requests | 핸디맨·SH 요청 |
 | sh_balance | SH 잔량 |
@@ -127,6 +138,16 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 | admin_approvals | 승인 요청·결정 이력 ✅ |
 | chat_sessions | 챗봇 대화 이력 ✅ |
 | bug_reports | 오류 리포트 ✅ |
+
+---
+
+## 실제 고객 현황 (2026-04-03)
+
+| 이메일 | 플랜 | stripe_customer_id |
+|--------|------|-------------------|
+| wealthstone.property@gmail.com | Smart (Annual $900) | cus_UFn7gt0WnZJsES |
+| ysland2033@gmail.com | Premium | cus_UDVlnt8zlcapPx |
+| jinhyunmail@gmail.com | Premium | cus_U8kwffowu63DfM |
 
 ---
 
@@ -155,25 +176,16 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 
 2. **ai-dev-agent 패턴 확장**
    - 현재: property card UX만 처리
-   - 추가 필요: ERROR_PATTERNS.md 패턴 자동 감지 + 수정
+   - 추가: ERROR_PATTERNS.md 패턴 자동 감지 + 수정
    - 알려진 패턴 매칭 → 자동 코드 수정 → 배포
 
 ### Phase 2 — 중기
 3. **ai-scheduling-agent** — 워커 자동 배정
-   - 새 서비스 요청 → 가용 워커 + 지역 매칭 → 자동 배정
-   - Jaden 승인 필요 항목만 escalate
-
 4. **ai-report-generator** — 월간 리포트 자동 생성
-   - 매월 1일 수익·방문·고객 만족도 리포트
-   - Sunny/Jaden 이메일 발송
-
-5. **ai-conversion-agent** — 전환율 최적화
-   - 미결제 부동산 고객 자동 follow-up 이메일
-   - property card preview → 플랜 전환 유도
+5. **ai-conversion-agent** — 미결제 부동산 고객 follow-up
 
 ### Phase 3
 6. **ai-social-agent** — SNS 자동 포스팅 (Meta Business API 연동 필요)
-7. **ai-report-generator** — 고급 분석 대시보드
 
 ---
 
@@ -206,13 +218,14 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 
 ## 주요 결정 사항 (ADR)
 
-1. **AI cadence** — 매일이 아닌 주 1회 금요일 오전 보고 → 검토 → 실행
-2. **별도 결제 에이전트 없음** — stripe-webhook 처리. ai-ceo-weekly가 주간 브리핑 커버
+1. **AI cadence** — 주 1회 금요일 오전 보고 → 검토 → 실행
+2. **별도 결제 에이전트 없음** — stripe-webhook 처리. ai-ceo-weekly 주간 브리핑 커버
 3. **daily-reminder 기존 유지** — ai-scheduling-agent는 배정 로직만 담당
 4. **챗봇 오류 자동화** — ai-support-agent → bug_reports → ai-dev-agent 라우팅
 5. **공동 승인 72h 타임아웃** — 합의 없으면 현상 유지
 6. **profiles.email 없음** — 고객 이메일은 항상 auth.users에서 조회
 7. **Gallery PIN** — 워커 갤러리 접근 예외용. admin_settings gallery_pin (SHA-256)
+8. **create-portal-session JWT verify OFF** — user JWT 대신 service role로 처리
 
 ---
 
