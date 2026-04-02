@@ -550,6 +550,68 @@ serve(async (req) => {
           .eq('stripe_subscription_id', stripeSubId)
 
         if (error) console.error('payment failed update error:', error)
+
+        // ── 결제 실패 알림 이메일 → 고객 발송 ──
+        try {
+          const stripeSub = await stripe.subscriptions.retrieve(stripeSubId)
+          const priceId = stripeSub.items.data[0]?.price.id
+          const plan = PRICE_TO_PLAN[priceId] || ''
+          const billingCycle = stripeSub.items.data[0]?.plan?.interval || ''
+
+          // 구독에 연결된 user_id 조회
+          const { data: subRecord } = await supabase
+            .from('subscriptions')
+            .select('user_id')
+            .eq('stripe_subscription_id', stripeSubId)
+            .maybeSingle()
+
+          if (subRecord?.user_id) {
+            const { data: { user } } = await supabase.auth.admin.getUserById(subRecord.user_id)
+            const customerEmail = user?.email || ''
+            const customerName = user?.user_metadata?.full_name || ''
+            const amountDue = invoice.amount_due ? invoice.amount_due / 100 : 0
+            const failedDate = new Date(invoice.created * 1000)
+              .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+
+            // Stripe Customer Portal URL 생성
+            let portalUrl = 'https://havenpluscare.com/dashboard.html'
+            try {
+              const portalSession = await stripe.billingPortal.sessions.create({
+                customer: stripeSub.customer as string,
+                return_url: 'https://havenpluscare.com/dashboard.html',
+              })
+              portalUrl = portalSession.url
+            } catch(e) { console.error('portal session error:', e) }
+
+            if (customerEmail) {
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+              await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}`,
+                },
+                body: JSON.stringify({
+                  type: 'payment_failed',
+                  recipients: [{ id: subRecord.user_id, type: 'customer' }],
+                  reference_type: 'cleaning',
+                  details: {
+                    plan,
+                    customer_name: customerName,
+                    amount: amountDue,
+                    billing_cycle: billingCycle,
+                    failed_date: failedDate,
+                    portal_url: portalUrl,
+                    attempt_count: invoice.attempt_count || 1,
+                  },
+                }),
+              })
+              console.log(`payment_failed email sent to ${customerEmail}`)
+            }
+          }
+        } catch(e) {
+          console.error('payment_failed email error:', e)
+        }
         break
       }
     }
