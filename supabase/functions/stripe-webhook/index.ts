@@ -90,7 +90,7 @@ async function notifyAdminPayment(opts: {
       body: JSON.stringify({
         type: 'payment_received',
         notify_admins: true,
-        recipients: [{ id: opts.userId, type: 'customer' }],
+        recipients: [],  // 고객에게 payment_received 불필요 — subscription_confirmed로 대체
         reference_type: 'cleaning',
         details: {
           amount: opts.amount,
@@ -314,6 +314,7 @@ serve(async (req) => {
                 },
                 body: JSON.stringify({
                   type: 'subscription_confirmed',
+                  notify_admins: true,
                   recipients: [{ id: userId, type: 'customer' }],
                   reference_type: 'cleaning',
                   details: {
@@ -409,6 +410,7 @@ serve(async (req) => {
                 },
                 body: JSON.stringify({
                   type: 'sh_bundle_confirmed',
+                  notify_admins: true,
                   recipients: [{ id: userId, type: 'customer' }],
                   reference_type: 'service',
                   details: {
@@ -593,6 +595,7 @@ serve(async (req) => {
                 },
                 body: JSON.stringify({
                   type: 'payment_failed',
+                  notify_admins: true,
                   recipients: [{ id: subRecord.user_id, type: 'customer' }],
                   reference_type: 'cleaning',
                   details: {
