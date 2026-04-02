@@ -549,6 +549,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </button>
+        <button class="sidebar-item" data-section="aitasks" onclick="switchSection('aitasks')" id="sidebarAITasks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          AI Tasks (의사결정) <span id="sidebarAIBadge" style="display:none;margin-left:auto;font-size:10px;font-weight:700;background:#ff6b35;color:white;padding:1px 6px;border-radius:10px"></span>
+        </button>
         <button class="sidebar-item" data-section="cleanings" onclick="switchSection('cleanings')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           Cleanings
@@ -904,11 +908,33 @@
         </div>
       </div>
 
-      <!-- ═══ AI Tasks — 승인 대기 + 히스토리 패널 ═══ -->
-      <div class="section-card" id="aiTasksPanel" style="margin-top:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div class="section-title" style="margin:0">AI 주간 태스크 <span class="admin-badge" style="background:#f0f4ff;color:#3730a3">CEO Agent</span></div>
-          <button onclick="loadAITasks()" style="font-size:12px;color:var(--text-light);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">↻ 새로고침</button>
+      <!-- ═══ AI Tasks 요약 카드 (Dashboard) ═══ -->
+      <div class="section-card" id="aiTasksSummaryCard" style="margin-top:16px;cursor:pointer" onclick="switchSection('aitasks')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div class="section-title" style="margin:0">AI Tasks (의사결정)</div>
+              <span class="admin-badge" style="background:#f0f4ff;color:#3730a3">CEO Agent</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-light)" id="aiSummaryDesc">로딩 중…</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+            <div id="aiSummaryBadge" style="display:none;font-size:13px;font-weight:700;background:#fff3e0;color:#e65100;padding:4px 12px;border-radius:20px"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--text-light)"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: AI Tasks (의사결정) ═══ -->
+    <section class="section" id="section-aitasks">
+      <div class="section-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div>
+            <div class="section-title">AI Tasks (의사결정) <span class="admin-badge" style="background:#f0f4ff;color:#3730a3">CEO Agent</span></div>
+            <div class="section-desc">매주 금요일 CEO 에이전트가 생성한 태스크를 검토하고 승인하세요.</div>
+          </div>
+          <button onclick="loadAITasks()" style="font-size:12px;color:var(--text-light);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);flex-shrink:0">↻ 새로고침</button>
         </div>
         <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px">
           <button id="aiTab-pending" onclick="switchAITab('pending')" style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--orange);color:var(--navy);margin-bottom:-1px">검토 대기</button>
@@ -1949,7 +1975,8 @@ function switchSection(name) {
   if (btn) btn.classList.add('active');
   history.replaceState(null, '', '?section=' + name);
 
-  if (name === 'dashboard')     { loadDashboard(); loadAITasks(); }
+  if (name === 'dashboard')     { loadDashboard(); loadAIDashboardSummary(); }
+  if (name === 'aitasks')       { loadAITasks(); }
   if (name === 'subscription') loadSubscription();
   if (name === 'subscribers')  loadSubscribers();
   if (name === 'cleanings')    loadSchedules();
@@ -4028,6 +4055,35 @@ async function deleteWorker(workerId, workerName) {
 }
 
 /* ══ AI Tasks — 승인 패널 ══════════════════════════════════ */
+
+async function loadAIDashboardSummary() {
+  if (!isAdmin) return;
+  try {
+    const { data, error } = await sb
+      .from('admin_approvals')
+      .select('id, status, created_at')
+      .eq('status', 'pending');
+    if (error) throw error;
+    const count = data?.length || 0;
+    const desc = document.getElementById('aiSummaryDesc');
+    const badge = document.getElementById('aiSummaryBadge');
+    const sidebarBadge = document.getElementById('sidebarAIBadge');
+    if (desc) desc.textContent = count > 0
+      ? `검토 대기 ${count}건 — 클릭하여 확인하세요`
+      : '검토 대기 중인 태스크가 없습니다 · 다음 보고: 금요일 오전';
+    if (badge) {
+      badge.textContent = count > 0 ? `${count}건 대기` : '';
+      badge.style.display = count > 0 ? 'block' : 'none';
+    }
+    if (sidebarBadge) {
+      sidebarBadge.textContent = count > 0 ? count : '';
+      sidebarBadge.style.display = count > 0 ? 'inline' : 'none';
+    }
+  } catch(e) {
+    const desc = document.getElementById('aiSummaryDesc');
+    if (desc) desc.textContent = '로드 실패';
+  }
+}
 
 let aiCurrentTab = 'pending';
 
