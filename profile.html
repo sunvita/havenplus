@@ -4129,7 +4129,7 @@ async function loadAIHistory() {
       const deciderLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)' }[a.decided_by] || a.decided_by || '—';
       const decidedAt = a.decided_at ? new Date(a.decided_at).toLocaleDateString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
       return `
-        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin-bottom:8px;opacity:${a.status==='rejected'?'.7':'1'}">
+        <div style="border:1px solid ${a.status==='modified'?'#fde68a':'#e5e7eb'};border-radius:12px;padding:14px 16px;margin-bottom:8px;opacity:${a.status==='rejected'?'.65':'1'};background:${a.status==='modified'?'#fffdf5':'white'}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
             <div style="flex:1">
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
@@ -4138,13 +4138,18 @@ async function loadAIHistory() {
                 <span style="font-size:11px;color:#aaa">${_sevLabel[task.severity]||task.severity}</span>
               </div>
               <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">${task.title}</div>
-              ${a.comment ? `<div style="font-size:12px;color:#666;margin-top:4px;font-style:italic">"${a.comment}"</div>` : ''}
+              ${a.comment ? `<div style="font-size:12px;color:#92400e;margin-top:4px;font-style:italic">💬 "${a.comment}"</div>` : ''}
             </div>
             <div style="text-align:right;flex-shrink:0">
               <div style="font-size:11px;color:#aaa">${deciderLabel}</div>
               <div style="font-size:11px;color:#aaa">${decidedAt}</div>
             </div>
           </div>
+          ${a.status === 'modified' ? `
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #fde68a;display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="reinstateTask('${a.id}','${task.id}')" style="padding:7px 14px;background:#ff6b35;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">↩ 검토 대기로 되돌리기</button>
+            <button onclick="rejectFromHistory('${a.id}','${task.id}')" style="padding:7px 12px;background:white;color:#666;border:1px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer">✗ 최종 거절</button>
+          </div>` : ''}
         </div>`;
     }).join('');
   } catch(e) {
@@ -4201,6 +4206,37 @@ async function rejectTask(approvalId, taskId) {
     document.getElementById(`task-card-${approvalId}`)?.remove();
     if (!document.querySelector('[id^="task-card-"]')) loadAITasks();
   } catch(e) { showToast('거절 실패: ' + e.message, true); }
+}
+
+async function reinstateTask(approvalId, taskId) {
+  try {
+    // approval을 pending으로 되돌리고 comment 초기화
+    await sb.from('admin_approvals').update({
+      status: 'pending',
+      decided_by: null,
+      decided_at: null,
+      comment: null,
+    }).eq('id', approvalId);
+    // task도 proposed로 되돌려서 검토 대기 탭에 표시
+    await sb.from('admin_tasks').update({ status: 'proposed' }).eq('id', taskId);
+    showToast('검토 대기로 이동했습니다.');
+    // 히스토리 탭 새로고침
+    loadAIHistory();
+  } catch(e) { showToast('처리 실패: ' + e.message, true); }
+}
+
+async function rejectFromHistory(approvalId, taskId) {
+  if (!confirm('이 태스크를 최종 거절하시겠습니까?')) return;
+  try {
+    await sb.from('admin_approvals').update({
+      status: 'rejected', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+      comment: '검토 후 최종 거절',
+    }).eq('id', approvalId);
+    await sb.from('admin_tasks').update({ status: 'rejected' }).eq('id', taskId);
+    showToast('최종 거절되었습니다.');
+    loadAIHistory();
+  } catch(e) { showToast('처리 실패: ' + e.message, true); }
 }
 
 /* ══ Admin: Dashboard ═══════════════════════════════════════ */
