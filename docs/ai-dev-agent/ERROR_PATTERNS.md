@@ -262,3 +262,47 @@ WHERE tablename = 'service_requests';
 
 -- with_check가 null인 UPDATE 정책이 있으면 위험
 ```
+
+---
+
+## 패턴 7: 결제 영수증 이메일 미발송
+
+### 증상
+- 고객이 결제 완료 후 영수증 이메일 미수신
+- Stripe 결제는 성공, payments 테이블에 기록됨
+- send-notification 로그: "No email found for customer {id}"
+
+### 원인
+```
+위치: send-notification/index.ts resolveEmail()
+원인: profiles 테이블에 email 컬럼이 없음
+     resolveEmail()이 profiles.email 조회 시도 → 컬럼 없어서 에러
+     auth.users fallback까지 못 도달
+수정: resolveEmail()에서 profiles.email 조회 제거
+     auth.users.email 직접 조회로 변경 (2026-04-02 수정 완료)
+심각도: High (고객 이메일 전체 영향)
+```
+
+### 진단 쿼리
+```sql
+-- profiles 테이블에 email 컬럼 있는지 확인
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'profiles' AND column_name = 'email';
+-- 결과 없으면 이 버그
+```
+
+### 수동 재발송
+send-notification Invoke:
+```json
+{
+  "type": "payment_received",
+  "recipients": [{ "id": "{user_id}", "type": "customer" }],
+  "reference_id": "{payment_id}",
+  "reference_type": "cleaning",
+  "details": {
+    "amount": {금액},
+    "customer_name": "{고객명}",
+    "paid_at": "{결제일시}"
+  }
+}
+```
