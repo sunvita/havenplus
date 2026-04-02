@@ -2182,18 +2182,10 @@ function toggleLang(lang) {
     el.style.display = lang === 'ko' ? '' : 'none';
   });
 
-  // 동적 생성 카드 재렌더링 (property hub cards contain inline currentLang checks)
-  const hub = document.getElementById('propertyHubList');
-  if (hub && hub.innerHTML.trim()) {
-    // 현재 펼쳐진 카드 ID 기억
-    const expanded = [...document.querySelectorAll('.prop-hub-card.expanded')].map(c => c.id.replace('phub_', ''));
-    loadDashboard().then(() => {
-      // 재렌더링 후 펼쳐진 카드 복원
-      expanded.forEach(id => {
-        const card = document.getElementById('phub_' + id);
-        if (card) card.classList.add('expanded');
-      });
-    });
+  // 언어 변경 시 페이지 새로고침으로 카드 재렌더링
+  // (property hub cards use currentLang at render time)
+  if (document.getElementById('propertyHubList')?.innerHTML.trim()) {
+    location.reload();
   }
 }
 (function initLang() {
