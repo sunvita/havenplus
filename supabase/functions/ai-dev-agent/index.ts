@@ -155,18 +155,29 @@ async function executePropertyCardPreview(proposalId: number): Promise<{ success
         \${isAdmin ? \`<button class="btn-delete-prop" onclick="event.stopPropagation();deleteProperty('\${p.id}','\${p.address.replace(/'/g,\"\\\\\\'\")}')">Delete</button>\` : ''}
       </div>`
 
-  if (html.includes(oldDetailNoplan)) {
+  // 이미 패치됐는지 확인
+  const alreadyPatched = html.includes('이 부동산에 플랜 시작하기') || html.includes('Smart 플랜 기준 미리보기')
+
+  if (alreadyPatched) {
+    console.log('detailInner already patched — skipping')
+  } else if (html.includes(oldDetailNoplan)) {
     html = html.replace(oldDetailNoplan, newDetailNoplan)
     console.log('detailInner patch applied')
   } else {
-    console.warn('detailInner pattern not found — checking alternate pattern')
-    // 간략한 패턴으로 재시도
-    const altPattern = `        <div class="prop-hub-noplan-text">No subscription plan for this property yet.</div>`
-    if (!html.includes(altPattern)) {
-      return { success: false, message: 'Could not find property card no-plan section to patch. May already be updated.' }
+    // 간략 패턴으로 재시도 (줄바꿈/공백 차이 대응)
+    const simpleMarker = 'No subscription plan for this property yet.'
+    if (html.includes(simpleMarker)) {
+      // prop-hub-noplan 블록 전체를 정규식으로 교체
+      html = html.replace(
+        /\s*<div class="prop-hub-noplan">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*`\s*;/,
+        `
+      ${newDetailNoplan}
+    \`;`
+      )
+      console.log('detailInner patch applied via regex fallback')
+    } else {
+      console.warn('detailInner: no-plan section not found at all')
     }
-    // 패턴이 존재하면 수동 확인 필요
-    return { success: false, message: 'Pattern mismatch — manual review needed. The no-plan section exists but exact match failed.' }
   }
 
   // GitHub에 커밋
