@@ -215,6 +215,65 @@ function buildEmail(
       }
     }
 
+    case 'subscription_renewed': {
+      const plan = (details.plan || '').toLowerCase()
+      const planLabel: Record<string, string> = {
+        essential: 'Essential Care',
+        smart: 'Smart Care',
+        premium: 'Premium Care',
+      }
+      const planName = planLabel[plan] || plan
+      const customer = details.customer_name || ''
+      const amountPaid = details.amount ? `$${Number(details.amount).toFixed(0)} AUD` : ''
+      const billingCycle = details.billing_cycle || ''
+      const cycleLabel = billingCycle === 'year' ? '/year' : billingCycle === 'month' ? '/month' : ''
+      const priceStr = amountPaid ? `${amountPaid}${cycleLabel}` : ''
+      const receiptUrl = details.receipt_url || ''
+      const nextDate = details.next_renewal_date || ''
+      return {
+        subject: `Haven Plus — ${planName} Renewed`,
+        html: `
+          <div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;">
+            <div style="background:#162d47;padding:28px 24px;text-align:center;">
+              <img src="https://sunvita.github.io/havenplus/havenplus-logo.png" width="311" height="84" style="display:block;margin:0 auto;" alt="HAVEN PLUS PROPERTY CARE" />
+            </div>
+            <div style="padding:32px 24px;">
+              <h2 style="margin:0 0 16px;">Your subscription has been renewed ✅</h2>
+              <p style="color:#555;margin:0 0 24px;">Hi${customer ? ' ' + customer : ''}. Your Haven Plus ${planName} subscription has been successfully renewed.</p>
+              <div style="background:#f5f8fa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+                <p style="margin:0 0 8px;"><strong>Plan:</strong> ${planName}</p>
+                ${priceStr ? `<p style="margin:0 0 8px;"><strong>Amount charged:</strong> ${priceStr}</p>` : ''}
+                ${nextDate ? `<p style="margin:0;"><strong>Next renewal:</strong> ${nextDate}</p>` : ''}
+              </div>
+              <p style="color:#555;margin:0 0 24px;">Your cleaning hours and service hour vouchers have been topped up for the new period.</p>
+              <table style="border-collapse:collapse;table-layout:fixed;width:200px;">
+                <tr>
+                  <td style="padding:0 0 12px 0;width:168px;">
+                    <a href="https://havenpluscare.com/dashboard.html"
+                       style="display:block;background:#1a3c5e;color:#fff;text-decoration:none;padding:12px 0;border-radius:6px;font-weight:600;border:1.5px solid #1a3c5e;box-sizing:border-box;text-align:center;width:100%;">
+                      Go to Dashboard
+                    </a>
+                  </td>
+                </tr>
+                ${receiptUrl ? `
+                <tr>
+                  <td style="padding:0;width:168px;">
+                    <a href="${receiptUrl}"
+                       style="display:block;background:#fff;color:#1a3c5e;text-decoration:none;padding:12px 0;border-radius:6px;font-weight:600;border:1.5px solid #1a3c5e;box-sizing:border-box;text-align:center;width:100%;">
+                      View Receipt
+                    </a>
+                  </td>
+                </tr>` : ''}
+              </table>
+              <p style="color:#999;font-size:12px;margin:32px 0 0;">
+                Haven Plus Care · Perth, WA · ABN 83 695 213 499<br>
+                Questions? <a href="mailto:hi@havenpluscare.com" style="color:#999;">hi@havenpluscare.com</a>
+              </p>
+            </div>
+          </div>`
+      }
+    }
+
     case 'sh_bundle_confirmed': {
       const shAmount = details.sh_amount || 0
       const customer = details.customer_name || ''
@@ -462,6 +521,8 @@ function buildTitle(type: string, recipientType: string, details: { date?: strin
       return `Your ${jobLabel.toLowerCase()} is complete!`
     case 'subscription_confirmed':
       return `Welcome to Haven Plus — ${details.plan || 'Plan'} Confirmed`
+    case 'subscription_renewed':
+      return `Your Haven Plus subscription has been renewed`
     case 'sh_bundle_confirmed':
       return `${details.sh_amount || ''} Service Hours added to your account`
     case 'payment_received':
@@ -519,6 +580,7 @@ serve(async (req) => {
       reminder:         { cleaning: 'cleaning_reminder',  service: 'job_reminder' },
       completed:        { cleaning: 'cleaning_completed', service: 'service_completed' },
       subscription_confirmed: { cleaning: 'payment_received', service: 'payment_received' },
+      subscription_renewed: { cleaning: 'payment_received', service: 'payment_received' },
       sh_bundle_confirmed: { cleaning: 'payment_received', service: 'payment_received' },
       payment_received: { cleaning: 'payment_received',   service: 'payment_received' },
       new_request:         { cleaning: 'cleaning_scheduled', service: 'service_confirmed' },

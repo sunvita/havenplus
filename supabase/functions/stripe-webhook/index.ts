@@ -484,6 +484,45 @@ serve(async (req) => {
           isSubscriptionInvoice: true,
           plan: `${plan} plan renewal`,
         })
+
+        // ── 구독 갱신 확인 이메일 → 고객 발송 ──
+        try {
+          const { data: { user } } = await supabase.auth.admin.getUserById(subRecord.user_id)
+          const customerEmail = user?.email || ''
+          const customerName = user?.user_metadata?.full_name || ''
+          const amountPaid = invoice.amount_paid ? invoice.amount_paid / 100 : 0
+          const receiptUrl = invoice.hosted_invoice_url || ''
+          const billingCycle = stripeSub.items.data[0]?.plan?.interval || ''
+          const nextDate = new Date(stripeSub.current_period_end * 1000)
+            .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+
+          if (customerEmail) {
+            const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+            await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}`,
+              },
+              body: JSON.stringify({
+                type: 'subscription_renewed',
+                recipients: [{ id: subRecord.user_id, type: 'customer' }],
+                reference_type: 'cleaning',
+                details: {
+                  plan,
+                  customer_name: customerName,
+                  amount: amountPaid,
+                  billing_cycle: billingCycle,
+                  receipt_url: receiptUrl,
+                  next_renewal_date: nextDate,
+                },
+              }),
+            })
+            console.log(`subscription_renewed email sent to ${customerEmail}`)
+          }
+        } catch(e) {
+          console.error('subscription_renewed email error:', e)
+        }
         break
       }
 
