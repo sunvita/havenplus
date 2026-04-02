@@ -170,16 +170,8 @@ async function recordPayment(opts: {
     return
   }
 
-  // Notify admin emails after successful payment record
-  if (opts.paymentType === 'subscription' || opts.paymentType === 'sh_bundle') {
-    await notifyAdminPayment({
-      userId: opts.userId,
-      amount: amountDollars,
-      plan: opts.plan || opts.description || '',
-      paymentId: opts.stripePaymentId,
-      paidAt: new Date().toISOString(),
-    })
-  }
+  // payment_received 어드민 알림 불필요
+  // subscription_confirmed / sh_bundle_confirmed 에서 어드민 notify_admins: true로 처리
 }
 
 serve(async (req) => {
