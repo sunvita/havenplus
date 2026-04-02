@@ -47,15 +47,14 @@ async function resolveEmail(userId: string, recipientType: string): Promise<stri
       .maybeSingle()
     return data?.email || null
   }
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('id', userId)
-    .maybeSingle()
-  if (profile?.email) return profile.email
-
-  const { data: { user } } = await supabase.auth.admin.getUserById(userId)
-  return user?.email || null
+  // profiles 테이블에 email 컬럼 없음 — auth.users에서 직접 조회
+  try {
+    const { data: { user } } = await supabase.auth.admin.getUserById(userId)
+    return user?.email || null
+  } catch(e) {
+    console.error('resolveEmail auth.users error:', e)
+    return null
+  }
 }
 
 // ── Send email via Resend (single recipient) ──
