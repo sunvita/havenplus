@@ -288,14 +288,21 @@ serve(async (req) => {
             const customerEmail = user?.email || ''
             const customerName = user?.user_metadata?.full_name || ''
 
-            // Stripe invoice URL (receipt link)
+            // Stripe에서 실제 결제 금액 + billing cycle + invoice URL 조회
             let receiptUrl = ''
+            let amountPaid = session.amount_total ? session.amount_total / 100 : 0
+            let billingCycle = ''
             try {
               if (stripeSubId) {
                 const invoices = await stripe.invoices.list({ subscription: stripeSubId, limit: 1 })
-                receiptUrl = invoices.data[0]?.hosted_invoice_url || ''
+                const invoice = invoices.data[0]
+                receiptUrl = invoice?.hosted_invoice_url || ''
+                if (invoice?.amount_paid) amountPaid = invoice.amount_paid / 100
               }
-            } catch(e) { console.error('invoice fetch error:', e) }
+              // billing interval from subscription
+              const stripeSub2 = await stripe.subscriptions.retrieve(stripeSubId)
+              billingCycle = stripeSub2.items.data[0]?.plan?.interval || ''
+            } catch(e) { console.error('stripe invoice/interval fetch error:', e) }
 
             if (customerEmail) {
               const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -313,10 +320,12 @@ serve(async (req) => {
                     plan,
                     customer_name: customerName,
                     receipt_url: receiptUrl,
+                    amount: amountPaid,
+                    billing_cycle: billingCycle,
                   },
                 }),
               })
-              console.log(`subscription_confirmed email sent to ${customerEmail}`)
+              console.log(`subscription_confirmed email sent to ${customerEmail}, amount: ${amountPaid}, cycle: ${billingCycle}`)
             }
           } catch(e) {
             console.error('subscription_confirmed email error:', e)

@@ -146,18 +146,13 @@ function buildEmail(
 
     // ── New Payment ──
     case 'subscription_confirmed': {
-      const plan = details.plan || ''
+      const plan = (details.plan || '').toLowerCase()
       const planLabel: Record<string, string> = {
         essential: 'Essential Care',
         smart: 'Smart Care',
         premium: 'Premium Care',
       }
-      const planName = planLabel[plan.toLowerCase()] || plan
-      const priceLabel: Record<string, string> = {
-        essential: '$55/month · Annual $660',
-        smart: '$75/month · Annual $900',
-        premium: '$150/month · Annual $1,800',
-      }
+      const planName = planLabel[plan] || plan
       const cleaningLabel: Record<string, string> = {
         essential: '8 hours (4 cleans/year)',
         smart: '12 hours (6 cleans/year)',
@@ -170,6 +165,11 @@ function buildEmail(
       }
       const receiptUrl = details.receipt_url || ''
       const customer = details.customer_name || ''
+      // 실제 결제 금액 + billing cycle (stripe-webhook에서 전달)
+      const amount = details.amount ? `$${Number(details.amount).toFixed(0)} AUD` : null
+      const billingCycle = details.billing_cycle || ''
+      const cycleLabel = billingCycle === 'year' ? '/year' : billingCycle === 'month' ? '/month' : ''
+      const priceStr = amount ? `${amount}${cycleLabel}` : null
       return {
         subject: `Welcome to Haven Plus — ${planName} Confirmed`,
         html: `
@@ -182,7 +182,7 @@ function buildEmail(
               <p style="color:#555;margin:0 0 24px;">Thank you for subscribing to Haven Plus${customer ? ', ' + customer : ''}. We're delighted to have you on board — your property is in good hands. Here's a summary of your plan:</p>
               <div style="background:#f5f8fa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
                 <p style="margin:0 0 8px;"><strong>Plan:</strong> ${planName}</p>
-                <p style="margin:0 0 8px;"><strong>Price:</strong> ${priceLabel[plan.toLowerCase()] || ''}</p>
+                ${priceStr ? `<p style="margin:0 0 8px;"><strong>Price:</strong> ${priceStr}</p>` : ''}
                 <p style="margin:0 0 8px;"><strong>Cleaning:</strong> ${cleaningLabel[plan.toLowerCase()] || ''}</p>
                 <p style="margin:0;"><strong>Service Hour vouchers:</strong> ${shLabel[plan.toLowerCase()] || ''}</p>
               </div>
