@@ -2476,7 +2476,7 @@ async function savePassword() {
     // Supabase 원문 메시지 → 친절한 메시지로 변환
     let msg = error.message;
     if (msg.includes('at least one character') || msg.includes('password') && msg.includes('character')) {
-      msg = 'Password must include uppercase, lowercase, and a number (e.g. MyPass123).';
+      msg = 'Password must include uppercase, lowercase, and a number. Special characters optional (e.g. MyPass123 or MyPass@123).';
     } else if (msg.includes('at least 6') || msg.includes('at least 8')) {
       msg = 'Password must be at least 8 characters.';
     } else if (msg.includes('same as old') || msg.includes('different')) {
