@@ -785,6 +785,35 @@
               <button class="btn-cancel" onclick="togglePinForm()">Cancel</button>
             </div>
           </div>
+
+          <!-- Gallery PIN -->
+          <div class="security-row" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div>
+              <div class="security-label">Gallery Access PIN <span class="admin-badge" style="background:#e8f5e9;color:#2e7d32;">Team App</span></div>
+              <div class="security-value">워커가 갤러리에서 사진 선택할 때 사용 (예외 상황용)</div>
+            </div>
+            <button class="btn-change" onclick="toggleGalleryPinForm()">Change</button>
+          </div>
+          <div class="inline-form" id="galleryPinForm" style="display:none;">
+            <div class="alert alert-error" id="galleryPinError"></div>
+            <div class="alert alert-success" id="galleryPinSuccess"></div>
+            <div class="pw-field">
+              <label>New 4-digit PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="galleryPinNew" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div class="pw-field">
+              <label>Confirm PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="galleryPinConfirm" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn-save" onclick="saveGalleryPin()">Update PIN</button>
+              <button class="btn-cancel" onclick="toggleGalleryPinForm()">Cancel</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1991,6 +2020,35 @@ function switchSection(name) {
     if (!manageUnlocked) { openPinGate(); return; }
     loadManageData();
   }
+}
+
+/* ── Gallery PIN ──────────────────────────────────────── */
+function toggleGalleryPinForm() {
+  const f = document.getElementById('galleryPinForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveGalleryPin() {
+  const pinNew = document.getElementById('galleryPinNew').value;
+  const pinConfirm = document.getElementById('galleryPinConfirm').value;
+  const err = document.getElementById('galleryPinError');
+  const suc = document.getElementById('galleryPinSuccess');
+  err.textContent = ''; suc.textContent = '';
+
+  if (!/^\d{4}$/.test(pinNew)) { err.textContent = '4자리 숫자를 입력하세요.'; return; }
+  if (pinNew !== pinConfirm) { err.textContent = 'PIN이 일치하지 않습니다.'; return; }
+
+  const enc = new TextEncoder().encode(pinNew);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const { error } = await sb.from('admin_settings').upsert({ key: 'gallery_pin', value: hash }, { onConflict: 'key' });
+  if (error) { err.textContent = '저장 실패: ' + error.message; return; }
+
+  suc.textContent = 'Gallery PIN이 업데이트되었습니다.';
+  document.getElementById('galleryPinNew').value = '';
+  document.getElementById('galleryPinConfirm').value = '';
+  setTimeout(() => toggleGalleryPinForm(), 1500);
 }
 
 /* ── Manual Override PIN Gate ──────────────────────────── */
