@@ -2472,7 +2472,19 @@ async function savePassword() {
   const { error } = await sb.auth.updateUser({ password: newPw });
   btn.disabled = false; btn.textContent = 'Update Password';
 
-  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+  if (error) {
+    // Supabase 원문 메시지 → 친절한 메시지로 변환
+    let msg = error.message;
+    if (msg.includes('at least one character') || msg.includes('password') && msg.includes('character')) {
+      msg = 'Password must include uppercase, lowercase, and a number (e.g. MyPass123).';
+    } else if (msg.includes('at least 6') || msg.includes('at least 8')) {
+      msg = 'Password must be at least 8 characters.';
+    } else if (msg.includes('same as old') || msg.includes('different')) {
+      msg = 'New password must be different from your current password.';
+    }
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
   else {
     sucEl.textContent = 'Password updated successfully.';
     sucEl.style.display = 'block';
