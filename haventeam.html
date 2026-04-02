@@ -1664,8 +1664,9 @@ async function confirmStartJob() {
     showToast('Job started! 🚀', 'success');
     loadAllData();
   } catch(e) {
-    showToast('Failed to start job', 'error');
-    console.error(e);
+    const msg = e?.message || 'Unknown error';
+    showToast('Failed to start job: ' + msg, 'error');
+    console.error('confirmStartJob error:', e);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Start Job';
@@ -1900,9 +1901,9 @@ async function uploadPhotos(blobs, jobId, prefix) {
     const path = `${jobId}/${prefix}_${ts}_${i}.jpg`;
     const { error } = await sb.storage.from('job-photos').upload(path, blobs[i], {
       contentType: 'image/jpeg',
-      upsert: false,
+      upsert: true,
     });
-    if (error) throw error;
+    if (error) throw new Error(`Photo upload failed (${path}): ${error.message}`);
     const { data: { publicUrl } } = sb.storage.from('job-photos').getPublicUrl(path);
     urls.push(publicUrl);
   }
