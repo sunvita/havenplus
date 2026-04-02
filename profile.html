@@ -904,13 +904,16 @@
         </div>
       </div>
 
-      <!-- ═══ AI Tasks — 승인 대기 패널 ═══ -->
+      <!-- ═══ AI Tasks — 승인 대기 + 히스토리 패널 ═══ -->
       <div class="section-card" id="aiTasksPanel" style="margin-top:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div class="section-title" style="margin:0">AI 주간 태스크 <span class="admin-badge" style="background:#f0f4ff;color:#3730a3">CEO Agent</span></div>
           <button onclick="loadAITasks()" style="font-size:12px;color:var(--text-light);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border)">↻ 새로고침</button>
         </div>
-        <div class="section-desc" style="margin-bottom:16px">매주 금요일 CEO 에이전트가 생성한 태스크를 검토하고 승인하세요.</div>
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px">
+          <button id="aiTab-pending" onclick="switchAITab('pending')" style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--orange);color:var(--navy);margin-bottom:-1px">검토 대기</button>
+          <button id="aiTab-history" onclick="switchAITab('history')" style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-light);margin-bottom:-1px">결정 내역</button>
+        </div>
         <div id="aiTasksList"><div style="font-size:13px;color:var(--text-light);padding:12px 0">로딩 중…</div></div>
       </div>
     </section>
@@ -4025,6 +4028,31 @@ async function deleteWorker(workerId, workerName) {
 }
 
 /* ══ AI Tasks — 승인 패널 ══════════════════════════════════ */
+
+let aiCurrentTab = 'pending';
+
+function switchAITab(tab) {
+  aiCurrentTab = tab;
+  const pending = document.getElementById('aiTab-pending');
+  const history = document.getElementById('aiTab-history');
+  if (pending && history) {
+    pending.style.borderBottomColor = tab === 'pending' ? 'var(--orange)' : 'transparent';
+    pending.style.color = tab === 'pending' ? 'var(--navy)' : 'var(--text-light)';
+    history.style.borderBottomColor = tab === 'history' ? 'var(--orange)' : 'transparent';
+    history.style.color = tab === 'history' ? 'var(--navy)' : 'var(--text-light)';
+  }
+  tab === 'pending' ? loadAITasks() : loadAIHistory();
+}
+
+const _sevColor = { urgent:'#dc2626', normal:'#059669', longterm:'#2563eb' };
+const _sevBg    = { urgent:'#fef2f2', normal:'#f0fdf4', longterm:'#eff6ff' };
+const _sevLabel = { urgent:'긴급', normal:'일반', longterm:'장기' };
+const _ownerLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)', both:'Sunny + Jaden' };
+const _agentLabel = { 'ai-ceo-weekly':'CEO 에이전트', 'ai-dev-agent':'Dev 에이전트', 'ai-support-agent':'지원 에이전트' };
+const _statusLabel = { approved:'승인됨', rejected:'거절됨', modified:'검토 보류' };
+const _statusColor = { approved:'#059669', rejected:'#dc2626', modified:'#d97706' };
+const _statusBg    = { approved:'#f0fdf4', rejected:'#fef2f2', modified:'#fffbeb' };
+
 async function loadAITasks() {
   if (!isAdmin) return;
   const container = document.getElementById('aiTasksList');
@@ -4038,18 +4066,16 @@ async function loadAITasks() {
       .limit(20);
     if (error) throw error;
     if (!approvals || approvals.length === 0) {
-      container.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--text-light)"><div style="font-size:24px;margin-bottom:8px">✅</div><div style="font-size:13px">승인 대기 중인 태스크가 없습니다</div><div style="font-size:12px;margin-top:4px">다음 보고는 금요일 오전에 도착합니다</div></div>`;
+      container.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-light)"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:13px;font-weight:600">검토 대기 중인 태스크가 없습니다</div><div style="font-size:12px;margin-top:4px">다음 보고는 금요일 오전에 도착합니다</div></div>`;
       return;
     }
-    const sevColor = { urgent:'#dc2626', normal:'#059669', longterm:'#2563eb' };
-    const sevBg    = { urgent:'#fef2f2', normal:'#f0fdf4', longterm:'#eff6ff' };
-    const ownerLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)', both:'Sunny + Jaden' };
     container.innerHTML = approvals.map(a => {
       const task = a.admin_tasks;
       if (!task) return '';
       const proposals = task.proposals || [];
+      const agentName = _agentLabel[a.requester] || a.requester || 'AI 에이전트';
       const proposalHTML = proposals.map((p, i) => `
-        <label style="display:flex;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px;cursor:pointer">
+        <label style="display:flex;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#ff6b35'" onmouseout="this.style.borderColor='#e5e7eb'">
           <input type="radio" name="proposal_${a.id}" value="${i}" ${i===1?'checked':''} style="margin-top:2px;flex-shrink:0">
           <div>
             <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">제안 ${i+1}: ${p.title}</div>
@@ -4059,16 +4085,65 @@ async function loadAITasks() {
         </label>`).join('');
       return `
         <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px" id="task-card-${a.id}">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${sevBg[task.severity]||'#f9f9f9'};color:${sevColor[task.severity]||'#666'}">${task.severity.toUpperCase()}</span>
-            <span style="font-size:11px;color:#888">담당: ${ownerLabel[task.owner]||task.owner}</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${_sevBg[task.severity]||'#f9f9f9'};color:${_sevColor[task.severity]||'#666'}">${_sevLabel[task.severity]||task.severity}</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#f0f4ff;color:#3730a3;font-weight:600">${agentName}</span>
+            <span style="font-size:11px;color:#aaa">담당: ${_ownerLabel[task.owner]||task.owner}</span>
+            <span style="font-size:11px;color:#aaa">${new Date(a.created_at).toLocaleDateString('ko-KR')}</span>
           </div>
           <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:4px">${task.title}</div>
-          <div style="font-size:12px;color:#666;line-height:1.5;margin-bottom:12px">${task.description||''}</div>
-          ${proposals.length > 0 ? `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">제안 선택:</div>${proposalHTML}</div>` : ''}
+          <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:12px">${task.description||''}</div>
+          ${proposals.length > 0 ? `<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">제안 선택:</div>${proposalHTML}</div>` : ''}
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button onclick="approveTask('${a.id}','${task.id}')" style="padding:8px 18px;background:#ff6b35;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✓ 승인 및 실행</button>
+            <button onclick="holdTask('${a.id}','${task.id}')" style="padding:8px 14px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;font-size:13px;cursor:pointer">⏸ 검토 보류</button>
             <button onclick="rejectTask('${a.id}','${task.id}')" style="padding:8px 14px;background:white;color:#666;border:1px solid #ddd;border-radius:8px;font-size:13px;cursor:pointer">✗ 거절</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div style="font-size:13px;color:#dc2626;padding:12px 0">로드 실패: ${e.message}</div>`;
+  }
+}
+
+async function loadAIHistory() {
+  if (!isAdmin) return;
+  const container = document.getElementById('aiTasksList');
+  if (!container) return;
+  try {
+    const { data: approvals, error } = await sb
+      .from('admin_approvals')
+      .select('*, admin_tasks(*)')
+      .in('status', ['approved', 'rejected', 'modified'])
+      .order('decided_at', { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    if (!approvals || approvals.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-light)"><div style="font-size:13px">결정된 내역이 없습니다</div></div>`;
+      return;
+    }
+    container.innerHTML = approvals.map(a => {
+      const task = a.admin_tasks;
+      if (!task) return '';
+      const agentName = _agentLabel[a.requester] || a.requester || 'AI 에이전트';
+      const deciderLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)' }[a.decided_by] || a.decided_by || '—';
+      const decidedAt = a.decided_at ? new Date(a.decided_at).toLocaleDateString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+      return `
+        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin-bottom:8px;opacity:${a.status==='rejected'?'.7':'1'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+            <div style="flex:1">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${_statusBg[a.status]||'#f9f9f9'};color:${_statusColor[a.status]||'#666'}">${_statusLabel[a.status]||a.status}</span>
+                <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#f0f4ff;color:#3730a3;font-weight:600">${agentName}</span>
+                <span style="font-size:11px;color:#aaa">${_sevLabel[task.severity]||task.severity}</span>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">${task.title}</div>
+              ${a.comment ? `<div style="font-size:12px;color:#666;margin-top:4px;font-style:italic">"${a.comment}"</div>` : ''}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:11px;color:#aaa">${deciderLabel}</div>
+              <div style="font-size:11px;color:#aaa">${decidedAt}</div>
+            </div>
           </div>
         </div>`;
     }).join('');
@@ -4088,7 +4163,6 @@ async function approveTask(approvalId, taskId) {
       payload: { selected_proposal: selectedProposal },
     }).eq('id', approvalId);
     await sb.from('admin_tasks').update({ selected_proposal: selectedProposal, status: 'approved' }).eq('id', taskId);
-    // ai-dev-agent 호출
     const session = (await sb.auth.getSession()).data.session;
     fetch('https://rtkgnlcgepromqtoelre.supabase.co/functions/v1/ai-dev-agent', {
       method: 'POST',
@@ -4101,9 +4175,27 @@ async function approveTask(approvalId, taskId) {
   } catch(e) { showToast('승인 실패: ' + e.message, true); }
 }
 
+async function holdTask(approvalId, taskId) {
+  const comment = prompt('보류 사유 또는 추가 검토 내용을 입력하세요 (선택사항):', '') ?? '';
+  try {
+    await sb.from('admin_approvals').update({
+      status: 'modified', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+      comment: comment || '검토 보류',
+    }).eq('id', approvalId);
+    await sb.from('admin_tasks').update({ status: 'proposed' }).eq('id', taskId);
+    showToast('검토 보류 처리되었습니다.');
+    document.getElementById(`task-card-${approvalId}`)?.remove();
+    if (!document.querySelector('[id^="task-card-"]')) loadAITasks();
+  } catch(e) { showToast('처리 실패: ' + e.message, true); }
+}
+
 async function rejectTask(approvalId, taskId) {
   try {
-    await sb.from('admin_approvals').update({ status: 'rejected', decided_by: 'sunny', decided_at: new Date().toISOString() }).eq('id', approvalId);
+    await sb.from('admin_approvals').update({
+      status: 'rejected', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+    }).eq('id', approvalId);
     await sb.from('admin_tasks').update({ status: 'rejected' }).eq('id', taskId);
     showToast('거절되었습니다.');
     document.getElementById(`task-card-${approvalId}`)?.remove();
