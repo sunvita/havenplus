@@ -216,3 +216,49 @@ AND s.id IS NULL;
 수정: {수정 방법}
 심각도: Low / Mid / High
 ```
+
+---
+
+## 패턴 6: 워커 앱 Start Job 실패 ("Failed to start job")
+
+### 증상
+- haventeam.html에서 사진 업로드 후 Start Job 버튼 클릭 시 실패
+- "Failed to start job" 토스트 표시
+- 특히 Service 타입 job에서 발생
+
+### 원인 분류
+
+**6-A) Storage 중복 경로 충돌**
+```
+로그 패턴: "The resource already exists"
+위치: haventeam.html uploadPhotos()
+원인: upsert: false 상태에서 같은 job을 두 번 시도
+     첫 번째 시도에서 일부 사진이 업로드된 후 실패 → 두 번째 시도 시 경로 충돌
+수정: storage.upload() 옵션을 upsert: true로 변경 (2026-04-02 수정 완료)
+심각도: Mid
+```
+
+**6-B) RLS with_check null (UPDATE 막힘)**
+```
+로그 패턴: "new row violates row-level security policy"
+위치: haventeam.html confirmStartJob() → service_requests UPDATE
+원인: "Team app can update service_requests" 정책의 with_check가 null
+     Supabase에서 with_check: null = false로 처리 → 쓰기 차단
+수정:
+  ALTER POLICY "Team app can update service_requests"
+  ON service_requests
+  USING (true)
+  WITH CHECK (true);
+심각도: High
+확인: 2026-04-02 수정 완료
+```
+
+### 진단 쿼리
+```sql
+-- service_requests RLS 정책 확인
+SELECT policyname, cmd, qual, with_check
+FROM pg_policies
+WHERE tablename = 'service_requests';
+
+-- with_check가 null인 UPDATE 정책이 있으면 위험
+```
