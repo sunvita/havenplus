@@ -382,6 +382,48 @@ serve(async (req) => {
             isSubscriptionInvoice: false,
             plan: `${shAmount} SH bundle`,
           })
+
+          // ── SH 번들 구매 확인 이메일 → 고객 발송 ──
+          try {
+            const { data: { user } } = await supabase.auth.admin.getUserById(userId)
+            const customerEmail = user?.email || ''
+            const customerName = user?.user_metadata?.full_name || ''
+
+            let receiptUrl = ''
+            const amountPaid = session.amount_total ? session.amount_total / 100 : 0
+            try {
+              if (paymentIntentId) {
+                const pi = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge'] })
+                const charge = pi.latest_charge as any
+                receiptUrl = charge?.receipt_url || ''
+              }
+            } catch(e) { console.error('SH receipt fetch error:', e) }
+
+            if (customerEmail) {
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+              await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}`,
+                },
+                body: JSON.stringify({
+                  type: 'sh_bundle_confirmed',
+                  recipients: [{ id: userId, type: 'customer' }],
+                  reference_type: 'service',
+                  details: {
+                    sh_amount: shAmount,
+                    customer_name: customerName,
+                    amount: amountPaid,
+                    receipt_url: receiptUrl,
+                  },
+                }),
+              })
+              console.log(`sh_bundle_confirmed email sent to ${customerEmail}`)
+            }
+          } catch(e) {
+            console.error('sh_bundle_confirmed email error:', e)
+          }
         }
         break
       }
