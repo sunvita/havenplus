@@ -2374,11 +2374,12 @@ async function openPortal() {
 
     if (!res.ok) {
       const status = res.status;
-      if (status === 404) throw new Error('portal_not_deployed');
+      if (status === 404) throw new Error('no_subscription');
       throw new Error('Server error: ' + status);
     }
 
     const data = await res.json();
+    if (data.error && data.error.includes('No active subscription')) throw new Error('no_subscription');
     if (data.error) throw new Error(data.error);
     if (!data.url)  throw new Error('No portal URL returned.');
 
@@ -2386,19 +2387,16 @@ async function openPortal() {
   } catch(e) {
     console.warn('Portal error:', e.message);
 
-    // Show helpful status message
     statusEl.style.display = 'flex';
-    if (e.message === 'portal_not_deployed' || e.message.includes('404')) {
+    if (e.message === 'no_subscription') {
       statusEl.className = 'payment-status not-connected';
-      document.getElementById('portalStatusText').textContent =
-        'Billing portal is being set up. Please contact us for billing changes.';
+      document.getElementById('portalStatusText').innerHTML =
+        'No active subscription found. <a href="plans.html" style="color:var(--navy);font-weight:600;">Choose a plan →</a>';
     } else {
       statusEl.className = 'payment-status not-connected';
       document.getElementById('portalStatusText').textContent =
-        'Payment portal unavailable right now. Please contact us for billing changes.';
+        'Payment portal unavailable right now. Please contact hi@havenpluscare.com';
     }
-
-    showToast('Billing portal unavailable. Contact hi' + '@' + 'havenpluscare.com', true);
   }
 }
 
