@@ -154,9 +154,9 @@ function buildEmail(
       }
       const planName = planLabel[plan.toLowerCase()] || plan
       const priceLabel: Record<string, string> = {
-        essential: '$75/month or $750/year',
-        smart: '$100/month or $1,000/year',
-        premium: '$150/month or $1,500/year',
+        essential: '$55/month · Annual $660',
+        smart: '$75/month · Annual $900',
+        premium: '$150/month · Annual $1,800',
       }
       const cleaningLabel: Record<string, string> = {
         essential: '8 hours (4 cleans/year)',
