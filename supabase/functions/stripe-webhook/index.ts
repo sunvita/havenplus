@@ -281,6 +281,46 @@ serve(async (req) => {
             isSubscriptionInvoice: true,
             plan: `${plan} plan`,
           })
+
+          // ── 구독 확인 Welcome 이메일 → 고객 발송 ──
+          try {
+            const { data: { user } } = await supabase.auth.admin.getUserById(userId)
+            const customerEmail = user?.email || ''
+            const customerName = user?.user_metadata?.full_name || ''
+
+            // Stripe invoice URL (receipt link)
+            let receiptUrl = ''
+            try {
+              if (stripeSubId) {
+                const invoices = await stripe.invoices.list({ subscription: stripeSubId, limit: 1 })
+                receiptUrl = invoices.data[0]?.hosted_invoice_url || ''
+              }
+            } catch(e) { console.error('invoice fetch error:', e) }
+
+            if (customerEmail) {
+              const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+              await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}`,
+                },
+                body: JSON.stringify({
+                  type: 'subscription_confirmed',
+                  recipients: [{ id: userId, type: 'customer' }],
+                  reference_type: 'cleaning',
+                  details: {
+                    plan,
+                    customer_name: customerName,
+                    receipt_url: receiptUrl,
+                  },
+                }),
+              })
+              console.log(`subscription_confirmed email sent to ${customerEmail}`)
+            }
+          } catch(e) {
+            console.error('subscription_confirmed email error:', e)
+          }
         }
 
         // SH 번들 구매인 경우
