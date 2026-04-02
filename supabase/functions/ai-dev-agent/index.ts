@@ -95,9 +95,12 @@ async function executePropertyCardPreview(proposalId: number): Promise<{ success
   const oldSummaryMeta = `      : \`<span class="prop-hub-plan-pill pill-none">No plan</span>
          \${bedBath}\`;`
 
-  const newSummaryMeta = `      : \`<span class="prop-hub-plan-pill pill-none">No plan yet</span>
+  const newSummaryMeta = `      : \`<span class="prop-hub-plan-pill pill-none"><span class="lang-en">No plan yet</span><span class="lang-ko" style="display:\${currentLang==='ko'?'':'none'}">플랜 없음</span></span>
          \${bedBath}
-         <span style="color:var(--orange);font-size:12px;font-weight:600">✦ Smart 기준: 방문 6회 · 청소 12h · SH 3h 포함</span>\`;`
+         <span style="color:#2563eb;font-size:12px;font-weight:600">
+           <span class="lang-en">Smart plan: 6 visits · 12h cleaning · 3h SH included</span>
+           <span class="lang-ko" style="display:\${currentLang==='ko'?'':'none'}">Smart 기준: 방문 6회 · 청소 12h · SH 3h 포함</span>
+         </span>\`;`
 
   if (html.includes(oldSummaryMeta)) {
     html = html.replace(oldSummaryMeta, newSummaryMeta)

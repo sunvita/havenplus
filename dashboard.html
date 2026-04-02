@@ -1150,9 +1150,12 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
          <span><strong>Cleaning:</strong> ${r1(cleanR)}/${r1(cleanT)}h</span>
          <span><strong>Service Hour:</strong> ${r1(shVR)}/${r1(shVT)}SH</span>
          ${nextVisitText ? `<span><strong>Next Visit:</strong> ${nextVisitText}</span>` : ''}`
-      : `<span class="prop-hub-plan-pill pill-none">No plan yet</span>
+      : `<span class="prop-hub-plan-pill pill-none"><span class="lang-en">No plan yet</span><span class="lang-ko" style="display:${currentLang==='ko'?'':'none'}">플랜 없음</span></span>
          ${bedBath}
-         <span style="color:#2563eb;font-size:12px;font-weight:600">Smart 기준: 방문 6회 · 청소 12h · SH 3h 포함</span>`;
+         <span style="color:#2563eb;font-size:12px;font-weight:600">
+           <span class="lang-en">Smart plan: 6 visits · 12h cleaning · 3h SH included</span>
+           <span class="lang-ko" style="display:${currentLang==='ko'?'':'none'}">Smart 기준: 방문 6회 · 청소 12h · SH 3h 포함</span>
+         </span>`;
 
     // PM / Key Holder info
     const keyName = p.key_holder_name || p.key_holder || '';
@@ -1186,30 +1189,30 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     ` : `
       <div class="prop-hub-divider"></div>
       <div style="margin-bottom:14px">
-        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">📅 Cleaning Schedule</div>
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px">📅 <span class="lang-en">Cleaning Schedule</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">청소 스케줄</span></div>
         <div class="sched-timeline" style="opacity:.3">
           ${[...Array(6)].map((_,i) => `
             <div class="sched-dot future"><div class="sched-dot-circle future"></div><div class="sched-dot-label">—</div></div>
             ${i < 5 ? '<div class="sched-line"></div>' : ''}
           `).join('')}
         </div>
-        <div style="font-size:12px;color:var(--text-light);margin-top:8px">플랜 선택 후 방문 스케줄이 여기 표시됩니다</div>
+        <div style="font-size:12px;color:var(--text-light);margin-top:8px"><span class="lang-en">Schedule will appear here after plan selection</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">플랜 선택 후 방문 스케줄이 여기 표시됩니다</span></div>
       </div>
       <div style="position:relative;margin-bottom:14px">
         <div class="pd-grid" style="opacity:.3;pointer-events:none;user-select:none">
-          <div><div class="pd-item-label">Plan</div><div class="pd-item-val">Smart</div></div>
-          <div><div class="pd-item-label">Visits / yr</div><div class="pd-item-val">6</div></div>
-          <div><div class="pd-item-label">Cleaning hrs</div><div class="pd-item-val">12h</div></div>
-          <div><div class="pd-item-label">SH vouchers</div><div class="pd-item-val">3h</div></div>
-          <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
-          <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
+          <div><div class="pd-item-label"><span class="lang-en">Plan</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">플랜</span></div><div class="pd-item-val">Smart</div></div>
+          <div><div class="pd-item-label"><span class="lang-en">Visits / yr</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">연간 방문</span></div><div class="pd-item-val">6</div></div>
+          <div><div class="pd-item-label"><span class="lang-en">Cleaning hrs</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">청소 시간</span></div><div class="pd-item-val">12h</div></div>
+          <div><div class="pd-item-label"><span class="lang-en">SH vouchers</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">SH 바우처</span></div><div class="pd-item-val">3h</div></div>
+          <div><div class="pd-item-label"><span class="lang-en">Repair checkup</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">수리 점검</span></div><div class="pd-item-val"><span class="lang-en">Every visit</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">매 방문</span></div></div>
+          <div><div class="pd-item-label"><span class="lang-en">Smoke alarm</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">연기감지기</span></div><div class="pd-item-val"><span class="lang-en">Annually</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">연 1회</span></div></div>
         </div>
         <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
-          <div style="font-size:12px;color:var(--text-light);font-weight:600">Smart 플랜 기준 미리보기</div>
+          <div style="font-size:12px;color:var(--text-light);font-weight:600"><span class="lang-en">Smart plan preview</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">Smart 플랜 기준 미리보기</span></div>
           <a href="plans.html" class="btn-action btn-primary"
              style="font-size:13px;padding:10px 24px;text-decoration:none"
              onclick="event.stopPropagation();sessionStorage.setItem('hp_selected_property','${p.id}')">
-            이 부동산에 플랜 시작하기 →
+            <span class="lang-en">Start a plan for this property →</span><span class="lang-ko" style="display:${currentLang==='ko'?'':\'none\'}">이 부동산에 플랜 시작하기 →</span>
           </a>
         </div>
       </div>
