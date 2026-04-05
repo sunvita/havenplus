@@ -210,3 +210,27 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 "CLAUDE.md 읽고 현재 상태 파악해줘.
  오늘은 [작업 내용]을 할 거야."
 ```
+
+---
+
+## 운영 주의사항 (2026-04-05 추가)
+
+### Edge Function 재배포 후 필수 확인
+Supabase Edge Function 재배포 시 JWT verify가 기본값 ON으로 초기화됨.
+아래 함수는 재배포 후 **반드시 JWT verify OFF** 확인:
+- `stripe-webhook` ← Stripe가 JWT 없이 호출
+- `create-portal-session` ← 고객이 비인증 상태로 호출
+
+JWT가 ON이면 Stripe 웹훅 401 → 결제 DB 미반영 → 운영 치명적
+
+### Stripe 웹훅 장애 대응 절차
+1. Stripe → Developers → Webhooks → Recent deliveries에서 실패 이벤트 확인
+2. Supabase → Edge Functions → stripe-webhook → JWT verify OFF 확인
+3. 실패한 `checkout.session.completed` **만** Resend (invoice.payment_succeeded, customer.subscription.updated는 Resend 불필요)
+4. Resend 후 subscriptions, payments 테이블 데이터 반드시 크로스체크
+
+### stripe-webhook 핵심 버그 수정 이력 (2026-04-05)
+- `invoice.payment_succeeded`: `billing_reason !== 'subscription_cycle'`이면 skip
+  - 신규 구독 첫 결제 시 `checkout.session.completed`와 중복 실행 방지
+- `recordPayment`: `stripe_payment_id` / `stripe_invoice_id` 중복 체크 추가
+  - Resend 시 payments 테이블 중복 insert 방지
