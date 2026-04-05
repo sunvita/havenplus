@@ -6467,8 +6467,9 @@ async function onCancelSubReasonChange() {
   // 결과 입력란 표시
   refundRow.style.display = netRefund > 0 ? 'block' : 'none';
   chargeRow.style.display = cappedCharge > 0 ? 'block' : 'none';
-  if (netRefund > 0) document.getElementById('cancelSubRefundAmt').value = netRefund.toFixed(2);
-  if (cappedCharge > 0) document.getElementById('cancelSubChargeAmt').value = cappedCharge.toFixed(2);
+  // 항상 값 초기화 후 설정 (이전 계산값 잔류 방지)
+  document.getElementById('cancelSubRefundAmt').value = netRefund > 0 ? netRefund.toFixed(2) : '';
+  document.getElementById('cancelSubChargeAmt').value = cappedCharge > 0 ? cappedCharge.toFixed(2) : '';
 
   // 확인 버튼 활성화 (Case A/B 분기)
   confirmBtn.disabled = false;
