@@ -156,6 +156,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 @media (max-width: 420px) { .stat-grid { grid-template-columns: 1fr; } }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: border-color .2s, box-shadow .2s; }
 .stat-card[onclick]:hover { border-color: var(--navy); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+.prop-select-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
+.prop-select-modal { background: white; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; }
+.prop-select-title { font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 16px; }
+.prop-select-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--border); margin-bottom: 8px; cursor: pointer; transition: all .15s; font-size: 13px; font-weight: 600; color: var(--navy); }
+.prop-select-item:hover { border-color: var(--navy); background: var(--blue-bg); }
+.prop-select-cancel { width: 100%; padding: 10px; margin-top: 8px; border: none; background: var(--bg); border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; font-family: inherit; }
 .stat-card.hl { border-color: var(--green-txt); background: var(--green-bg); }
 .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
 .stat-value { font-size: 26px; font-weight: 900; color: var(--navy); line-height: 1; margin-bottom: 3px; }
@@ -2219,7 +2225,15 @@ function toggleLang(lang) {
 </script>
 
 <!-- ═══ Service History Slide Panel ═══ -->
-<div class="sh-panel-overlay" id="shPanelOverlay" onclick="if(event.target===this)closeServiceHistory()">
+<div class="prop-select-overlay" id="propSelectModal" style="display:none">
+    <div class="prop-select-modal">
+      <div class="prop-select-title" id="propSelectTitle">Select a Property</div>
+      <div id="propSelectList"></div>
+      <button class="prop-select-cancel" onclick="document.getElementById('propSelectModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+
+  <div class="sh-panel-overlay" id="shPanelOverlay" onclick="if(event.target===this)closeServiceHistory()">
   <div class="sh-slide-panel">
     <div class="sh-panel-header">
       <button class="sh-panel-back" onclick="closeServiceHistory()">← Back</button>
@@ -2254,15 +2268,72 @@ let shAllJobs = [];
 let shFilterType = 'all';
 
 function openStatCardHistory(filterType) {
-  // 상단 카드 클릭 시 — property 1개면 바로 그 property, 여러 개면 첫번째 active sub property
-  const activeProp = allProperties.find(p => {
-    const sub = allSubs ? allSubs.find(s => s.property_id === p.id) : null;
-    return !!sub;
-  }) || allProperties[0];
+  const activeProps = allProperties.filter(p =>
+    allSubs && allSubs.some(s => s.property_id === p.id)
+  );
+  const props = activeProps.length > 0 ? activeProps : allProperties;
+  if (!props.length) { showToast('No property found.', true); return; }
 
-  if (!activeProp) { showToast('No property found.', true); return; }
-  const addr = [activeProp.address, activeProp.suburb, activeProp.postcode].filter(Boolean).join(', ');
-  openServiceHistory(activeProp.id, addr, filterType);
+  if (filterType === 'service') {
+    // Service Hours: 전체 property 통합 히스토리
+    openServiceHistoryAll('service');
+    return;
+  }
+
+  // Cleaning Hours: property 1개면 바로, 2개 이상이면 선택 모달
+  if (props.length === 1) {
+    const p = props[0];
+    const addr = [p.address, p.suburb, p.postcode].filter(Boolean).join(', ');
+    openServiceHistory(p.id, addr, 'cleaning');
+  } else {
+    document.getElementById('propSelectTitle').textContent = 'Select a Property — Cleaning History';
+    document.getElementById('propSelectList').innerHTML = props.map(p => {
+      const addr = [p.address, p.suburb, p.postcode].filter(Boolean).join(', ');
+      return `<div class="prop-select-item" onclick="
+        document.getElementById('propSelectModal').style.display='none';
+        openServiceHistory('${p.id}','${addr.replace(/'/g,"\\'")}','cleaning')
+      ">🏠 ${addr}</div>`;
+    }).join('');
+    document.getElementById('propSelectModal').style.display = 'flex';
+  }
+}
+
+async function openServiceHistoryAll(filterType) {
+  // 전체 property service_requests 통합 로드
+  document.getElementById('shPanelAddress').textContent = 'All Properties';
+  document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">Loading...</div>';
+  document.getElementById('shPanelOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  shFilterType = filterType;
+  document.querySelectorAll('.sh-filter-chip').forEach(c => {
+    const chipType = c.getAttribute('data-filter') || 'all';
+    c.classList.toggle('active', chipType === filterType);
+  });
+
+  try {
+    const srRes = await sb.from('service_requests')
+      .select('id, scheduled_date, preferred_date, status, category, sh_used, description, urgency, assigned_worker_id, before_photos, after_photos, worker_notes, property_id')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    // property_id → address 맵
+    const propMap = {};
+    allProperties.forEach(p => {
+      propMap[p.id] = [p.address, p.suburb].filter(Boolean).join(', ');
+    });
+
+    shAllJobs = (srRes.data || []).map(j => ({
+      ...j, type: 'service',
+      date: j.scheduled_date || j.preferred_date,
+      duration: j.sh_used,
+      label: j.category ? j.category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Service',
+      propertyAddress: propMap[j.property_id] || '—',
+    }));
+    renderSHList();
+  } catch(e) {
+    console.error('Service history all load failed:', e);
+    document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">Failed to load history.</div>';
+  }
 }
 
 async function openServiceHistory(propertyId, address, filterType = 'all') {
@@ -2394,7 +2465,7 @@ function renderJobEntry(j) {
   return `<div class="sh-job-entry" onclick="this.classList.toggle('open')">
     <div class="sh-job-summary">
       <div class="sh-job-summary-left">
-        <div class="sh-job-date">${dateStr}</div>
+        <div class="sh-job-date">${dateStr}${j.propertyAddress ? `<span style="font-size:11px;font-weight:500;color:var(--text-light);margin-left:8px;">📍 ${j.propertyAddress}</span>` : ''}</div>
         <span class="sh-job-type ${typeClass}">${j.label}</span>
         ${j.duration ? `<span style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-left:6px;">Used ${j.type === 'service' ? 'SH' : 'CH'}: ${j.duration}h</span>` : ''}
       </div>
