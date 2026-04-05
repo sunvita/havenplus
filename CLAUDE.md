@@ -324,3 +324,28 @@ print(f"추가한 기능 키워드 존재 여부 확인")
 1. **Python으로 정확한 문자열 교체** — 가장 안전
 2. **str_replace 도구** — 짧고 고유한 문자열일 때
 3. **rfind()로 마지막 위치 교체** — 절대 사용 금지 (위치 오판 위험)
+
+---
+
+## Payments — 환불/취소 시스템 (2026-04-05)
+
+### Cancel Subscription 흐름
+- **Case A** (추가청구 없음): 즉시 취소 → 환불(있으면) → subscription_cancelled 이메일
+- **Case B** (추가청구 있음): Invoice 발송 → pending_cancellation=true → 고객 납부 → invoice.paid webhook → 자동 취소 → subscription_cancelled 이메일
+
+### 이메일 타입
+| 타입 | 발송 시점 |
+|------|---------|
+| subscription_cancelled | 구독 취소 완료 시 (Case A/B 공통) |
+| subscription_cancellation_pending | Invoice 발송 시 (Case B) |
+| refund_confirmed | SH번들 환불 완료 시 |
+
+### 미구현 — 추후 처리 필요
+- Case B Invoice 미납 시 (14일 만료 후) 처리 로직
+  - invoice.payment_failed 웹훅으로 어드민 알림 또는 자동 취소 처리
+
+### 쿨링오프 자격 체크 (profile.html openCancelSubModal)
+1. 구독 시작 30일 이내
+2. cleaning_schedule completed 없음
+3. service_requests completed 없음
+→ 3개 모두 충족 시만 활성화
