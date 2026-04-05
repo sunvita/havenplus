@@ -281,3 +281,46 @@ supabase functions deploy [함수명] --project-ref rtkgnlcgepromqtoelre
 ```
 
 Docker 없이도 배포 가능. Supabase CLI 로그인 상태 필요.
+
+---
+
+## HTML 파일 수정 원칙 (2026-04-05 추가)
+
+### 대형 HTML 파일 수정 시 필수 절차
+profile.html, dashboard.html, haventeam.html 등 대형 파일 수정 시 반드시 준수.
+
+**수정 전:**
+1. 현재 파일 구조 파악
+   - script 블록 수/크기 확인
+   - 수정할 위치 정확한 라인 번호 확인
+   - 수정 전후 컨텍스트 확인
+2. 안정 버전 백업 확인 (git log로 커밋 확인)
+3. 영향 범위 분석 (어떤 기능에 영향 주는지)
+
+**수정 후 반드시 검증:**
+```python
+import re
+content = open('profile.html').read()
+scripts = re.findall(r'<script[^>]*>([\s\S]*?)</script>', content)
+print(f"Script blocks: {len(scripts)}")
+for i, s in enumerate(scripts):
+    print(f"  [{i}] {len(s)} chars")
+print(f"</body>: {content.count('</body>')}")
+print(f"</html>: {content.count('</html>')}")
+print(f"추가한 기능 키워드 존재 여부 확인")
+```
+
+**검증 항목:**
+- script 블록 수/크기가 수정 전과 비교해 정상인지
+- </body>, </html> 각 1개씩 존재하는지
+- 추가한 HTML/JS 요소가 실제로 존재하는지
+- 기존 주요 기능 키워드 유지되는지
+
+**이상 발견 시:**
+- 즉시 git checkout 또는 안정 버전으로 롤백
+- 원인 파악 후 재시도
+
+### 수정 방식 우선순위
+1. **Python으로 정확한 문자열 교체** — 가장 안전
+2. **str_replace 도구** — 짧고 고유한 문자열일 때
+3. **rfind()로 마지막 위치 교체** — 절대 사용 금지 (위치 오판 위험)
