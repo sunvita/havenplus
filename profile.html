@@ -598,6 +598,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </button>
+        <button class="sidebar-item" data-section="payments" onclick="switchSection('payments')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Payments
+        </button>
         <button class="sidebar-item" data-section="aitasks" onclick="switchSection('aitasks')" id="sidebarAITasks">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
           AI Tasks (의사결정) <span id="sidebarAIBadge" style="display:none;margin-left:auto;font-size:10px;font-weight:700;background:#ff6b35;color:white;padding:1px 6px;border-radius:10px"></span>
@@ -637,10 +641,6 @@
         <button class="sidebar-item" data-section="manage" onclick="switchSection('manage')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           Manual Override
-        </button>
-        <button class="sidebar-item" data-section="payments" onclick="switchSection('payments')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          Payments
         </button>
       </div>
     </nav>
@@ -1286,6 +1286,123 @@
         </div>
       </div>
     </section>
+
+    <!-- ═══ Payments Section (Admin) ═══ -->
+  <section class="section" id="section-payments">
+    <div class="section-card">
+      <div class="section-title">Payments</div>
+      <div class="section-desc">All payment records, refunds, and additional charges.</div>
+      <div class="pay-filters">
+        <div class="pay-filter-group">
+          <span class="pay-filter-label">Period</span>
+          <select class="pay-select" id="payPeriodType" onchange="onPayPeriodChange()">
+            <option value="all">All Time</option>
+            <option value="year">Year</option>
+            <option value="month">Month</option>
+          </select>
+          <select class="pay-select" id="payYear" style="display:none" onchange="loadPaymentsSection()">
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+          </select>
+          <select class="pay-select" id="payMonth" style="display:none" onchange="loadPaymentsSection()">
+            <option value="1">Jan</option><option value="2">Feb</option>
+            <option value="3">Mar</option><option value="4">Apr</option>
+            <option value="5">May</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Aug</option>
+            <option value="9">Sep</option><option value="10">Oct</option>
+            <option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+        </div>
+        <div class="pay-filter-group">
+          <span class="pay-filter-label">Status</span>
+          <select class="pay-select" id="payStatus" onchange="loadPaymentsSection()">
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="refunded">Refunded</option>
+            <option value="partial_refunded">Partial Refunded</option>
+            <option value="additional_pending">Additional Pending</option>
+            <option value="additional_paid">Additional Paid</option>
+          </select>
+        </div>
+        <button class="pay-btn charge" onclick="openAdditionalChargeModal()">+ Additional Charge</button>
+      </div>
+      <div class="pay-summary">
+        <div class="pay-sum-card"><div class="pay-sum-label">Total Revenue</div><div class="pay-sum-value" id="payTotalRevenue">—</div></div>
+        <div class="pay-sum-card"><div class="pay-sum-label">Stripe Fees</div><div class="pay-sum-value red" id="payTotalFees">—</div></div>
+        <div class="pay-sum-card"><div class="pay-sum-label">Net Revenue</div><div class="pay-sum-value green" id="payTotalNet">—</div></div>
+        <div class="pay-sum-card"><div class="pay-sum-label">Refunded</div><div class="pay-sum-value red" id="payTotalRefunded">—</div></div>
+      </div>
+      <div class="pay-table-wrap">
+        <table class="pay-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Customer</th><th>Type</th>
+              <th>Amount</th><th>Stripe Fee</th><th>Net</th>
+              <th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="payTableBody">
+            <tr><td colspan="8" class="pay-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Refund Modal -->
+  <div class="pay-modal-overlay" id="refundModal" style="display:none">
+    <div class="pay-modal">
+      <div class="pay-modal-title">Process Refund</div>
+      <div class="pay-modal-row"><div class="pay-modal-label">Customer</div><div class="pay-modal-value" id="refundCustomer">—</div></div>
+      <div class="pay-modal-row"><div class="pay-modal-label">Original Payment</div><div class="pay-modal-value" id="refundOriginal">—</div></div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Refund Type</div>
+        <select class="pay-modal-input" id="refundType" onchange="onRefundTypeChange()">
+          <option value="cooling_off">Cooling-off (Full Refund)</option>
+          <option value="subscription_cancel">Subscription Cancel</option>
+          <option value="sh_bundle">SH Bundle Refund</option>
+          <option value="custom">Custom Amount</option>
+        </select>
+      </div>
+      <div class="pay-modal-calc" id="refundCalc">Select refund type to calculate amount.</div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Refund Amount (AUD)</div>
+        <input class="pay-modal-input" type="number" id="refundAmount" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Reason (internal note)</div>
+        <input class="pay-modal-input" type="text" id="refundReason" placeholder="e.g. Cooling-off period, customer request">
+      </div>
+      <div class="pay-modal-btns">
+        <button class="pay-modal-btn cancel" onclick="closeRefundModal()">Cancel</button>
+        <button class="pay-modal-btn confirm" id="refundConfirmBtn" onclick="executeRefund()">Process Refund</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Charge Modal -->
+  <div class="pay-modal-overlay" id="additionalChargeModal" style="display:none">
+    <div class="pay-modal">
+      <div class="pay-modal-title">Send Additional Charge</div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Customer</div>
+        <select class="pay-modal-input" id="chargeCustomer" onchange="onChargeCustomerChange()"></select>
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Amount (AUD)</div>
+        <input class="pay-modal-input" type="number" id="chargeAmount" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Description</div>
+        <input class="pay-modal-input" type="text" id="chargeDescription" placeholder="e.g. Early termination fee">
+      </div>
+      <div class="pay-modal-calc" id="chargeCalc" style="display:none"></div>
+      <div class="pay-modal-btns">
+        <button class="pay-modal-btn cancel" onclick="closeAdditionalChargeModal()">Cancel</button>
+        <button class="pay-modal-btn confirm" id="chargeConfirmBtn" onclick="executeAdditionalCharge()">Send Invoice</button>
+      </div>
+    </div>
+  </div>
 
   </main>
 </div>
@@ -5905,7 +6022,7 @@ function renderPaymentsTable(data) {
     const net = p.net_amount ? `$${parseFloat(p.net_amount).toFixed(2)}` : '—';
     const status = p.status || 'paid';
     const refundInfo = p.refund_amount ? `<br><small style="color:#e65100">Refunded: -$${parseFloat(p.refund_amount).toFixed(2)}</small>` : '';
-    const canRefund = p.stripe_charge_id && !['refunded','cancelled'].includes(p.status) && p.payment_type !== 'additional_charge';
+    const canRefund = (p.stripe_charge_id || p.stripe_payment_id) && !['refunded','cancelled'].includes(p.status) && p.payment_type !== 'additional_charge';
     return `<tr>
       <td style="white-space:nowrap">${date}</td>
       <td>${customer}</td>
@@ -6079,121 +6196,5 @@ async function executeAdditionalCharge() {
 
 </script>
 
-  <!-- ═══ Payments Section (Admin) ═══ -->
-  <section class="section" id="section-payments">
-    <div class="section-card">
-      <div class="section-title">Payments</div>
-      <div class="section-desc">All payment records, refunds, and additional charges.</div>
-      <div class="pay-filters">
-        <div class="pay-filter-group">
-          <span class="pay-filter-label">Period</span>
-          <select class="pay-select" id="payPeriodType" onchange="onPayPeriodChange()">
-            <option value="all">All Time</option>
-            <option value="year">Year</option>
-            <option value="month">Month</option>
-          </select>
-          <select class="pay-select" id="payYear" style="display:none" onchange="loadPaymentsSection()">
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-          </select>
-          <select class="pay-select" id="payMonth" style="display:none" onchange="loadPaymentsSection()">
-            <option value="1">Jan</option><option value="2">Feb</option>
-            <option value="3">Mar</option><option value="4">Apr</option>
-            <option value="5">May</option><option value="6">Jun</option>
-            <option value="7">Jul</option><option value="8">Aug</option>
-            <option value="9">Sep</option><option value="10">Oct</option>
-            <option value="11">Nov</option><option value="12">Dec</option>
-          </select>
-        </div>
-        <div class="pay-filter-group">
-          <span class="pay-filter-label">Status</span>
-          <select class="pay-select" id="payStatus" onchange="loadPaymentsSection()">
-            <option value="all">All</option>
-            <option value="paid">Paid</option>
-            <option value="refunded">Refunded</option>
-            <option value="partial_refunded">Partial Refunded</option>
-            <option value="additional_pending">Additional Pending</option>
-            <option value="additional_paid">Additional Paid</option>
-          </select>
-        </div>
-        <button class="pay-btn charge" onclick="openAdditionalChargeModal()">+ Additional Charge</button>
-      </div>
-      <div class="pay-summary">
-        <div class="pay-sum-card"><div class="pay-sum-label">Total Revenue</div><div class="pay-sum-value" id="payTotalRevenue">—</div></div>
-        <div class="pay-sum-card"><div class="pay-sum-label">Stripe Fees</div><div class="pay-sum-value red" id="payTotalFees">—</div></div>
-        <div class="pay-sum-card"><div class="pay-sum-label">Net Revenue</div><div class="pay-sum-value green" id="payTotalNet">—</div></div>
-        <div class="pay-sum-card"><div class="pay-sum-label">Refunded</div><div class="pay-sum-value red" id="payTotalRefunded">—</div></div>
-      </div>
-      <div class="pay-table-wrap">
-        <table class="pay-table">
-          <thead>
-            <tr>
-              <th>Date</th><th>Customer</th><th>Type</th>
-              <th>Amount</th><th>Stripe Fee</th><th>Net</th>
-              <th>Status</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="payTableBody">
-            <tr><td colspan="8" class="pay-empty">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- Refund Modal -->
-  <div class="pay-modal-overlay" id="refundModal" style="display:none">
-    <div class="pay-modal">
-      <div class="pay-modal-title">Process Refund</div>
-      <div class="pay-modal-row"><div class="pay-modal-label">Customer</div><div class="pay-modal-value" id="refundCustomer">—</div></div>
-      <div class="pay-modal-row"><div class="pay-modal-label">Original Payment</div><div class="pay-modal-value" id="refundOriginal">—</div></div>
-      <div class="pay-modal-row">
-        <div class="pay-modal-label">Refund Type</div>
-        <select class="pay-modal-input" id="refundType" onchange="onRefundTypeChange()">
-          <option value="cooling_off">Cooling-off (Full Refund)</option>
-          <option value="subscription_cancel">Subscription Cancel</option>
-          <option value="sh_bundle">SH Bundle Refund</option>
-          <option value="custom">Custom Amount</option>
-        </select>
-      </div>
-      <div class="pay-modal-calc" id="refundCalc">Select refund type to calculate amount.</div>
-      <div class="pay-modal-row">
-        <div class="pay-modal-label">Refund Amount (AUD)</div>
-        <input class="pay-modal-input" type="number" id="refundAmount" step="0.01" min="0" placeholder="0.00">
-      </div>
-      <div class="pay-modal-row">
-        <div class="pay-modal-label">Reason (internal note)</div>
-        <input class="pay-modal-input" type="text" id="refundReason" placeholder="e.g. Cooling-off period, customer request">
-      </div>
-      <div class="pay-modal-btns">
-        <button class="pay-modal-btn cancel" onclick="closeRefundModal()">Cancel</button>
-        <button class="pay-modal-btn confirm" id="refundConfirmBtn" onclick="executeRefund()">Process Refund</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Additional Charge Modal -->
-  <div class="pay-modal-overlay" id="additionalChargeModal" style="display:none">
-    <div class="pay-modal">
-      <div class="pay-modal-title">Send Additional Charge</div>
-      <div class="pay-modal-row">
-        <div class="pay-modal-label">Customer</div>
-        <select class="pay-modal-input" id="chargeCustomer" onchange="onChargeCustomerChange()"></select>
-      </div>
-      <div class="pay-modal-row">
-        <div class="pay-modal-label">Amount (AUD)</div>
-        <input class="pay-modal-input" type="number" id="chargeAmount" step="0.01" min="0" placeholder="0.00">
-      </div>
-      <div class="pay-modal-row">
-        <div class="pay-modal-label">Description</div>
-        <input class="pay-modal-input" type="text" id="chargeDescription" placeholder="e.g. Early termination fee">
-      </div>
-      <div class="pay-modal-calc" id="chargeCalc" style="display:none"></div>
-      <div class="pay-modal-btns">
-        <button class="pay-modal-btn cancel" onclick="closeAdditionalChargeModal()">Cancel</button>
-        <button class="pay-modal-btn confirm" id="chargeConfirmBtn" onclick="executeAdditionalCharge()">Send Invoice</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
