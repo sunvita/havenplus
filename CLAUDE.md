@@ -359,3 +359,13 @@ print(f"추가한 기능 키워드 존재 여부 확인")
 2. cleaning_schedule completed 없음
 3. service_requests completed 없음
 → 3개 모두 충족 시만 활성화
+
+---
+
+## 미해결 — 다음 세션 작업 필요 (2026-04-05)
+
+### profile.html 반응형 미완성
+1. **사이드바 모바일 숨김 안 됨** — `aside` grid flow 제거 시도했으나 미해결
+2. **Payments 요약 카드 반응형 미적용** — grid 2열 전환 안 됨
+- 현재 코드: `display:none` + `display:block !important` 충돌 의심
+- 접근 방법 변경 필요: JS로 직접 style 제어 또는 CSS 구조 재검토
