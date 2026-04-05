@@ -972,13 +972,17 @@ async function loadDashboard() {
   allProperties = [];
 
   try {
-    const [subsRes, shBalRes, propRes] = await Promise.all([
+    const [subsRes, shBalRes, propRes, srRes] = await Promise.all([
       sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').then(r => r, () => ({ data: [] })),
       sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle().then(r => r, () => ({ data: null })),
       sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at').then(r => r, () => ({ data: [] })),
+      sb.from('service_requests').select('id, property_id').eq('user_id', currentUser.id).then(r => r, () => ({ data: [] })),
     ]);
     allSubs       = subsRes?.data || [];
     shBal         = shBalRes?.data || null;
+    // property별 service_requests 존재 여부 맵
+    const srByProp = {};
+    (srRes?.data || []).forEach(sr => { srByProp[sr.property_id] = true; });
     allProperties = propRes?.data || [];
   } catch(e) {
     console.warn('loadDashboard query error:', e.message);
@@ -1076,6 +1080,7 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     const planKey = sub ? (sub.plan_type || '') : '';
     const m = PLAN_META[planKey] || {};
     const hasSub = !!sub;
+    const hasServiceHistory = !!srByProp[p.id]; // service_requests 이력 있는지
 
     // Cleaning hours for this property
     const cleanT = sub ? (sub.cleaning_hours_total || 0) : 0;
@@ -1147,8 +1152,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     const summaryMeta = hasSub
       ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
          ${bedBath}
-         <span><strong>Cleaning:</strong> ${r1(cleanR)}/${r1(cleanT)}h</span>
-         <span><strong>Service Hour:</strong> ${r1(shVR)}/${r1(shVT)}SH</span>
+         <span onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','cleaning')" style="cursor:pointer;text-decoration:underline dotted" title="View cleaning history"><strong>Cleaning:</strong> ${r1(cleanR)}/${r1(cleanT)}h</span>
+         <span onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','service')" style="cursor:pointer;text-decoration:underline dotted" title="View service history"><strong>Service Hour:</strong> ${r1(shVR)}/${r1(shVT)}SH</span>
          ${nextVisitText ? `<span><strong>Next Visit:</strong> ${nextVisitText}</span>` : ''}`
       : `<span class="prop-hub-plan-pill pill-none"><span class="lang-en">No plan yet</span><span class="lang-ko" style="display:${currentLang==='ko'?'':'none'}">플랜 없음</span></span>
          ${bedBath}
@@ -1170,8 +1175,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
       <div class="pd-grid" style="margin-bottom:16px">
         <div><div class="pd-item-label">Plan</div><div class="pd-item-val">${m.name || planKey}</div></div>
         <div><div class="pd-item-label">Visits / yr</div><div class="pd-item-val">${m.visits || '—'}</div></div>
-        <div><div class="pd-item-label">Cleaning hrs</div><div class="pd-item-val">${r1(cleanU)} used / ${r1(cleanT)}</div></div>
-        <div><div class="pd-item-label">SH vouchers</div><div class="pd-item-val">${r1(shVU)} used / ${r1(shVT)}</div></div>
+        <div onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','cleaning')" style="cursor:pointer" title="View cleaning history"><div class="pd-item-label">Cleaning hrs 🔍</div><div class="pd-item-val">${r1(cleanU)} used / ${r1(cleanT)}</div></div>
+        <div onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','service')" style="cursor:pointer" title="View service history"><div class="pd-item-label">SH vouchers 🔍</div><div class="pd-item-val">${r1(shVU)} used / ${r1(shVT)}</div></div>
         <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
         <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
       </div>
@@ -1217,6 +1222,10 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${hasServiceHistory ? `<button class="btn-history" onclick="event.stopPropagation();openServiceHistory('${p.id}','${(p.address + ', ' + p.suburb + ' ' + p.postcode).replace(/'/g, "\\'")}')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Service History
+        </button>` : ''}
         <button class="btn-action btn-secondary" onclick="event.stopPropagation();openEditPropertyModal('${p.id}')">Update Details</button>
         ${isAdmin ? `<button class="btn-delete-prop" onclick="event.stopPropagation();deleteProperty('${p.id}','${p.address.replace(/'/g,"\\'")}')">Delete</button>` : ''}
       </div>
@@ -2214,9 +2223,9 @@ function toggleLang(lang) {
       <div class="sh-panel-subtitle" id="shPanelAddress"></div>
     </div>
     <div class="sh-filter-bar" id="shFilterBar">
-      <button class="sh-filter-chip active" onclick="filterSH('all',this)">All</button>
-      <button class="sh-filter-chip" onclick="filterSH('cleaning',this)">Cleaning</button>
-      <button class="sh-filter-chip" onclick="filterSH('service',this)">Service</button>
+      <button class="sh-filter-chip active" data-filter="all" onclick="filterSH('all',this)">All</button>
+      <button class="sh-filter-chip" data-filter="cleaning" onclick="filterSH('cleaning',this)">Cleaning</button>
+      <button class="sh-filter-chip" data-filter="service" onclick="filterSH('service',this)">Service</button>
     </div>
     <div class="sh-panel-body" id="shPanelBody">
       <div class="sh-empty">Loading...</div>
@@ -2240,13 +2249,17 @@ function toggleLang(lang) {
 let shAllJobs = [];
 let shFilterType = 'all';
 
-async function openServiceHistory(propertyId, address) {
+async function openServiceHistory(propertyId, address, filterType = 'all') {
   document.getElementById('shPanelAddress').textContent = address;
   document.getElementById('shPanelBody').innerHTML = '<div class="sh-empty">Loading...</div>';
   document.getElementById('shPanelOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  shFilterType = 'all';
-  document.querySelectorAll('.sh-filter-chip').forEach((c,i) => c.classList.toggle('active', i === 0));
+  shFilterType = filterType;
+  // 필터 chip UI 업데이트
+  document.querySelectorAll('.sh-filter-chip').forEach(c => {
+    const chipType = c.getAttribute('data-filter') || 'all';
+    c.classList.toggle('active', chipType === filterType);
+  });
 
   try {
     const [cleanRes, srRes] = await Promise.all([
