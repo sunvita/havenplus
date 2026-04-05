@@ -970,6 +970,7 @@ async function loadDashboard() {
 
   let allSubs = [], shBal = null;
   allProperties = [];
+  let srByProp = {};
 
   try {
     const [subsRes, shBalRes, propRes, srRes] = await Promise.all([
@@ -980,10 +981,10 @@ async function loadDashboard() {
     ]);
     allSubs       = subsRes?.data || [];
     shBal         = shBalRes?.data || null;
-    // property별 service_requests 존재 여부 맵
-    const srByProp = {};
-    (srRes?.data || []).forEach(sr => { srByProp[sr.property_id] = true; });
     allProperties = propRes?.data || [];
+    // property별 service_requests 존재 여부 맵 (try 밖 srByProp에 할당)
+    srByProp = {};
+    (srRes?.data || []).forEach(sr => { srByProp[sr.property_id] = true; });
   } catch(e) {
     console.warn('loadDashboard query error:', e.message);
   }
