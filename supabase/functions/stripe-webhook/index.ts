@@ -51,76 +51,47 @@ async function getSubscriptionUUID(stripeSubId: string): Promise<string | null> 
   return data?.id || null
 }
 
-// Stripe Billing Usage Fee (인보이스당 고정 비용: $1.05 + 수수료 $0.11 = $1.16)
-// Stripe Billing 기능 사용 시 인보이스당 자동 부과됨
 const STRIPE_BILLING_FEE = 1.16
 
-// ── 결제 기록 헬퍼 함수 ──
-async function notifyAdminPayment(opts: {
-  userId: string
-  amount: number        // dollars
-  plan: string
-  paymentId?: string | null
-  paidAt: string
-}) {
-  try {
-    // Resolve customer name + email
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, email')
-      .eq('id', opts.userId)
-      .maybeSingle()
-
-    let customerName = profile?.full_name || ''
-    let customerEmail = profile?.email || ''
-
-    if (!customerEmail) {
-      const { data: { user } } = await supabase.auth.admin.getUserById(opts.userId)
-      customerEmail = user?.email || ''
-      if (!customerName) customerName = user?.user_metadata?.full_name || user?.email || ''
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}`,
-      },
-      body: JSON.stringify({
-        type: 'payment_received',
-        notify_admins: true,
-        recipients: [],  // 고객에게 payment_received 불필요 — subscription_confirmed로 대체
-        reference_type: 'cleaning',
-        details: {
-          amount: opts.amount,
-          plan: opts.plan,
-          customer_name: customerName,
-          customer_email: customerEmail,
-          payment_id: opts.paymentId,
-          paid_at: opts.paidAt,
-        },
-      }),
-    })
-  } catch (e) {
-    console.error('Admin payment notification failed:', e)
-  }
-}
-
+// ── 결제 기록 헬퍼 함수 (중복 방지: stripe_payment_id + stripe_invoice_id unique 체크) ──
 async function recordPayment(opts: {
   userId: string
   stripePaymentId?: string | null
   stripeInvoiceId?: string | null
-  amount: number          // cents (Stripe 원본)
+  amount: number
   currency: string
-  paymentType: string     // 'subscription' | 'sh_bundle'
+  paymentType: string
   shBundleSize?: number | null
-  subscriptionUUID?: string | null  // 내부 UUID
+  subscriptionUUID?: string | null
   stripeChargeId?: string | null
   description?: string | null
-  isSubscriptionInvoice?: boolean   // Billing Usage Fee 포함 여부
+  isSubscriptionInvoice?: boolean
   plan?: string | null
 }) {
+  // ── 중복 방지: 동일 stripe_payment_id 또는 stripe_invoice_id 이미 존재하면 skip ──
+  if (opts.stripePaymentId) {
+    const { data: existing } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('stripe_payment_id', opts.stripePaymentId)
+      .maybeSingle()
+    if (existing) {
+      console.log(`recordPayment: duplicate skipped for stripe_payment_id=${opts.stripePaymentId}`)
+      return
+    }
+  }
+  if (opts.stripeInvoiceId) {
+    const { data: existing } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('stripe_invoice_id', opts.stripeInvoiceId)
+      .maybeSingle()
+    if (existing) {
+      console.log(`recordPayment: duplicate skipped for stripe_invoice_id=${opts.stripeInvoiceId}`)
+      return
+    }
+  }
+
   // Stripe charge에서 결제 수수료 조회
   let chargeFee = 0
   let balanceTxId = null
@@ -132,7 +103,7 @@ async function recordPayment(opts: {
       })
       const balanceTx = charge.balance_transaction as Stripe.BalanceTransaction
       if (balanceTx) {
-        chargeFee = balanceTx.fee / 100       // 결제 수수료 (예: $2.85)
+        chargeFee = balanceTx.fee / 100
         balanceTxId = balanceTx.id
       }
     } catch (e) {
@@ -140,10 +111,8 @@ async function recordPayment(opts: {
     }
   }
 
-  // 총 수수료 = 결제 수수료 + Billing Usage Fee (구독 인보이스인 경우)
   const billingFee = opts.isSubscriptionInvoice ? STRIPE_BILLING_FEE : 0
   const totalFee = chargeFee + billingFee
-
   const amountDollars = opts.amount / 100
   const netAmount = amountDollars - totalFee
 
@@ -165,20 +134,13 @@ async function recordPayment(opts: {
     description: opts.description || null,
   })
 
-  if (error) {
-    console.error('payments insert error:', error)
-    return
-  }
-
-  // payment_received 어드민 알림 불필요
-  // subscription_confirmed / sh_bundle_confirmed 에서 어드민 notify_admins: true로 처리
+  if (error) console.error('payments insert error:', error)
 }
 
 serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
   const body = await req.text()
 
-  // Webhook 서명 검증 (async required in Deno/Supabase Edge Runtime)
   let event: Stripe.Event
   try {
     event = await stripe.webhooks.constructEventAsync(
@@ -191,11 +153,10 @@ serve(async (req) => {
     return new Response('Webhook Error', { status: 400 })
   }
 
-  // 이벤트 처리
   try {
     switch (event.type) {
 
-      // ── 구독 결제 완료 ──
+      // ── 구독/SH번들 결제 완료 ──
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         const userId = session.metadata?.user_id
@@ -204,12 +165,11 @@ serve(async (req) => {
 
         if (!userId || !priceId) break
 
-        // 구독 플랜인 경우
+        // ── 구독 플랜인 경우 ──
         if (PRICE_TO_PLAN[priceId]) {
           const plan = PRICE_TO_PLAN[priceId]
           const stripeSubId = session.subscription as string
 
-          // Retrieve Stripe subscription to get period_end
           const stripeSub = await stripe.subscriptions.retrieve(stripeSubId)
 
           const subData: Record<string, unknown> = {
@@ -218,36 +178,25 @@ serve(async (req) => {
             status: 'active',
             stripe_subscription_id: stripeSubId,
             stripe_customer_id: session.customer as string,
-            // Cleaning hours
             cleaning_hours_total: CLEANING_HOURS_MAP[plan] || 0,
             cleaning_hours_used: 0,
-            // Service hours (voucher)
             voucher_sh_total: VOUCHER_MAP[plan],
             voucher_sh_period: 0,
             sh_hours_total: VOUCHER_MAP[plan],
             sh_hours_used: 0,
-            // Dates
             start_date: new Date().toISOString(),
             end_date: null,
-            current_period_end: stripeSub.current_period_end,  // Unix timestamp
+            current_period_end: stripeSub.current_period_end,
           }
           if (propertyId) subData.property_id = propertyId
 
-          // Use property-scoped upsert if property_id is present (multi-property),
-          // otherwise fall back to user-scoped upsert (legacy single-property)
-          const { error } = propertyId
-            ? await supabase.from('subscriptions').upsert(
-                subData,
-                { onConflict: 'user_id,property_id' }
-              )
-            : await supabase.from('subscriptions').upsert(
-                subData,
-                { onConflict: 'user_id' }
-              )
+          const { error: upsertError } = propertyId
+            ? await supabase.from('subscriptions').upsert(subData, { onConflict: 'user_id,property_id' })
+            : await supabase.from('subscriptions').upsert(subData, { onConflict: 'user_id' })
 
-          if (error) console.error('subscriptions upsert error:', error)
+          if (upsertError) console.error('subscriptions upsert error:', upsertError)
 
-          // ── 결제 기록 → payments 테이블 ──
+          // payments 기록 (중복 방지 내장)
           const paymentIntentId = session.payment_intent as string
           let chargeId: string | null = null
           if (paymentIntentId) {
@@ -274,13 +223,12 @@ serve(async (req) => {
             plan: `${plan} plan`,
           })
 
-          // ── 구독 확인 Welcome 이메일 → 고객 발송 ──
+          // 구독 확인 이메일
           try {
             const { data: { user } } = await supabase.auth.admin.getUserById(userId)
             const customerEmail = user?.email || ''
             const customerName = user?.user_metadata?.full_name || ''
 
-            // Stripe에서 실제 결제 금액 + billing cycle + invoice URL 조회
             let receiptUrl = ''
             let amountPaid = session.amount_total ? session.amount_total / 100 : 0
             let billingCycle = ''
@@ -291,7 +239,6 @@ serve(async (req) => {
                 receiptUrl = invoice?.hosted_invoice_url || ''
                 if (invoice?.amount_paid) amountPaid = invoice.amount_paid / 100
               }
-              // billing interval from subscription
               const stripeSub2 = await stripe.subscriptions.retrieve(stripeSubId)
               billingCycle = stripeSub2.items.data[0]?.plan?.interval || ''
             } catch(e) { console.error('stripe invoice/interval fetch error:', e) }
@@ -309,27 +256,20 @@ serve(async (req) => {
                   notify_admins: true,
                   recipients: [{ id: userId, type: 'customer' }],
                   reference_type: 'cleaning',
-                  details: {
-                    plan,
-                    customer_name: customerName,
-                    receipt_url: receiptUrl,
-                    amount: amountPaid,
-                    billing_cycle: billingCycle,
-                  },
+                  details: { plan, customer_name: customerName, receipt_url: receiptUrl, amount: amountPaid, billing_cycle: billingCycle },
                 }),
               })
-              console.log(`subscription_confirmed email sent to ${customerEmail}, amount: ${amountPaid}, cycle: ${billingCycle}`)
+              console.log(`subscription_confirmed sent to ${customerEmail}`)
             }
           } catch(e) {
             console.error('subscription_confirmed email error:', e)
           }
         }
 
-        // SH 번들 구매인 경우
+        // ── SH 번들 구매인 경우 ──
         if (SH_PRICES[priceId]) {
           const shAmount = SH_PRICES[priceId]
 
-          // 기존 sh_hours_total에 추가 (property-scoped if property_id present)
           let subQuery = supabase
             .from('subscriptions')
             .select('id, sh_hours_total')
@@ -338,19 +278,23 @@ serve(async (req) => {
 
           const { data: sub } = await subQuery.maybeSingle()
 
-          const currentSH = sub?.sh_hours_total ?? 0
+          if (!sub) {
+            // property에 구독이 없으면 SH번들 업데이트 불가 — 로그만 남김
+            console.error(`SH bundle: no subscription found for user=${userId} property=${propertyId}`)
+          } else {
+            const currentSH = Number(sub.sh_hours_total) ?? 0
 
-          let updateQuery = supabase
-            .from('subscriptions')
-            .update({ sh_hours_total: currentSH + shAmount })
-            .eq('user_id', userId)
-          if (propertyId) updateQuery = updateQuery.eq('property_id', propertyId)
+            let updateQuery = supabase
+              .from('subscriptions')
+              .update({ sh_hours_total: currentSH + shAmount })
+              .eq('user_id', userId)
+            if (propertyId) updateQuery = updateQuery.eq('property_id', propertyId)
 
-          const { error } = await updateQuery
+            const { error } = await updateQuery
+            if (error) console.error('sh_hours_total update error:', error)
+            else console.log(`SH bundle +${shAmount} applied to subscription ${sub.id}, total=${currentSH + shAmount}`)
+          }
 
-          if (error) console.error('sh_hours_total update error:', error)
-
-          // ── 결제 기록 → payments 테이블 ──
           const paymentIntentId = session.payment_intent as string
           let chargeId: string | null = null
           if (paymentIntentId) {
@@ -376,7 +320,7 @@ serve(async (req) => {
             plan: `${shAmount} SH bundle`,
           })
 
-          // ── SH 번들 구매 확인 이메일 → 고객 발송 ──
+          // SH번들 확인 이메일
           try {
             const { data: { user } } = await supabase.auth.admin.getUserById(userId)
             const customerEmail = user?.email || ''
@@ -405,15 +349,10 @@ serve(async (req) => {
                   notify_admins: true,
                   recipients: [{ id: userId, type: 'customer' }],
                   reference_type: 'service',
-                  details: {
-                    sh_amount: shAmount,
-                    customer_name: customerName,
-                    amount: amountPaid,
-                    receipt_url: receiptUrl,
-                  },
+                  details: { sh_amount: shAmount, customer_name: customerName, amount: amountPaid, receipt_url: receiptUrl },
                 }),
               })
-              console.log(`sh_bundle_confirmed email sent to ${customerEmail}`)
+              console.log(`sh_bundle_confirmed sent to ${customerEmail}`)
             }
           } catch(e) {
             console.error('sh_bundle_confirmed email error:', e)
@@ -422,30 +361,40 @@ serve(async (req) => {
         break
       }
 
-      // ── 구독 갱신 (매월 자동결제 성공) ──
+      // ── 구독 갱신 (매월 자동결제) — 신규 구독 첫 결제는 반드시 skip ──
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
         const stripeSubId = invoice.subscription as string
         if (!stripeSubId) break
 
-        // 구독 정보 조회
+        // ★ 핵심: billing_reason이 subscription_cycle(갱신)일 때만 처리
+        // subscription_create(신규), manual 등은 checkout.session.completed에서 처리
+        if (invoice.billing_reason !== 'subscription_cycle') {
+          console.log(`invoice.payment_succeeded skipped: billing_reason=${invoice.billing_reason}`)
+          break
+        }
+
         const stripeSub = await stripe.subscriptions.retrieve(stripeSubId)
         const priceId = stripeSub.items.data[0]?.price.id
         const plan = PRICE_TO_PLAN[priceId]
         if (!plan) break
 
-        // 내부 subscription 조회
+        // stripe_subscription_id로 구독 조회
         const { data: subRecord } = await supabase
           .from('subscriptions')
           .select('id, user_id, voucher_sh_total, sh_hours_total')
           .eq('stripe_subscription_id', stripeSubId)
           .maybeSingle()
 
-        if (!subRecord) break
+        if (!subRecord) {
+          console.error(`invoice.payment_succeeded: no subscription found for stripeSubId=${stripeSubId}`)
+          break
+        }
 
-        // period_end 업데이트 + 갱신 시 바우처/시간 추가 지급
-        const newVoucherTotal = (subRecord.voucher_sh_total ?? 0) + VOUCHER_MAP[plan]
-        const newSHTotal = (subRecord.sh_hours_total ?? 0) + VOUCHER_MAP[plan]
+        // 갱신: 바우처 추가 + 청소시간 리셋
+        const newVoucherTotal = (Number(subRecord.voucher_sh_total) ?? 0) + VOUCHER_MAP[plan]
+        const newSHTotal = (Number(subRecord.sh_hours_total) ?? 0) + VOUCHER_MAP[plan]
+
         const { error } = await supabase
           .from('subscriptions')
           .update({
@@ -454,15 +403,15 @@ serve(async (req) => {
             current_period_end: stripeSub.current_period_end,
             voucher_sh_total: newVoucherTotal,
             sh_hours_total: newSHTotal,
-            // Reset cleaning hours for new period
             cleaning_hours_total: CLEANING_HOURS_MAP[plan] || 0,
             cleaning_hours_used: 0,
           })
           .eq('stripe_subscription_id', stripeSubId)
 
         if (error) console.error('invoice renewal update error:', error)
+        else console.log(`subscription renewed: ${stripeSubId}, new sh_hours_total=${newSHTotal}`)
 
-        // ── 결제 기록 → payments 테이블 ──
+        // payments 기록 (중복 방지 내장)
         const chargeId = invoice.charge as string || null
 
         await recordPayment({
@@ -479,7 +428,7 @@ serve(async (req) => {
           plan: `${plan} plan renewal`,
         })
 
-        // ── 구독 갱신 확인 이메일 → 고객 발송 ──
+        // 갱신 확인 이메일
         try {
           const { data: { user } } = await supabase.auth.admin.getUserById(subRecord.user_id)
           const customerEmail = user?.email || ''
@@ -502,17 +451,10 @@ serve(async (req) => {
                 type: 'subscription_renewed',
                 recipients: [{ id: subRecord.user_id, type: 'customer' }],
                 reference_type: 'cleaning',
-                details: {
-                  plan,
-                  customer_name: customerName,
-                  amount: amountPaid,
-                  billing_cycle: billingCycle,
-                  receipt_url: receiptUrl,
-                  next_renewal_date: nextDate,
-                },
+                details: { plan, customer_name: customerName, amount: amountPaid, billing_cycle: billingCycle, receipt_url: receiptUrl, next_renewal_date: nextDate },
               }),
             })
-            console.log(`subscription_renewed email sent to ${customerEmail}`)
+            console.log(`subscription_renewed sent to ${customerEmail}`)
           }
         } catch(e) {
           console.error('subscription_renewed email error:', e)
@@ -545,14 +487,12 @@ serve(async (req) => {
 
         if (error) console.error('payment failed update error:', error)
 
-        // ── 결제 실패 알림 이메일 → 고객 발송 ──
         try {
           const stripeSub = await stripe.subscriptions.retrieve(stripeSubId)
           const priceId = stripeSub.items.data[0]?.price.id
           const plan = PRICE_TO_PLAN[priceId] || ''
           const billingCycle = stripeSub.items.data[0]?.plan?.interval || ''
 
-          // 구독에 연결된 user_id 조회
           const { data: subRecord } = await supabase
             .from('subscriptions')
             .select('user_id')
@@ -567,7 +507,6 @@ serve(async (req) => {
             const failedDate = new Date(invoice.created * 1000)
               .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 
-            // Stripe Customer Portal URL 생성
             let portalUrl = 'https://havenpluscare.com/dashboard.html'
             try {
               const portalSession = await stripe.billingPortal.sessions.create({
@@ -590,18 +529,10 @@ serve(async (req) => {
                   notify_admins: true,
                   recipients: [{ id: subRecord.user_id, type: 'customer' }],
                   reference_type: 'cleaning',
-                  details: {
-                    plan,
-                    customer_name: customerName,
-                    amount: amountDue,
-                    billing_cycle: billingCycle,
-                    failed_date: failedDate,
-                    portal_url: portalUrl,
-                    attempt_count: invoice.attempt_count || 1,
-                  },
+                  details: { plan, customer_name: customerName, amount: amountDue, billing_cycle: billingCycle, failed_date: failedDate, portal_url: portalUrl, attempt_count: invoice.attempt_count || 1 },
                 }),
               })
-              console.log(`payment_failed email sent to ${customerEmail}`)
+              console.log(`payment_failed sent to ${customerEmail}`)
             }
           }
         } catch(e) {
