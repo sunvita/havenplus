@@ -158,6 +158,8 @@
   .pay-btn { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; font-family: inherit; border: none; cursor: pointer; transition: all .15s; }
   .pay-btn.refund { background: #fff3e0; color: #e65100; }
   .pay-btn.refund:hover { background: #ffe0b2; }
+  .pay-btn.cancel-sub { background: #fce4ec; color: #880e4f; }
+  .pay-btn.cancel-sub:hover { background: #f8bbd0; }
   .pay-btn.charge { background: var(--blue-bg); color: var(--navy); }
   .pay-btn.charge:hover { background: #c5d8f7; }
   .pay-empty { text-align: center; padding: 48px; color: var(--text-light); font-size: 14px; }
@@ -1400,6 +1402,50 @@
       <div class="pay-modal-btns">
         <button class="pay-modal-btn cancel" onclick="closeAdditionalChargeModal()">Cancel</button>
         <button class="pay-modal-btn confirm" id="chargeConfirmBtn" onclick="executeAdditionalCharge()">Send Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Subscription Modal -->
+  <div class="pay-modal-overlay" id="cancelSubModal" style="display:none">
+    <div class="pay-modal" style="max-width:520px">
+      <div class="pay-modal-title">Cancel Subscription</div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Customer</div>
+        <div class="pay-modal-value" id="cancelSubCustomer">—</div>
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Plan</div>
+        <div class="pay-modal-value" id="cancelSubPlan">—</div>
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Cancel Reason</div>
+        <select class="pay-modal-input" id="cancelSubReason" onchange="onCancelSubReasonChange()">
+          <option value="general">General cancellation</option>
+          <option value="cooling_off">Cooling-off (within 30 days, no work done)</option>
+          <option value="hardship">Hardship (50% term fee reduction)</option>
+          <option value="property_sold">Property sold (term fee waived, $50 transfer fee)</option>
+        </select>
+      </div>
+      <div class="pay-modal-calc" id="cancelSubCalc" style="margin:16px 0">Calculating...</div>
+      <div id="cancelSubResultBlock" style="display:none">
+        <div id="cancelSubRefundRow" class="pay-modal-row" style="display:none">
+          <div class="pay-modal-label">Refund Amount (AUD)</div>
+          <input class="pay-modal-input" type="number" id="cancelSubRefundAmt" step="0.01" min="0" readonly>
+        </div>
+        <div id="cancelSubChargeRow" class="pay-modal-row" style="display:none">
+          <div class="pay-modal-label">Additional Charge (AUD)</div>
+          <input class="pay-modal-input" type="number" id="cancelSubChargeAmt" step="0.01" min="0" readonly>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">Stripe Invoice will be sent to customer</div>
+        </div>
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Internal Note</div>
+        <input class="pay-modal-input" type="text" id="cancelSubNote" placeholder="e.g. Customer requested via email on 5 Apr">
+      </div>
+      <div class="pay-modal-btns">
+        <button class="pay-modal-btn cancel" onclick="closeCancelSubModal()">Cancel</button>
+        <button class="pay-modal-btn confirm" id="cancelSubConfirmBtn" onclick="executeCancelSub()" disabled>Processing...</button>
       </div>
     </div>
   </div>
@@ -6031,7 +6077,12 @@ function renderPaymentsTable(data) {
       <td style="color:#888">${fee}</td>
       <td style="font-weight:700">${net}</td>
       <td><span class="pay-badge ${status}">${status.replace(/_/g,' ')}</span></td>
-      <td>${canRefund ? `<button class="pay-btn refund" onclick="openRefundModal('${p.id}')">Refund</button>` : ''}</td>
+      <td>${p.payment_type === 'subscription' && !['refunded','cancelled'].includes(p.status)
+        ? `<button class="pay-btn cancel-sub" onclick="openCancelSubModal('${p.id}')">Cancel Sub</button>`
+        : p.payment_type === 'sh_bundle' && !['refunded','cancelled'].includes(p.status)
+        ? `<button class="pay-btn refund" onclick="openRefundModal('${p.id}')">Refund</button>`
+        : ''
+      }</td>
     </tr>`;
   }).join('');
 }
@@ -6194,6 +6245,231 @@ async function executeAdditionalCharge() {
   }
 }
 
+
+/* ── Cancel Subscription ── */
+let currentCancelPayment = null;
+let currentCancelSub = null;
+
+async function openCancelSubModal(paymentId) {
+  const payment = allPaymentsData.find(p => p.id === paymentId);
+  if (!payment) return;
+  currentCancelPayment = payment;
+
+  // 구독 정보 조회
+  const { data: sub } = await sb.from('subscriptions')
+    .select('id, plan_type, start_date, cleaning_hours_total, cleaning_hours_used, status, stripe_subscription_id, stripe_customer_id, profiles:user_id(full_name)')
+    .eq('id', payment.subscription_id)
+    .maybeSingle();
+
+  if (!sub) { showToast('Subscription not found', 'error'); return; }
+  currentCancelSub = sub;
+
+  document.getElementById('cancelSubCustomer').textContent = sub.profiles?.full_name || '—';
+  document.getElementById('cancelSubPlan').textContent =
+    `${sub.plan_type.charAt(0).toUpperCase() + sub.plan_type.slice(1)} / ${parseFloat(payment.amount) >= (PLAN_MONTHLY[sub.plan_type] * 10) ? 'Annual' : 'Monthly'} — Started ${new Date(sub.start_date).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}`;
+
+  document.getElementById('cancelSubReason').value = 'general';
+  document.getElementById('cancelSubNote').value = '';
+  document.getElementById('cancelSubConfirmBtn').disabled = true;
+  document.getElementById('cancelSubConfirmBtn').textContent = 'Calculating...';
+  document.getElementById('cancelSubModal').style.display = 'flex';
+
+  await onCancelSubReasonChange();
+}
+
+function closeCancelSubModal() {
+  document.getElementById('cancelSubModal').style.display = 'none';
+  currentCancelPayment = null;
+  currentCancelSub = null;
+}
+
+async function onCancelSubReasonChange() {
+  if (!currentCancelPayment || !currentCancelSub) return;
+
+  const reason = document.getElementById('cancelSubReason').value;
+  const calcEl = document.getElementById('cancelSubCalc');
+  const resultBlock = document.getElementById('cancelSubResultBlock');
+  const refundRow = document.getElementById('cancelSubRefundRow');
+  const chargeRow = document.getElementById('cancelSubChargeRow');
+  const confirmBtn = document.getElementById('cancelSubConfirmBtn');
+
+  calcEl.innerHTML = 'Calculating...';
+  resultBlock.style.display = 'none';
+  confirmBtn.disabled = true;
+
+  const sub = currentCancelSub;
+  const payment = currentCancelPayment;
+  const amount = parseFloat(payment.amount);
+  const monthly = PLAN_MONTHLY[sub.plan_type] || 0;
+  const isAnnual = amount >= monthly * 10;
+
+  // 경과 월 계산
+  const start = new Date(sub.start_date);
+  const now = new Date();
+  const elapsedMonths = Math.ceil((now - start) / (1000 * 60 * 60 * 24 * 30.44));
+  const remaining = Math.max(0, 12 - elapsedMonths);
+
+  let subRefund = 0;
+  let termFee = 0;
+  let termFeeNote = '';
+  let calcLines = [];
+
+  // 구독료 환불 계산
+  if (reason === 'cooling_off') {
+    subRefund = amount;
+    termFee = 0;
+    termFeeNote = 'Cooling-off — full refund, no termination fee';
+    calcLines.push(`Full refund: <strong>$${subRefund.toFixed(2)}</strong>`);
+  } else if (reason === 'property_sold') {
+    subRefund = isAnnual ? remaining * (amount / 12) : 0;
+    termFee = 50; // transfer fee
+    termFeeNote = 'Term fee waived — $50 transfer fee applies';
+    calcLines.push(`Sub refund: $${subRefund.toFixed(2)}`);
+    calcLines.push(`Transfer fee: $50.00`);
+  } else {
+    // general or hardship
+    subRefund = isAnnual ? remaining * (amount / 12) : 0;
+
+    if (elapsedMonths <= 1) {
+      termFee = 0;
+      termFeeNote = 'Within cooling-off period — no termination fee';
+    } else if (elapsedMonths <= 6) {
+      termFee = remaining * monthly * 0.2;
+      termFeeNote = `${remaining}m × $${monthly} × 20% = $${termFee.toFixed(2)}`;
+    } else {
+      termFee = remaining * monthly * 0.1;
+      termFeeNote = `${remaining}m × $${monthly} × 10% = $${termFee.toFixed(2)}`;
+    }
+
+    if (reason === 'hardship') {
+      termFee = termFee * 0.5;
+      termFeeNote += ' → 50% reduction (hardship)';
+    }
+
+    calcLines.push(`Plan: ${sub.plan_type} / ${isAnnual ? 'Annual' : 'Monthly'}`);
+    calcLines.push(`Elapsed: ${elapsedMonths}m / Remaining: ${remaining}m`);
+    calcLines.push(`Sub refund: $${subRefund.toFixed(2)}`);
+    calcLines.push(`Early termination fee: ${termFeeNote}`);
+  }
+
+  // 최종 정산
+  const netRefund = Math.max(0, subRefund - termFee);
+  const netCharge = Math.max(0, termFee - subRefund);
+
+  // 상한선: 총 납부액 초과 불가
+  const cappedCharge = Math.min(netCharge, amount);
+
+  if (netRefund > 0) {
+    calcLines.push(`<strong style="color:#1e5c3a">→ Refund: $${netRefund.toFixed(2)}</strong>`);
+  } else if (cappedCharge > 0) {
+    calcLines.push(`<strong style="color:#880e4f">→ Additional charge: $${cappedCharge.toFixed(2)}</strong>`);
+  } else {
+    calcLines.push(`<strong>→ No refund or charge — subscription cancelled</strong>`);
+  }
+
+  calcEl.innerHTML = calcLines.join('<br>');
+  resultBlock.style.display = 'block';
+
+  // 결과 입력란 표시
+  refundRow.style.display = netRefund > 0 ? 'block' : 'none';
+  chargeRow.style.display = cappedCharge > 0 ? 'block' : 'none';
+  if (netRefund > 0) document.getElementById('cancelSubRefundAmt').value = netRefund.toFixed(2);
+  if (cappedCharge > 0) document.getElementById('cancelSubChargeAmt').value = cappedCharge.toFixed(2);
+
+  // 확인 버튼 활성화
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = netRefund > 0
+    ? `Cancel & Refund $${netRefund.toFixed(2)}`
+    : cappedCharge > 0
+    ? `Cancel & Send Invoice $${cappedCharge.toFixed(2)}`
+    : 'Cancel Subscription';
+}
+
+async function executeCancelSub() {
+  const btn = document.getElementById('cancelSubConfirmBtn');
+  const reason = document.getElementById('cancelSubReason').value;
+  const note = document.getElementById('cancelSubNote').value.trim();
+  const sub = currentCancelSub;
+  const payment = currentCancelPayment;
+
+  const netRefund = parseFloat(document.getElementById('cancelSubRefundAmt').value) || 0;
+  const netCharge = parseFloat(document.getElementById('cancelSubChargeAmt').value) || 0;
+
+  const confirmMsg = netRefund > 0
+    ? `Cancel subscription and refund $${netRefund.toFixed(2)} AUD?`
+    : netCharge > 0
+    ? `Cancel subscription and send invoice for $${netCharge.toFixed(2)} AUD?`
+    : 'Cancel this subscription?';
+
+  if (!confirm(confirmMsg + '\n\nThis cannot be undone.')) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+
+  try {
+    // 1. Stripe 구독 취소
+    const cancelRes = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+      body: JSON.stringify({
+        action: 'cancel_subscription',
+        stripe_subscription_id: sub.stripe_subscription_id,
+        subscription_id: sub.id,
+        reason,
+        note,
+      }),
+    });
+    const cancelData = await cancelRes.json();
+    if (!cancelRes.ok || !cancelData.success) throw new Error(cancelData.error || 'Cancel failed');
+
+    // 2. 환불이 있으면 실행
+    if (netRefund > 0 && payment.stripe_charge_id) {
+      const refundRes = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          action: 'refund',
+          payment_id: payment.id,
+          refund_amount: netRefund,
+          refund_reason: `Subscription cancellation — ${reason}${note ? ': ' + note : ''}`,
+        }),
+      });
+      const refundData = await refundRes.json();
+      if (!refundRes.ok || !refundData.success) throw new Error(refundData.error || 'Refund failed');
+    }
+
+    // 3. 추가 청구가 있으면 Invoice 발송
+    if (netCharge > 0) {
+      const chargeRes = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          action: 'additional_charge',
+          customer_stripe_id: sub.stripe_customer_id,
+          additional_amount: netCharge,
+          description: `Early termination fee — ${sub.plan_type} plan (${reason})`,
+        }),
+      });
+      const chargeData = await chargeRes.json();
+      if (!chargeRes.ok || !chargeData.success) throw new Error(chargeData.error || 'Invoice failed');
+    }
+
+    const resultMsg = netRefund > 0
+      ? `Subscription cancelled. Refund of $${netRefund.toFixed(2)} processed.`
+      : netCharge > 0
+      ? `Subscription cancelled. Invoice of $${netCharge.toFixed(2)} sent.`
+      : 'Subscription cancelled.';
+
+    showToast(resultMsg);
+    closeCancelSubModal();
+    setTimeout(loadPaymentsSection, 2000);
+
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+  }
+}
 </script>
 
 </body>

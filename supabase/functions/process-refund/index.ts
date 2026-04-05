@@ -14,7 +14,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   try {
-    const { action, payment_id, refund_amount, refund_reason, additional_amount, customer_email, customer_stripe_id, description } = await req.json()
+    const body_json = await req.json()
+    const { action, payment_id, refund_amount, refund_reason, additional_amount, customer_email, customer_stripe_id, description,
+            stripe_subscription_id, subscription_id, reason, note } = body_json
 
     // ── 어드민 권한 체크 ──
     const authHeader = req.headers.get('Authorization')
@@ -84,6 +86,27 @@ serve(async (req) => {
       })
 
       return new Response(JSON.stringify({ success: true, invoice_id: invoice.id, invoice_url: invoice.hosted_invoice_url }), { headers: { ...CORS, 'Content-Type': 'application/json' } })
+    }
+
+    // ── 구독 취소 ──
+    if (action === 'cancel_subscription') {
+      if (!stripe_subscription_id) {
+        return new Response(JSON.stringify({ error: 'stripe_subscription_id required' }), { status: 400, headers: CORS })
+      }
+
+      // Stripe 구독 즉시 취소
+      await stripe.subscriptions.cancel(stripe_subscription_id)
+
+      // Supabase subscriptions 상태 업데이트
+      if (subscription_id) {
+        await supabase.from('subscriptions').update({
+          status: 'cancelled',
+          end_date: new Date().toISOString(),
+        }).eq('id', subscription_id)
+      }
+
+      console.log(`Subscription cancelled: ${stripe_subscription_id}, reason: ${reason}, note: ${note}`)
+      return new Response(JSON.stringify({ success: true }), { headers: { ...CORS, 'Content-Type': 'application/json' } })
     }
 
     return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400, headers: CORS })
