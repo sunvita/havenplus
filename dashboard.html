@@ -931,6 +931,7 @@ const ICO = {
 };
 let isAdmin = false, hasActiveSub = false;
 let srByProp = {};
+let allSubs = [];
 
 /* ── Init ─────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -970,7 +971,7 @@ async function loadDashboard() {
   ['stateOnboard','stateActive','stateSHOnly'].forEach(id =>
     document.getElementById(id).classList.remove('show'));
 
-  let allSubs = [], shBal = null;
+  allSubs = []; let shBal = null;
   allProperties = [];
   srByProp = {};
 
