@@ -3635,17 +3635,22 @@ async function saveSchedEdit() {
     const workerId = selectedWorkerIds.length > 0 ? selectedWorkerIds[0] : null;
     const chDeducted = selectedWorkerIds.length * duration;
     
-    const { error } = await sb.from('cleaning_schedule').update({
+    const schedUpdatePayload = {
       status,
       planned_date: date || null,
       planned_time: time || null,
       assigned_worker_id: workerId,
-      assigned_workers: selectedWorkerIds,  // JSONB array of all workers
+      assigned_workers: selectedWorkerIds,
       duration_hours: duration,
       ch_deducted: chDeducted,
       updated_at: new Date().toISOString()
-    }).eq('id', id);
-    
+    };
+    if (status === 'in_progress') {
+      schedUpdatePayload.actual_start = currentSchedData?.actual_start || new Date().toISOString();
+    } else if (['requested', 'scheduled', 'confirmed'].includes(status)) {
+      schedUpdatePayload.actual_start = null;
+    }
+    const { error } = await sb.from('cleaning_schedule').update(schedUpdatePayload).eq('id', id);
     if (error) throw error;
 
     // ── Send notification when status is scheduled/confirmed ──
@@ -3870,7 +3875,13 @@ async function saveJobEdit() {
   btn.disabled = true; btn.textContent = 'Saving…';
 
   try {
-    const { error } = await sb.from('service_requests').update({
+    // 어드민이 in_progress로 강제 설정 시 actual_start 자동 세팅
+    const existingJob = allJobRequests?.find(j => j.id === id);
+    const actualStart = status === 'in_progress'
+      ? (existingJob?.actual_start || new Date().toISOString())
+      : (status === 'requested' || status === 'scheduled' || status === 'confirmed' ? null : undefined);
+
+    const updatePayload = {
       status,
       scheduled_date: date || null,
       scheduled_time: time || null,
@@ -3879,7 +3890,10 @@ async function saveJobEdit() {
       sh_used: actual,
       admin_notes: notes || null,
       updated_at: new Date().toISOString()
-    }).eq('id', id);
+    };
+    if (actualStart !== undefined) updatePayload.actual_start = actualStart;
+
+    const { error } = await sb.from('service_requests').update(updatePayload).eq('id', id);
     
     if (error) throw error;
 

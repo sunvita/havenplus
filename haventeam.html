@@ -1399,9 +1399,13 @@ async function loadAllJobs() {
 
     /* Detect in-progress job */
     const inProgress = myJobs.find(j => j.status === 'in_progress');
-    if (inProgress?.actual_start) {
+    if (inProgress) {
       activeJobId = inProgress.id;
-      jobStartTime = new Date(inProgress.actual_start);
+      activeJobType = inProgress.job_type || 'service';
+      // actual_start 없으면 현재 시각으로 fallback (어드민 강제 시작 케이스)
+      jobStartTime = inProgress.actual_start
+        ? new Date(inProgress.actual_start)
+        : new Date();
       startTimer();
     }
 
