@@ -6142,11 +6142,16 @@ function renderPaymentsSummary(data) {
   const fees = data.reduce((s, p) => s + parseFloat(p.stripe_fee || 0), 0);
   const net = data.reduce((s, p) => s + parseFloat(p.net_amount || 0), 0);
   const refunded = data.reduce((s, p) => s + parseFloat(p.refund_amount || 0), 0);
-  const netAfterRefund = net - refunded;
+  // 환불된 건의 stripe_fee도 손실 (Stripe 수수료 미환급)
+  const refundedFees = data
+    .filter(p => parseFloat(p.refund_amount || 0) > 0)
+    .reduce((s, p) => s + parseFloat(p.stripe_fee || 0), 0);
+  const netAfterRefund = net - refunded - refundedFees;
 
   document.getElementById('payTotalRevenue').innerHTML =
     `$${revenue.toFixed(2)}${refunded > 0 ? `<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:2px">-$${refunded.toFixed(2)} refunded</div>` : ''}`;
-  document.getElementById('payTotalFees').textContent = `$${fees.toFixed(2)}`;
+  document.getElementById('payTotalFees').innerHTML =
+    `$${fees.toFixed(2)}${refundedFees > 0 ? `<div style="font-size:11px;color:var(--red);font-weight:500;margin-top:2px">+$${refundedFees.toFixed(2)} unrecovered</div>` : ''}`;
   document.getElementById('payTotalNet').innerHTML =
     `$${netAfterRefund.toFixed(2)}${refunded > 0 ? `<div style="font-size:11px;color:var(--text-light);font-weight:500;margin-top:2px">before refund: $${net.toFixed(2)}</div>` : ''}`;
   document.getElementById('payTotalRefunded').textContent = refunded > 0 ? `-$${refunded.toFixed(2)}` : '$0.00';
@@ -6160,7 +6165,11 @@ function renderPaymentsTable(data) {
     const date = new Date(p.paid_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const customer = p.profiles?.full_name || '—';
     const prop = p.subscriptions?.properties;
-    const propText = prop ? [prop.address, prop.suburb].filter(Boolean).join(', ') || '—' : '—';
+    const propText = prop
+      ? [prop.address, prop.suburb].filter(Boolean).join(', ') || '—'
+      : p.subscriptions?.property_id
+      ? 'Property ID: ' + p.subscriptions.property_id.slice(0, 8) + '...'
+      : '—';
     const type = typeLabel[p.payment_type] || p.payment_type;
     const shSize = p.sh_bundle_size ? ` (${p.sh_bundle_size}h)` : '';
     const amount = `$${parseFloat(p.amount || 0).toFixed(2)}`;
