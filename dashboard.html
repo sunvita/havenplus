@@ -154,7 +154,8 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
 @media (max-width: 700px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 420px) { .stat-grid { grid-template-columns: 1fr; } }
-.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: border-color .2s, box-shadow .2s; }
+.stat-card[onclick]:hover { border-color: var(--navy); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
 .stat-card.hl { border-color: var(--green-txt); background: var(--green-bg); }
 .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
 .stat-value { font-size: 26px; font-weight: 900; color: var(--navy); line-height: 1; margin-bottom: 3px; }
@@ -559,12 +560,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="stat-value" id="ovPropCount">0</div>
         <div class="stat-sub" id="ovPropSub">—</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openStatCardHistory('cleaning')" style="cursor:pointer" title="View cleaning history">
         <div class="stat-label"><span class="lang-en">Cleaning Hours</span><span class="lang-ko" style="display:none;">청소 시간</span></div>
         <div class="stat-value" id="ovCleanRem">0</div>
         <div class="stat-sub" id="ovCleanSub"><span class="lang-en">total remaining</span><span class="lang-ko" style="display:none;">총 잔여</span></div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="openStatCardHistory('service')" style="cursor:pointer" title="View service history">
         <div class="stat-label">Service Hours</div>
         <div class="stat-value" id="ovSHRem">0</div>
         <div class="stat-sub" id="ovSHSub"><span class="lang-en">voucher + purchased</span><span class="lang-ko" style="display:none;">바우처 + 구매</span></div>
@@ -2250,6 +2251,18 @@ function toggleLang(lang) {
 /* ═══ Service History ═══ */
 let shAllJobs = [];
 let shFilterType = 'all';
+
+function openStatCardHistory(filterType) {
+  // 상단 카드 클릭 시 — property 1개면 바로 그 property, 여러 개면 첫번째 active sub property
+  const activeProp = allProperties.find(p => {
+    const sub = allSubs ? allSubs.find(s => s.property_id === p.id) : null;
+    return !!sub;
+  }) || allProperties[0];
+
+  if (!activeProp) { showToast('No property found.', true); return; }
+  const addr = [activeProp.address, activeProp.suburb, activeProp.postcode].filter(Boolean).join(', ');
+  openServiceHistory(activeProp.id, addr, filterType);
+}
 
 async function openServiceHistory(propertyId, address, filterType = 'all') {
   document.getElementById('shPanelAddress').textContent = address;
