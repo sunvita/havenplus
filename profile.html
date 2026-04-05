@@ -6266,9 +6266,11 @@ async function executeRefund() {
   if (!confirm(`Process refund of $${amount.toFixed(2)} AUD?\n\nThis cannot be undone.`)) return;
   btn.disabled = true; btn.textContent = 'Processing...';
   try {
+    const { data: { session: refundSession } } = await sb.auth.getSession();
+    if (!refundSession) { showToast('Session expired. Please log in again.', 'error'); return; }
     const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + refundSession.access_token },
       body: JSON.stringify({ action: 'refund', payment_id: currentRefundPayment.id, refund_amount: amount, refund_reason: reason }),
     });
     const data = await res.json();
@@ -6325,9 +6327,11 @@ async function executeAdditionalCharge() {
   if (!confirm(`Send invoice of $${amount.toFixed(2)} AUD to customer?`)) return;
   btn.disabled = true; btn.textContent = 'Sending...';
   try {
+    const { data: { session: chargeSession } } = await sb.auth.getSession();
+    if (!chargeSession) { showToast('Session expired. Please log in again.', 'error'); return; }
     const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + chargeSession.access_token },
       body: JSON.stringify({ action: 'additional_charge', customer_stripe_id: stripeId, additional_amount: amount, description: desc }),
     });
     const data = await res.json();
@@ -6505,6 +6509,11 @@ async function executeCancelSub() {
   const netRefund = parseFloat(document.getElementById('cancelSubRefundAmt').value) || 0;
   const netCharge = parseFloat(document.getElementById('cancelSubChargeAmt').value) || 0;
 
+  // 어드민 세션 토큰 가져오기
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { showToast('Session expired. Please log in again.', 'error'); return; }
+  const authToken = session.access_token;
+
   // Case A: 즉시 취소 (netCharge = 0)
   // Case B: Invoice 발송 후 대기 (netCharge > 0)
   const isCaseB = netCharge > 0;
@@ -6525,7 +6534,7 @@ async function executeCancelSub() {
       // ── Case B: Invoice 발송 + pending 상태 기록 ──
       const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
         body: JSON.stringify({
           action: 'send_cancellation_invoice',
           stripe_customer_id: sub.stripe_customer_id,
@@ -6545,7 +6554,7 @@ async function executeCancelSub() {
       // ── Case A: 즉시 취소 (+ 환불 있으면 함께 처리) ──
       const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
         body: JSON.stringify({
           action: 'cancel_subscription',
           stripe_subscription_id: sub.stripe_subscription_id,
