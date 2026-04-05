@@ -408,3 +408,68 @@ print(f"추가한 기능 키워드 존재 여부 확인")
 - CH 카드 클릭 → 해당 Property 청소 히스토리 표시
 - SH 카드 클릭 → 해당 Property 서비스 히스토리 표시
 - 양방향 UX: Property 기준 + 각 시간 기준
+
+---
+
+## 2026-04-05 세션 완료 작업 요약
+
+### Payments 섹션 (profile.html 어드민)
+- 사이드바 Payments 메뉴 추가 (Dashboard 바로 아래)
+- 결제 내역 테이블: Date / Customer / Property / Type / Amount / Stripe Fee / Net / Status / Manage
+- 요약 카드: Total Revenue / Stripe Fees (+unrecovered) / Net Revenue (before refund) / Refunded
+- **Cancel Sub 흐름 (Case A/B)**
+  - Case A (추가청구 없음): 즉시 취소 → 환불 → subscription_cancelled 이메일
+  - Case B (추가청구 있음): Invoice 발송 (sendInvoice X, Haven Plus 이메일에 링크 포함) → 고객 납부 → invoice.paid webhook → 자동 취소
+- **Cancel Sub 모달 자동 계산**: 플랜/월납연납/경과월/잔여월 기반 정산
+- **쿨링오프**: 어드민 직접 선택 방식 (자동 체크 제거)
+- **Manage 컬럼**: subscription→Cancel Sub, sh_bundle→Refund, 취소/환불 후 버튼 자동 숨김
+- **Net 계산**: 환불된 건 = net_amount - refund_amount (수수료 이중차감 방지)
+
+### 이메일 템플릿 (send-notification)
+- `subscription_cancelled`: 고객/어드민 동일 HTML, 어드민 제목 [Admin Notice] 접두사
+- `subscription_cancellation_pending`: Invoice 링크 포함 (Case B)
+- `refund_confirmed`: SH번들 환불 확인
+
+### process-refund Edge Function
+- `cancel_subscription`: Stripe 취소 + 환불 (있을 때) + cancellation_reason/note 기록
+- `send_cancellation_invoice`: Invoice 생성 (finalize only) + pending_cancellation 기록 + 이메일
+- `refund`: resolveChargeId로 charge_id 없는 케이스 해결 (payment_intent → latest_charge)
+- **주의**: 반드시 `--no-verify-jwt` 플래그로 배포
+
+### stripe-webhook 강화
+- `customer.subscription.deleted`: status=cancelled + subscription_cancelled 이메일 통합
+- `invoice.paid`: pending_cancellation 구독 자동 취소 트리거
+- `charge.refunded`: stripe_payment_id fallback 추가 (stripe_charge_id null인 경우)
+
+### DB 마이그레이션
+```sql
+-- subscriptions
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS cancellation_reason text;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS cancellation_note text;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS pending_cancellation boolean DEFAULT false;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS pending_cancellation_invoice_id text;
+
+-- payments
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_amount numeric;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refunded_at timestamptz;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_reason text;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_refund_id text;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS additional_charge_amount numeric;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_additional_invoice_id text;
+```
+
+### Dashboard 개선 (dashboard.html)
+**4-1. 구독 없는 부동산 서비스 히스토리 활성화**
+- service_requests 이력 있으면 Service History 버튼 활성화
+- srByProp 전역 변수로 선언 (showStateActive가 전역 함수라 스코프 주의)
+
+**4-2. CH/SH 클릭 → 히스토리 필터링**
+- 상단 Cleaning Hours 카드: Property 1개→바로 오픈, 2개 이상→Property 선택 모달
+- 상단 Service Hours 카드: 전체 Property 통합 히스토리 (openServiceHistoryAll)
+- property 카드 내 Cleaning hrs 🔍 / SH vouchers 🔍 클릭 → 해당 필터
+- summaryMeta Cleaning/SH 텍스트 클릭 가능 (점선 밑줄)
+- 서비스 히스토리 job 항목: 날짜 아래 📍 Property 주소 두 번째 줄 표시
+
+### 코딩 원칙 추가 확인
+- 새 변수 추가 시 사용 범위(스코프) 먼저 파악 후 전역/로컬 결정
+- 수정 전 관련 함수가 전역인지 로컬인지 확인 필수
