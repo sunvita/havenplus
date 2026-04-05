@@ -140,14 +140,12 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
-    aside.sidebar {
-      grid-column: 1;
-      grid-row: 1;
-    }
-    .content {
-      grid-column: 1;
+    /* aside를 grid flow에서 완전히 제거 */
+    .page > aside {
+      display: none;
     }
     .sidebar {
+      display: block !important;
       position: fixed;
       top: 0;
       left: -100%;
@@ -165,7 +163,7 @@
       box-shadow: 4px 0 24px rgba(0,0,0,.18);
     }
     .sidebar-toggle { display: flex; }
-    .content { min-width: 0; }
+    .content { min-width: 0; width: 100%; }
     .pay-summary { grid-template-columns: repeat(2, 1fr); }
     .pay-table-wrap { font-size: 12px; }
     .pay-table th, .pay-table td { padding: 8px 10px; }
@@ -6073,20 +6071,21 @@ async function markAllReadPage() {
 
 /* ── Sidebar Mobile Toggle ── */
 function toggleSidebar() {
-  const sidebar = document.querySelector('.sidebar');
+  const sidebar = document.querySelector('aside.sidebar');
   const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar) return;
   const isOpen = sidebar.classList.contains('open');
   if (isOpen) {
     sidebar.classList.remove('open');
-    overlay.classList.remove('open');
+    overlay?.classList.remove('open');
   } else {
     sidebar.classList.add('open');
-    overlay.classList.add('open');
+    overlay?.classList.add('open');
   }
 }
 
 function closeSidebar() {
-  document.querySelector('.sidebar')?.classList.remove('open');
+  document.querySelector('aside.sidebar')?.classList.remove('open');
   document.getElementById('sidebarOverlay')?.classList.remove('open');
 }
 
