@@ -106,6 +106,69 @@
   /* ── Layout ── */
   .page { max-width: 1000px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
 
+  /* ── Mobile sidebar toggle ── */
+  .sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: rgba(255,255,255,.85);
+    flex-direction: column;
+    gap: 5px;
+    margin-right: 8px;
+  }
+  .sidebar-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: all .25s;
+  }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  @media (max-width: 768px) {
+    .page {
+      grid-template-columns: 1fr;
+      padding: 16px 12px;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 260px;
+      height: 100vh;
+      z-index: 300;
+      border-radius: 0;
+      overflow-y: auto;
+      transition: left .28s cubic-bezier(.4,0,.2,1);
+      box-shadow: none;
+    }
+    .sidebar.open {
+      left: 0;
+      box-shadow: 4px 0 24px rgba(0,0,0,.18);
+    }
+    .sidebar-toggle { display: flex; }
+    .content { min-width: 0; }
+    .pay-summary { grid-template-columns: repeat(2, 1fr); }
+    .pay-table-wrap { font-size: 12px; }
+    .pay-table th, .pay-table td { padding: 8px 10px; }
+    .section-card { padding: 16px; }
+  }
+
+  @media (max-width: 480px) {
+    .pay-summary { grid-template-columns: 1fr 1fr; }
+    .pay-sum-value { font-size: 16px; }
+  }
+
   /* ── Sidebar ── */
   .sidebar { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; position: sticky; top: 88px; }
   .sidebar-profile { padding: 20px; border-bottom: 1px solid var(--border); }
@@ -516,6 +579,9 @@
 <!-- Nav (identical to dashboard) -->
 <nav class="dash-nav">
   <div class="dash-nav-inner">
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
     <a href="index.html" class="dash-logo">
       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"/>
@@ -554,7 +620,8 @@
 </nav>
 
 <!-- Page -->
-<div class="page">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="page">
 
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -2214,6 +2281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function switchSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  closeSidebar(); // 모바일에서 메뉴 선택 시 자동 닫기
   const sec = document.getElementById('section-' + name);
   const btn = document.querySelector(`[data-section="${name}"]`);
   if (sec) sec.classList.add('active');
@@ -5993,6 +6061,25 @@ async function markAllReadPage() {
     loadNotifications(); // refresh bell badge
     showToast('All notifications marked as read.');
   } catch(e) { console.warn('markAllReadPage error:', e); }
+}
+
+/* ── Sidebar Mobile Toggle ── */
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  } else {
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+  }
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('open');
 }
 
 /* ══ Payments Section ════════════════════════════════════════════════ */
