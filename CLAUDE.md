@@ -234,3 +234,31 @@ JWT가 ON이면 Stripe 웹훅 401 → 결제 DB 미반영 → 운영 치명적
   - 신규 구독 첫 결제 시 `checkout.session.completed`와 중복 실행 방지
 - `recordPayment`: `stripe_payment_id` / `stripe_invoice_id` 중복 체크 추가
   - Resend 시 payments 테이블 중복 insert 방지
+
+---
+
+## Edge Function 배포 원칙 (2026-04-05 추가)
+
+### 배포 전 필수 절차 — 반드시 준수
+Edge Function 수정 및 배포 시 아래 절차를 반드시 따를 것.
+이를 무시하고 배포하면 운영 복구가 매우 어려움.
+
+1. **현재 운영 버전 확인**
+   - Supabase에 실제 배포된 버전을 첨부 또는 붙여넣기로 먼저 확인
+   - GitHub repo 버전과 실제 운영 버전이 다를 수 있음
+
+2. **diff 비교**
+   - 현재 운영 버전 vs 수정 버전을 라인 단위로 비교
+   - 변경되는 부분만 명확히 식별
+
+3. **영향 분석**
+   - 변경 사항이 어떤 이벤트/케이스에 영향을 주는지 명시
+   - 제거되는 기능, 추가되는 기능, 동일한 기능 구분
+
+4. **승인 후 배포**
+   - 위 3가지 확인 결과를 Sunny에게 보고 후 승인받아 배포
+   - "배포 진행해" 요청이 와도 위 절차 없이 present_file 하지 않음
+
+5. **배포 후 확인**
+   - JWT verify OFF 재확인 (stripe-webhook, create-portal-session)
+   - 실제 웹훅 테스트 이벤트로 정상 동작 확인
