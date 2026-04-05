@@ -278,9 +278,19 @@ supabase functions deploy create-portal-session --project-ref rtkgnlcgepromqtoel
 
 # 그 외 함수 (JWT ON 유지)
 supabase functions deploy [함수명] --project-ref rtkgnlcgepromqtoelre
+
+# 전체 배포 (오늘 기준 전체 함수)
+supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+supabase functions deploy process-refund --project-ref rtkgnlcgepromqtoelre
+supabase functions deploy send-notification --project-ref rtkgnlcgepromqtoelre
+supabase functions deploy create-portal-session --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+supabase functions deploy ai-ceo-weekly --project-ref rtkgnlcgepromqtoelre
+supabase functions deploy ai-dev-agent --project-ref rtkgnlcgepromqtoelre
+supabase functions deploy daily-reminder --project-ref rtkgnlcgepromqtoelre
 ```
 
 Docker 없이도 배포 가능. Supabase CLI 로그인 상태 필요.
+Dashboard에서 직접 복붙 배포 불필요 — CLI가 GitHub 파일 그대로 Supabase에 업로드.
 
 ---
 
