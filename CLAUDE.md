@@ -217,8 +217,9 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 
 ### Edge Function 재배포 후 필수 확인
 - `create-portal-session`: JWT verify OFF 유지 확인 (고객 비인증 호출)
-- `stripe-webhook`: 401 발생 시 STRIPE_WEBHOOK_SECRET 값 Supabase Secrets에서 재확인
-  (Stripe Dashboard → Developers → Webhooks → Signing secret과 일치 여부)
+- `stripe-webhook`: 401 발생 시 Supabase Edge Function 일시 장애 가능성
+  STRIPE_WEBHOOK_SECRET 불일치라면 Resend도 동일하게 실패함
+  → Resend 성공 시 일시적 함수 다운이 원인, 별도 조치 불필요
 
 ### Stripe 웹훅 장애 대응 절차
 1. Stripe → Developers → Webhooks → Recent deliveries에서 실패 이벤트 확인
