@@ -1155,8 +1155,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
     const summaryMeta = hasSub
       ? `<span class="prop-hub-plan-pill pill-active">${m.name || planKey}</span>
          ${bedBath}
-         <span onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','cleaning')" style="cursor:pointer;text-decoration:underline dotted" title="View cleaning history"><strong>Cleaning:</strong> ${r1(cleanR)}/${r1(cleanT)}h</span>
-         <span onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','service')" style="cursor:pointer;text-decoration:underline dotted" title="View service history"><strong>Service Hour:</strong> ${r1(shVR)}/${r1(shVT)}SH</span>
+         <span><strong>Cleaning:</strong> ${r1(cleanR)}/${r1(cleanT)}h</span>
+         <span><strong>Service Hour:</strong> ${r1(shVR)}/${r1(shVT)}SH</span>
          ${nextVisitText ? `<span><strong>Next Visit:</strong> ${nextVisitText}</span>` : ''}`
       : `<span class="prop-hub-plan-pill pill-none"><span class="lang-en">No plan yet</span><span class="lang-ko" style="display:${currentLang==='ko'?'':'none'}">플랜 없음</span></span>
          ${bedBath}
@@ -1178,8 +1178,8 @@ function showStateActive(allSubs, shBal, shPurchasedRem, shGrantedRem) {
       <div class="pd-grid" style="margin-bottom:16px">
         <div><div class="pd-item-label">Plan</div><div class="pd-item-val">${m.name || planKey}</div></div>
         <div><div class="pd-item-label">Visits / yr</div><div class="pd-item-val">${m.visits || '—'}</div></div>
-        <div onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','cleaning')" style="cursor:pointer" title="View cleaning history"><div class="pd-item-label">Cleaning hrs 🔍</div><div class="pd-item-val">${r1(cleanU)} used / ${r1(cleanT)}</div></div>
-        <div onclick="event.stopPropagation();openServiceHistory('${p.id}','${p.address}, ${p.suburb}','service')" style="cursor:pointer" title="View service history"><div class="pd-item-label">SH vouchers 🔍</div><div class="pd-item-val">${r1(shVU)} used / ${r1(shVT)}</div></div>
+        <div><div class="pd-item-label">Cleaning hrs</div><div class="pd-item-val">${r1(cleanU)} used / ${r1(cleanT)}</div></div>
+        <div><div class="pd-item-label">SH vouchers</div><div class="pd-item-val">${r1(shVU)} used / ${r1(shVT)}</div></div>
         <div><div class="pd-item-label">Repair checkup</div><div class="pd-item-val">Every visit</div></div>
         <div><div class="pd-item-label">Smoke alarm</div><div class="pd-item-val">Annually</div></div>
       </div>
