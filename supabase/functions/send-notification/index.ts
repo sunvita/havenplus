@@ -570,31 +570,28 @@ function buildEmail(
       const settlementBlock = refundAmt
         ? `<p style="margin:0 0 8px;"><strong>Refund:</strong> ${refundAmt} has been processed to your original payment method. Please allow 5–10 business days.</p>`
         : `<p style="margin:0;">No further charges or refunds apply.</p>`
+      // 고객/어드민 공통 HTML (어드민은 제목만 다름)
+      const sharedHtml = wrapTemplate(`
+        <h2 style="margin:0 0 16px;color:#1a1a1a;">Your subscription has been cancelled</h2>
+        <p style="color:#555;margin:0 0 24px;">Hi${customer ? ' ' + customer : ''},</p>
+        <div style="background:#f8f9fa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+          <p style="margin:0 0 8px;"><strong>Plan:</strong> ${planName}</p>
+          <p style="margin:0 0 8px;"><strong>Cancelled on:</strong> ${cancelledOn}</p>
+          <p style="margin:0;"><strong>Reason:</strong> ${reasonLabel[reason] || reason}</p>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+          <p style="margin:0 0 4px;font-weight:700;color:#166534;">Settlement</p>
+          ${settlementBlock}
+        </div>
+        <p style="color:#555;margin:0 0 8px;">It's been a pleasure caring for your property.</p>
+        <p style="color:#555;margin:0;">We'd love to welcome you back anytime — <a href="mailto:hi@havenpluscare.com" style="color:#ff6b35;">hi@havenpluscare.com</a></p>`)
       if (isAdmin) return {
-        subject: `Subscription Cancelled — ${customer}`,
-        html: wrapTemplate(`
-          <h2 style="margin:0 0 16px;color:#1a1a1a;">Subscription Cancelled</h2>
-          <p><strong>Customer:</strong> ${customer}</p>
-          <p><strong>Plan:</strong> ${planName}</p>
-          <p><strong>Reason:</strong> ${reasonLabel[reason] || reason}</p>
-          ${refundAmt ? `<p><strong>Refund:</strong> ${refundAmt}</p>` : '<p><strong>Settlement:</strong> None</p>'}`)
+        subject: `[Admin Notice] Haven Plus — Subscription Cancelled${customer ? ' — ' + customer : ''}`,
+        html: sharedHtml
       }
       return {
         subject: 'Haven Plus — Your Subscription Has Been Cancelled',
-        html: wrapTemplate(`
-          <h2 style="margin:0 0 16px;color:#1a1a1a;">Your subscription has been cancelled</h2>
-          <p style="color:#555;margin:0 0 24px;">Hi${customer ? ' ' + customer : ''},</p>
-          <div style="background:#f8f9fa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-            <p style="margin:0 0 8px;"><strong>Plan:</strong> ${planName}</p>
-            <p style="margin:0 0 8px;"><strong>Cancelled on:</strong> ${cancelledOn}</p>
-            <p style="margin:0;"><strong>Reason:</strong> ${reasonLabel[reason] || reason}</p>
-          </div>
-          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
-            <p style="margin:0 0 4px;font-weight:700;color:#166534;">Settlement</p>
-            ${settlementBlock}
-          </div>
-          <p style="color:#555;margin:0 0 8px;">It's been a pleasure caring for your property.</p>
-          <p style="color:#555;margin:0;">We'd love to welcome you back anytime — <a href="mailto:hi@havenpluscare.com" style="color:#ff6b35;">hi@havenpluscare.com</a></p>`)
+        html: sharedHtml
       }
     }
 

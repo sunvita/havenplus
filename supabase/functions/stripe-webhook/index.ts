@@ -484,7 +484,7 @@ serve(async (req) => {
         // DB에서 구독 정보 조회
         const { data: subRecord } = await supabase
           .from('subscriptions')
-          .select('id, user_id, plan_type, cancellation_reason, pending_cancellation')
+          .select('id, user_id, plan_type, cancellation_reason, pending_cancellation, profiles:user_id(full_name)')
           .eq('stripe_subscription_id', sub.id)
           .maybeSingle()
 
@@ -515,6 +515,7 @@ serve(async (req) => {
                   plan: subRecord.plan_type,
                   reason: subRecord.cancellation_reason || 'general',
                   cancelled_on: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }),
+                  customer_name: (subRecord as any).profiles?.full_name || '',
                 },
               }),
             })
