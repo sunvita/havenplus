@@ -197,15 +197,30 @@ serve(async (req) => {
           if (upsertError) console.error('subscriptions upsert error:', upsertError)
 
           // payments 기록 (중복 방지 내장)
-          const paymentIntentId = session.payment_intent as string
+          // 구독 결제는 session.payment_intent가 null — invoice에서 charge 조회
+          let paymentIntentId: string | null = session.payment_intent as string || null
           let chargeId: string | null = null
-          if (paymentIntentId) {
-            try {
+          let invoiceId: string | null = session.invoice as string || null
+
+          try {
+            if (invoiceId) {
+              // invoice에서 payment_intent + charge 조회 (구독 결제 표준 방법)
+              const invoice = await stripe.invoices.retrieve(invoiceId)
+              if (!paymentIntentId && invoice.payment_intent) {
+                paymentIntentId = invoice.payment_intent as string
+              }
+              if (invoice.charge) {
+                chargeId = invoice.charge as string
+              } else if (paymentIntentId) {
+                const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+                chargeId = pi.latest_charge as string || null
+              }
+            } else if (paymentIntentId) {
               const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
               chargeId = pi.latest_charge as string || null
-            } catch (e) {
-              console.error('paymentIntent retrieve error:', e)
             }
+          } catch (e) {
+            console.error('charge retrieval error:', e)
           }
 
           const subUUID = await getSubscriptionUUID(stripeSubId)
