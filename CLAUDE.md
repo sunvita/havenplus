@@ -281,8 +281,8 @@ supabase functions deploy [함수명] --project-ref rtkgnlcgepromqtoelre
 
 # 전체 배포 (오늘 기준 전체 함수)
 supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
-supabase functions deploy process-refund --project-ref rtkgnlcgepromqtoelre
-supabase functions deploy send-notification --project-ref rtkgnlcgepromqtoelre
+supabase functions deploy process-refund --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+supabase functions deploy send-notification --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
 supabase functions deploy create-portal-session --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
 supabase functions deploy ai-ceo-weekly --project-ref rtkgnlcgepromqtoelre
 supabase functions deploy ai-dev-agent --project-ref rtkgnlcgepromqtoelre
