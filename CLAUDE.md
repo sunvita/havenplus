@@ -258,5 +258,21 @@ Edge Function 수정 및 배포 시 아래 절차를 반드시 따를 것.
    - "배포 진행해" 요청이 와도 위 절차 없이 present_file 하지 않음
 
 5. **배포 후 확인**
-   - JWT verify OFF 재확인 (create-portal-session만 해당)
-   - Stripe Dashboard에서 테스트 이벤트 발송 후 Supabase 로그 정상 여부 확인
+   - Stripe Dashboard → Webhooks → havenplus-webhook → Event deliveries에서 200 OK 확인
+
+### Edge Function CLI 배포 명령어 (맥북 터미널)
+반드시 --no-verify-jwt 플래그 포함해서 배포할 것.
+Dashboard 배포 시 JWT가 ON으로 초기화되어 웹훅 401 반복 발생함.
+
+```bash
+# stripe-webhook (JWT OFF 필수 — Stripe가 JWT 없이 호출)
+supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+
+# create-portal-session (JWT OFF 필수 — 고객 비인증 호출)
+supabase functions deploy create-portal-session --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+
+# 그 외 함수 (JWT ON 유지)
+supabase functions deploy [함수명] --project-ref rtkgnlcgepromqtoelre
+```
+
+Docker 없이도 배포 가능. Supabase CLI 로그인 상태 필요.
