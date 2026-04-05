@@ -6174,7 +6174,12 @@ function renderPaymentsTable(data) {
     const shSize = p.sh_bundle_size ? ` (${p.sh_bundle_size}h)` : '';
     const amount = `$${parseFloat(p.amount || 0).toFixed(2)}`;
     const fee = p.stripe_fee ? `$${parseFloat(p.stripe_fee).toFixed(2)}` : '—';
-    const net = p.net_amount ? `$${parseFloat(p.net_amount).toFixed(2)}` : '—';
+    const refundAmt = parseFloat(p.refund_amount || 0);
+    const netAmt = parseFloat(p.net_amount || 0);
+    const feeAmt = parseFloat(p.stripe_fee || 0);
+    const actualNet = refundAmt > 0 ? netAmt - refundAmt - feeAmt : netAmt;
+    const netColor = actualNet < 0 ? 'color:var(--red)' : 'font-weight:700';
+    const net = p.net_amount ? `$${actualNet.toFixed(2)}` : '—';
     const status = p.status || 'paid';
     const refundInfo = p.refund_amount ? `<br><small style="color:#e65100">Refunded: -$${parseFloat(p.refund_amount).toFixed(2)}</small>` : '';
     const subCancelled = p.subscriptions?.status === 'cancelled';
@@ -6186,7 +6191,7 @@ function renderPaymentsTable(data) {
       <td><span class="pay-type-badge">${type}${shSize}</span></td>
       <td>${amount}${refundInfo}</td>
       <td style="color:#888">${fee}</td>
-      <td style="font-weight:700">${net}</td>
+      <td style="${netColor}">${net}</td>
       <td><span class="pay-badge ${status}">${status.replace(/_/g,' ')}</span></td>
       <td>${p.payment_type === 'subscription' && !paymentSettled && !subCancelled
         ? `<button class="pay-btn cancel-sub" onclick="openCancelSubModal('${p.id}')">Cancel Sub</button>`
