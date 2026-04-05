@@ -6114,7 +6114,7 @@ async function loadPaymentsSection() {
     const statusFilter = document.getElementById('payStatus').value;
 
     let query = sb.from('payments')
-      .select('*, profiles:user_id(full_name), subscriptions:subscription_id(plan_type, stripe_customer_id, property_id, properties:property_id(address, suburb))')
+      .select('*, profiles:user_id(full_name), subscriptions:subscription_id(plan_type, stripe_customer_id, status, property_id, properties:property_id(address, suburb))')
       .order('paid_at', { ascending: false });
 
     if (periodType === 'year') {
@@ -6142,9 +6142,13 @@ function renderPaymentsSummary(data) {
   const fees = data.reduce((s, p) => s + parseFloat(p.stripe_fee || 0), 0);
   const net = data.reduce((s, p) => s + parseFloat(p.net_amount || 0), 0);
   const refunded = data.reduce((s, p) => s + parseFloat(p.refund_amount || 0), 0);
-  document.getElementById('payTotalRevenue').textContent = `$${revenue.toFixed(2)}`;
+  const netAfterRefund = net - refunded;
+
+  document.getElementById('payTotalRevenue').innerHTML =
+    `$${revenue.toFixed(2)}${refunded > 0 ? `<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:2px">-$${refunded.toFixed(2)} refunded</div>` : ''}`;
   document.getElementById('payTotalFees').textContent = `$${fees.toFixed(2)}`;
-  document.getElementById('payTotalNet').textContent = `$${net.toFixed(2)}`;
+  document.getElementById('payTotalNet').innerHTML =
+    `$${netAfterRefund.toFixed(2)}${refunded > 0 ? `<div style="font-size:11px;color:var(--text-light);font-weight:500;margin-top:2px">before refund: $${net.toFixed(2)}</div>` : ''}`;
   document.getElementById('payTotalRefunded').textContent = refunded > 0 ? `-$${refunded.toFixed(2)}` : '$0.00';
 }
 
@@ -6164,7 +6168,8 @@ function renderPaymentsTable(data) {
     const net = p.net_amount ? `$${parseFloat(p.net_amount).toFixed(2)}` : '—';
     const status = p.status || 'paid';
     const refundInfo = p.refund_amount ? `<br><small style="color:#e65100">Refunded: -$${parseFloat(p.refund_amount).toFixed(2)}</small>` : '';
-    const canRefund = (p.stripe_charge_id || p.stripe_payment_id) && !['refunded','cancelled'].includes(p.status) && p.payment_type !== 'additional_charge';
+    const subCancelled = p.subscriptions?.status === 'cancelled';
+    const paymentSettled = ['refunded','cancelled','partial_refunded'].includes(p.status);
     return `<tr>
       <td style="white-space:nowrap">${date}</td>
       <td>${customer}</td>
@@ -6174,9 +6179,9 @@ function renderPaymentsTable(data) {
       <td style="color:#888">${fee}</td>
       <td style="font-weight:700">${net}</td>
       <td><span class="pay-badge ${status}">${status.replace(/_/g,' ')}</span></td>
-      <td>${p.payment_type === 'subscription' && !['refunded','cancelled'].includes(p.status)
+      <td>${p.payment_type === 'subscription' && !paymentSettled && !subCancelled
         ? `<button class="pay-btn cancel-sub" onclick="openCancelSubModal('${p.id}')">Cancel Sub</button>`
-        : p.payment_type === 'sh_bundle' && !['refunded','cancelled'].includes(p.status)
+        : p.payment_type === 'sh_bundle' && !paymentSettled
         ? `<button class="pay-btn refund" onclick="openRefundModal('${p.id}')">Refund</button>`
         : ''
       }</td>
@@ -6277,7 +6282,7 @@ async function executeRefund() {
     if (!res.ok || !data.success) throw new Error(data.error || 'Refund failed');
     showToast(`Refund of $${amount.toFixed(2)} processed successfully`);
     closeRefundModal();
-    setTimeout(loadPaymentsSection, 2000);
+    setTimeout(loadPaymentsSection, 4000);
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
   } finally {
@@ -6575,7 +6580,7 @@ async function executeCancelSub() {
     }
 
     closeCancelSubModal();
-    setTimeout(loadPaymentsSection, 2000);
+    setTimeout(loadPaymentsSection, 4000);
 
   } catch(e) {
     showToast('Error: ' + e.message, 'error');

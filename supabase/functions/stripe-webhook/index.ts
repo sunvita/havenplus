@@ -536,11 +536,21 @@ serve(async (req) => {
 
         // payments 테이블 업데이트
         const isFullRefund = charge.refunded
-        const { data: payment } = await supabase
+        // stripe_charge_id 또는 stripe_payment_id로 payment 조회
+        let { data: payment } = await supabase
           .from('payments')
           .select('id, amount, payment_type, subscription_id, sh_bundle_size, user_id')
           .eq('stripe_charge_id', chargeId)
           .maybeSingle()
+
+        if (!payment && charge.payment_intent) {
+          const { data: payment2 } = await supabase
+            .from('payments')
+            .select('id, amount, payment_type, subscription_id, sh_bundle_size, user_id')
+            .eq('stripe_payment_id', charge.payment_intent as string)
+            .maybeSingle()
+          payment = payment2
+        }
 
         if (payment) {
           await supabase.from('payments').update({
