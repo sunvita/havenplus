@@ -386,7 +386,8 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
   padding: 14px 16px; cursor: pointer; user-select: none; transition: background .15s;
 }
 .sh-job-summary:hover { background: #fafafa; }
-.sh-job-summary-left { display: flex; align-items: center; gap: 10px; }
+.sh-job-summary-left { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: 1; min-width: 0; }
+.sh-job-summary-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .sh-job-date { font-size: 13px; font-weight: 700; white-space: nowrap; color: var(--navy); }
 .sh-job-type { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
 .sh-type-cleaning { background: var(--green-bg); color: var(--green-txt); }
@@ -2465,10 +2466,12 @@ function renderJobEntry(j) {
   return `<div class="sh-job-entry" onclick="this.classList.toggle('open')">
     <div class="sh-job-summary">
       <div class="sh-job-summary-left">
-        <div class="sh-job-date">${dateStr}</div>
-        ${j.propertyAddress ? `<div style="font-size:11px;font-weight:500;color:var(--text-light);margin-bottom:4px;">📍 ${j.propertyAddress}</div>` : ''}
-        <span class="sh-job-type ${typeClass}">${j.label}</span>
-        ${j.duration ? `<span style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-left:6px;">Used ${j.type === 'service' ? 'SH' : 'CH'}: ${j.duration}h</span>` : ''}
+        <div class="sh-job-summary-top">
+          <div class="sh-job-date">${dateStr}</div>
+          <span class="sh-job-type ${typeClass}">${j.label}</span>
+          ${j.duration ? `<span style="font-size:11px;font-weight:600;color:var(--text-secondary);">Used ${j.type === 'service' ? 'SH' : 'CH'}: ${j.duration}h</span>` : ''}
+        </div>
+        ${j.propertyAddress ? `<div style="font-size:11px;font-weight:500;color:var(--text-light);">📍 ${j.propertyAddress}</div>` : ''}
       </div>
       <div class="sh-job-summary-right">
         <span class="sh-status ${statusClass}">${statusLabel}</span>
