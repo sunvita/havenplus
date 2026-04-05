@@ -161,8 +161,6 @@
   .pay-btn.charge { background: var(--blue-bg); color: var(--navy); }
   .pay-btn.charge:hover { background: #c5d8f7; }
   .pay-empty { text-align: center; padding: 48px; color: var(--text-light); font-size: 14px; }
-
-  /* Refund Modal */
   .pay-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
   .pay-modal { background: white; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; }
   .pay-modal-title { font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
@@ -508,9 +506,1333 @@
   .admin-lb-label { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 8px; }
 </style>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC03KO68dQ459iJ1RCXn2Loe8tJJ-thKYk&libraries=places" async defer></script>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div></div>
+
+<!-- Nav (identical to dashboard) -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="index.html" class="dash-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="rgba(255,255,255,0.9)" stroke-width="4" fill="none"/>
+        <path d="M50 25L32 39v16h13V46h10v9h13V39L50 25z" fill="rgba(255,255,255,0.95)"/>
+        <rect x="43" y="63.5" width="14" height="4.5" rx="2.25" fill="#ff6b35"/>
+        <rect x="47.75" y="59" width="4.5" height="14" rx="2.25" fill="#ff6b35"/>
+      </svg>
+      <div>
+        <div class="dash-brand">HAVEN<span>PLUS</span></div>
+        <div class="dash-brand-sub">PROPERTY CARE</div>
+      </div>
+    </a>
+    <div class="dash-nav-right">
+      <div class="nav-lang-toggle">
+        <span class="nav-lang-btn active" id="lang-en" onclick="toggleLang('en')">EN</span>
+        <span class="nav-lang-btn" id="lang-ko" onclick="toggleLang('ko')">KOR</span>
+      </div>
+      <span class="dash-user-name" id="navUserName"></span>
+      <div class="notif-bell" id="notifBell" onclick="toggleNotifDropdown(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge" id="notifBadge"></span>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-dropdown-header">
+            <span class="notif-dropdown-title">Notifications</span>
+            <button class="notif-mark-all" onclick="markAllRead(event)">Mark all read</button>
+          </div>
+          <div id="notifList">
+            <div class="notif-empty">No notifications yet</div>
+          </div>
+        </div>
+      </div>
+      <a href="dashboard.html" class="nav-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="0.5" y="0.5" width="15" height="6" rx="1.2"/><rect x="0.5" y="8.5" width="6.5" height="6.5" rx="1.2"/><rect x="9" y="8.5" width="6.5" height="6.5" rx="1.2"/></svg><span class="nav-btn-label">Dashboard</span></a>
+      <button class="nav-btn" onclick="handleLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M10 17l5-5-5-5"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span class="nav-btn-label">Log out</span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- Page -->
+<div class="page">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-profile">
+      <div class="sidebar-avatar" id="sidebarAvatar"></div>
+      <div class="sidebar-name" id="sidebarName"></div>
+      <div class="sidebar-email" id="sidebarEmail"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section"><span class="lang-en">Account</span><span class="lang-ko" style="display:none;">계정</span></div>
+      <button class="sidebar-item active" data-section="personal" onclick="switchSection('personal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="lang-en">Personal Info</span><span class="lang-ko" style="display:none;">개인정보</span>
+      </button>
+      <button class="sidebar-item" data-section="notifications" onclick="switchSection('notifications')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="lang-en">Notifications</span><span class="lang-ko" style="display:none;">알림</span>
+      </button>
+      <button class="sidebar-item" data-section="subscription" onclick="switchSection('subscription')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="14" x2="10" y2="14"/></svg>
+        <span class="lang-en">Subscription</span><span class="lang-ko" style="display:none;">구독</span>
+      </button>
+      <button class="sidebar-item" data-section="payment" onclick="switchSection('payment')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <span class="lang-en">Payment</span><span class="lang-ko" style="display:none;">결제</span>
+      </button>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section"><span class="lang-en">Security</span><span class="lang-ko" style="display:none;">보안</span></div>
+      <button class="sidebar-item" data-section="security" onclick="switchSection('security')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span class="lang-en">Security</span><span class="lang-ko" style="display:none;">보안</span>
+      </button>
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-item danger" data-section="delete" onclick="switchSection('delete')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        <span class="lang-en">Delete Account</span><span class="lang-ko" style="display:none;">계정 삭제</span>
+      </button>
+      <!-- Admin sections (hidden by default) -->
+      <div id="adminNav" style="display:none;">
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">Admin</div>
+        <button class="sidebar-item" data-section="dashboard" onclick="switchSection('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </button>
+        <button class="sidebar-item" data-section="aitasks" onclick="switchSection('aitasks')" id="sidebarAITasks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          AI Tasks (의사결정) <span id="sidebarAIBadge" style="display:none;margin-left:auto;font-size:10px;font-weight:700;background:#ff6b35;color:white;padding:1px 6px;border-radius:10px"></span>
+        </button>
+        <button class="sidebar-item" data-section="cleanings" onclick="switchSection('cleanings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Cleanings
+        </button>
+        <button class="sidebar-item" data-section="calendar" onclick="switchSection('calendar')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="6" y="13" width="4" height="4" rx="0.5"/><rect x="14" y="13" width="4" height="4" rx="0.5"/></svg>
+          Calendar
+        </button>
+        <button class="sidebar-item" data-section="jobrequests" onclick="switchSection('jobrequests')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Job Requests
+        </button>
+        <button class="sidebar-item" data-section="workers" onclick="switchSection('workers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Haven+ Team
+        </button>
+        <button class="sidebar-item" data-section="subscribers" onclick="switchSection('subscribers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="14" x2="10" y2="14"/></svg>
+          Subscribers
+        </button>
+        <button class="sidebar-item" data-section="properties" onclick="switchSection('properties')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Properties
+        </button>
+        <button class="sidebar-item" data-section="customers" onclick="switchSection('customers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Customers
+        </button>
+        <button class="sidebar-item" data-section="hourslog" onclick="switchSection('hourslog')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Hours Log
+        </button>
+        <button class="sidebar-item" data-section="manage" onclick="switchSection('manage')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Manual Override
+        </button>
+        <button class="sidebar-item" data-section="payments" onclick="switchSection('payments')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Payments
+        </button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- ═══ Personal Info ═══ -->
+    <section class="section active" id="section-personal">
+      <div class="section-card">
+        <div class="section-title">Personal Information</div>
+        <div class="section-desc">Update your name, contact details, and postal address.</div>
+        <div class="alert alert-error" id="personalError"></div>
+        <div class="alert alert-success" id="personalSuccess"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="fieldName" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" id="fieldPhone" placeholder="04XX XXX XXX">
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="fieldEmail" disabled>
+            <div class="form-hint">To change your email, go to Security → Update Email.</div>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Postal Address <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+            <input type="text" class="form-input" id="fieldPostal" placeholder="e.g. Unit 4, 12 Smith St, Perth WA 6000">
+            <div class="form-hint">Used for correspondence and invoices. Not the same as your serviced property address.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Language</label>
+            <select class="form-input" id="fieldLang">
+              <option value="en">English</option>
+              <option value="ko">한국어</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-save" id="btnSavePersonal" onclick="savePersonalInfo()">Save Changes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Notifications ═══ -->
+    <section class="section" id="section-notifications">
+      <div class="section-card">
+        <div class="section-title"><span class="lang-en">Notifications</span><span class="lang-ko" style="display:none;">알림</span></div>
+        <div class="section-desc"><span class="lang-en">All your notifications.</span><span class="lang-ko" style="display:none;">모든 알림.</span></div>
+
+        <!-- Filters -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            <button class="notif-filter-btn active" data-filter="all" onclick="setNotifFilter('all',this)">All</button>
+            <button class="notif-filter-btn" data-filter="unread" onclick="setNotifFilter('unread',this)">Unread</button>
+            <button class="notif-filter-btn" data-filter="read" onclick="setNotifFilter('read',this)">Read</button>
+          </div>
+          <select id="notifPeriodFilter" onchange="loadNotifPage()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:white;cursor:pointer;">
+            <option value="this_month">This Month</option>
+            <option value="this_year">This Year</option>
+            <option value="custom">Select Month…</option>
+          </select>
+          <input type="month" id="notifMonthPicker" onchange="loadNotifPage()" style="display:none;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:white;">
+          <button onclick="markAllReadPage()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;font-family:inherit;color:var(--text-light);cursor:pointer;">Mark all read</button>
+        </div>
+
+        <!-- Notification list -->
+        <div id="notifPageList" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+          <div style="padding:32px;text-align:center;color:#aaa;font-size:13px;">Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Subscription ═══ -->
+    <section class="section" id="section-subscription">
+      <div class="section-card">
+        <div class="section-title"><span class="lang-en">Subscription</span><span class="lang-ko" style="display:none;">구독</span></div>
+        <div class="section-desc"><span class="lang-en">Your current plan and usage.</span><span class="lang-ko" style="display:none;">현재 플랜과 사용량.</span></div>
+        <div id="subContent"><div style="color:#888;font-size:14px;"><span class="lang-en">Loading…</span><span class="lang-ko" style="display:none;">로딩 중…</span></div></div>
+      </div>
+    </section>
+
+    <!-- ═══ Payment ═══ -->
+    <section class="section" id="section-payment">
+      <div class="section-card">
+        <div class="section-title"><span class="lang-en">Payment</span><span class="lang-ko" style="display:none;">결제</span></div>
+        <div class="section-desc"><span class="lang-en">Manage your billing details and view invoices.</span><span class="lang-ko" style="display:none;">결제 정보를 관리하고 청구서를 확인하세요.</span></div>
+        <div class="payment-status not-connected" id="portalStatus" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="portalStatusText"></span>
+        </div>
+        <button class="payment-btn" id="portalBtn" onclick="openPortal()">
+          <div class="payment-btn-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div>
+            <div class="payment-btn-text"><span class="lang-en">Manage Billing</span><span class="lang-ko" style="display:none;">결제 관리</span></div>
+            <div class="payment-btn-sub"><span class="lang-en">Update card, view invoices, download receipts</span><span class="lang-ko" style="display:none;">카드 변경, 청구서 확인, 영수증 다운로드</span></div>
+          </div>
+        </button>
+        <p style="font-size:12px;color:var(--text-light);"><span class="lang-en">You'll be redirected to our secure billing portal powered by Stripe.</span><span class="lang-ko" style="display:none;">Stripe에서 제공하는 안전한 결제 포털로 이동합니다.</span></p>
+      </div>
+    </section>
+
+    <!-- ═══ Security ═══ -->
+    <section class="section" id="section-security">
+      <div class="section-card">
+        <div class="section-title"><span class="lang-en">Security</span><span class="lang-ko" style="display:none;">보안</span></div>
+        <div class="section-desc"><span class="lang-en">Manage your email, password, and account access.</span><span class="lang-ko" style="display:none;">이메일, 비밀번호, 계정 접근을 관리하세요.</span></div>
+
+        <!-- Email -->
+        <div class="security-row">
+          <div>
+            <div class="security-label">Email Address</div>
+            <div class="security-value" id="securityEmail"></div>
+          </div>
+          <button class="btn-change" onclick="toggleEmailForm()">Update</button>
+        </div>
+        <div class="inline-form" id="emailForm">
+          <div class="alert alert-error" id="emailError"></div>
+          <div class="alert alert-success" id="emailSuccess"></div>
+          <div class="pw-field">
+            <label>New Email Address</label>
+            <div class="pw-wrap">
+              <input type="email" id="emailNew" placeholder="your-new-email@example.com" style="padding-right:14px;">
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text-light);margin-bottom:12px;">A confirmation link will be sent to both your current and new email addresses. The change takes effect once confirmed.</p>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-save" id="btnEmailSave" onclick="saveEmail()">Send Confirmation</button>
+            <button class="btn-cancel" onclick="toggleEmailForm()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="security-row">
+          <div>
+            <div class="security-label">Password</div>
+            <div class="security-value">Last changed: unknown</div>
+          </div>
+          <button class="btn-change" onclick="togglePwForm()">Change</button>
+        </div>
+        <div class="inline-form" id="pwForm">
+          <div class="alert alert-error" id="pwError"></div>
+          <div class="alert alert-success" id="pwSuccess"></div>
+          <div class="pw-field">
+            <label>New Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="pwNew" placeholder="Minimum 8 characters">
+              <button type="button" class="pw-toggle" onclick="togglePW('pwNew')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div class="pw-field">
+            <label>Confirm Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="pwConfirm" placeholder="Re-enter new password">
+              <button type="button" class="pw-toggle" onclick="togglePW('pwConfirm')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button class="btn-save" id="btnPwSave" onclick="savePassword()">Update Password</button>
+            <button class="btn-cancel" onclick="togglePwForm()">Cancel</button>
+          </div>
+        </div>
+        <!-- Admin PIN (admin only) -->
+        <div id="adminPinSection" style="display:none;">
+          <div class="security-row">
+            <div>
+              <div class="security-label">Manual Override PIN <span class="admin-badge" style="background:#fff3e0;color:#e65100;">Admin</span></div>
+              <div class="security-value">4-digit PIN for Manual Override access</div>
+            </div>
+            <button class="btn-change" onclick="togglePinForm()">Change</button>
+          </div>
+          <div class="inline-form" id="pinForm" style="display:none;">
+            <div class="alert alert-error" id="pinError"></div>
+            <div class="alert alert-success" id="pinSuccess"></div>
+            <div class="pw-field">
+              <label>New 4-digit PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="pinNew" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div class="pw-field">
+              <label>Confirm PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="pinConfirm" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn-save" id="btnPinSave" onclick="saveAdminPin()">Update PIN</button>
+              <button class="btn-cancel" onclick="togglePinForm()">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Gallery PIN -->
+          <div class="security-row" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div>
+              <div class="security-label">Gallery Access PIN <span class="admin-badge" style="background:#e8f5e9;color:#2e7d32;">Team App</span></div>
+              <div class="security-value">워커가 갤러리에서 사진 선택할 때 사용 (예외 상황용)</div>
+            </div>
+            <button class="btn-change" onclick="toggleGalleryPinForm()">Change</button>
+          </div>
+          <div class="inline-form" id="galleryPinForm" style="display:none;">
+            <div class="alert alert-error" id="galleryPinError"></div>
+            <div class="alert alert-success" id="galleryPinSuccess"></div>
+            <div class="pw-field">
+              <label>New 4-digit PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="galleryPinNew" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div class="pw-field">
+              <label>Confirm PIN</label>
+              <div class="pw-wrap">
+                <input type="password" id="galleryPinConfirm" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]{4}" style="letter-spacing:8px;font-weight:700;text-align:center;">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn-save" onclick="saveGalleryPin()">Update PIN</button>
+              <button class="btn-cancel" onclick="toggleGalleryPinForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Delete ═══ -->
+    <section class="section" id="section-delete">
+      <div class="section-card">
+        <div class="section-title" style="color:var(--red);"><span class="lang-en">Delete Account</span><span class="lang-ko" style="display:none;">계정 삭제</span></div>
+        <div class="section-desc"><span class="lang-en">Permanently remove your account and all data.</span><span class="lang-ko" style="display:none;">계정과 모든 데이터를 영구적으로 삭제합니다.</span></div>
+        <div class="delete-warning">
+          <p><span class="lang-en">Deleting your account will permanently remove all your property data, service history, and subscription information. This action cannot be undone.</span><span class="lang-ko" style="display:none;">계정 삭제 시 모든 부동산 데이터, 서비스 이력, 구독 정보가 영구 삭제됩니다. 이 작업은 취소할 수 없습니다.</span></p>
+          <p><span class="lang-en">Any active subscriptions must be cancelled before deletion. Unused purchased Service Hours will be refunded at 70% of face value in accordance with our cancellation policy.</span><span class="lang-ko" style="display:none;">삭제 전 활성 구독은 해지해야 합니다. 미사용 Service Hours는 해지 정책에 따라 액면가의 70%로 환불됩니다.</span></p>
+        </div>
+        <p style="font-size:13px;color:var(--text-light);margin-bottom:20px;"><span class="lang-en">To proceed, send a deletion request to our support team. We will process your request within 30 days in accordance with the Australian Privacy Act 1988.</span><span class="lang-ko" style="display:none;">계속하려면 지원팀에 삭제 요청을 보내세요. 호주 개인정보보호법 1988에 따라 30일 이내에 처리됩니다.</span></p>
+        <a class="btn-delete" id="deletionEmailLink" href="#"><span class="lang-en">Send Deletion Request</span><span class="lang-ko" style="display:none;">삭제 요청 보내기</span></a>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Dashboard ═══ -->
+    <section class="section" id="section-dashboard">
+      <div class="section-card">
+        <div class="section-title">Dashboard <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Quick overview of items requiring attention.</div>
+        
+        <!-- CTA Cards Row 1: Action Items -->
+        <div class="cta-grid" id="ctaCards">
+          <div class="cta-card cta-pending" onclick="switchSection('jobrequests')">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaPendingJobs">—</div>
+              <div class="cta-label">Pending Jobs</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+          <div class="cta-card cta-payment" onclick="switchSection('subscribers')">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaPaymentIssues">—</div>
+              <div class="cta-label">Payment Issues</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+          <div class="cta-card cta-noplan" onclick="switchSection('properties')">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaNoPlanProps">—</div>
+              <div class="cta-label">No Plan Properties</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+          <div class="cta-card cta-chlow" onclick="switchSection('subscribers')">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaChLow">—</div>
+              <div class="cta-label">CH Low Alert</div>
+            </div>
+            <div class="cta-arrow">→</div>
+          </div>
+        </div>
+        
+        <!-- CTA Cards Row 2: Revenue -->
+        <div class="cta-grid" style="margin-top:16px;grid-template-columns:repeat(3, 1fr);">
+          <div class="cta-card cta-revenue">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaRevenueMonth">—</div>
+              <div class="cta-label">This Month Revenue</div>
+            </div>
+          </div>
+          <div class="cta-card cta-fees">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaFeesMonth">—</div>
+              <div class="cta-label">Stripe Fees</div>
+            </div>
+          </div>
+          <div class="cta-card cta-net">
+            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="cta-content">
+              <div class="cta-value" id="ctaNetMonth">—</div>
+              <div class="cta-label">Net Revenue</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div style="margin-top:24px;">
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">📊 This Month Overview</div>
+          <div class="stat-row">
+            <div class="stat-mini"><div class="stat-mini-label">Cleanings</div><div class="stat-mini-value" id="dashCleaningsMonth">—</div></div>
+            <div class="stat-mini"><div class="stat-mini-label">Jobs Completed</div><div class="stat-mini-value" id="dashJobsMonth">—</div></div>
+            <div class="stat-mini"><div class="stat-mini-label">Active Subs</div><div class="stat-mini-value" id="dashActiveSubs">—</div></div>
+            <div class="stat-mini"><div class="stat-mini-label">Total CH Used</div><div class="stat-mini-value" id="dashChUsed">—</div></div>
+          </div>
+        </div>
+        
+        <!-- Cleanings & Job Requests -->
+        <div style="margin-top:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);">📅 Cleanings & Job Requests</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="dashJobTypeFilter" onchange="loadDashboardJobs()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+                <option value="all">All Types</option>
+                <option value="cleaning">Cleanings</option>
+                <option value="service">Job Requests</option>
+              </select>
+              <select id="dashPeriodFilter" onchange="loadDashboardJobs()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
+                <option value="7days">Next 7 Days</option>
+                <option value="month">This Month</option>
+                <option value="all">All</option>
+              </select>
+              <button class="btn-action-sm" onclick="switchSection('calendar')">View Calendar</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Property / Description</th><th>Team</th><th>Status</th></tr></thead>
+              <tbody id="dashUpcomingBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ AI Tasks 요약 카드 (Dashboard) ═══ -->
+      <div class="section-card" id="aiTasksSummaryCard" style="margin-top:16px;cursor:pointer" onclick="switchSection('aitasks')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div class="section-title" style="margin:0">AI Tasks (의사결정)</div>
+              <span class="admin-badge" style="background:#f0f4ff;color:#3730a3">CEO Agent</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-light)" id="aiSummaryDesc">로딩 중…</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+            <div id="aiSummaryBadge" style="display:none;font-size:13px;font-weight:700;background:#fff3e0;color:#e65100;padding:4px 12px;border-radius:20px"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--text-light)"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: AI Tasks (의사결정) ═══ -->
+    <section class="section" id="section-aitasks">
+      <div class="section-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div>
+            <div class="section-title">AI Tasks (의사결정) <span class="admin-badge" style="background:#f0f4ff;color:#3730a3">CEO Agent</span></div>
+            <div class="section-desc">매주 금요일 CEO 에이전트가 생성한 태스크를 검토하고 승인하세요.</div>
+          </div>
+          <button onclick="loadAITasks()" style="font-size:12px;color:var(--text-light);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--border);flex-shrink:0">↻ 새로고침</button>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px">
+          <button id="aiTab-pending" onclick="switchAITab('pending')" style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--orange);color:var(--navy);margin-bottom:-1px">검토 대기</button>
+          <button id="aiTab-history" onclick="switchAITab('history')" style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-light);margin-bottom:-1px">결정 내역</button>
+        </div>
+        <div id="aiTasksList"><div style="font-size:13px;color:var(--text-light);padding:12px 0">로딩 중…</div></div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Job Requests ═══ -->
+    <section class="section" id="section-jobrequests">
+      <div class="section-card">
+        <div class="section-title">Job Requests <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Manage service requests from customers.</div>
+        <div class="stat-row" id="jobStats">
+          <div class="stat-mini"><div class="stat-mini-label">Pending</div><div class="stat-mini-value" id="statJobPending">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Confirmed</div><div class="stat-mini-value" id="statJobConfirmed">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">In Progress</div><div class="stat-mini-value" id="statJobInProgress">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Completed</div><div class="stat-mini-value" id="statJobCompleted">—</div></div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="jobSearch" placeholder="Search customer or description…" oninput="filterJobRequests()" style="flex:1;min-width:180px;">
+          <select class="filter-input" id="jobStatusFilter" onchange="loadJobRequests()">
+            <option value="">All statuses</option>
+            <option value="requested">Requested</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Customer</th><th>Address</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Actual</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="jobsBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Cleanings ═══ -->
+    <section class="section" id="section-cleanings">
+      <div class="section-card">
+        <div class="section-title">Cleanings <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Manage cleaning visits — confirm dates and assign team.</div>
+        <div class="stat-row" id="schedStats">
+          <div class="stat-mini"><div class="stat-mini-label">Pending</div><div class="stat-mini-value" id="statSchedPending">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Scheduled</div><div class="stat-mini-value" id="statSchedScheduled">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Completed</div><div class="stat-mini-value" id="statSchedCompleted">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">This Month</div><div class="stat-mini-value" id="statSchedThisMonth">—</div></div>
+        </div>
+        <div class="filter-bar">
+          <select class="filter-input" id="schedPeriodFilter" onchange="handlePeriodChange()">
+            <option value="1m">This month</option>
+            <option value="2m">Until next month</option>
+            <option value="all">All (past & future)</option>
+            <option value="custom">Custom range</option>
+          </select>
+          <input type="date" class="filter-input" id="schedDateFrom" style="display:none;" onchange="loadSchedules()">
+          <input type="date" class="filter-input" id="schedDateTo" style="display:none;" onchange="loadSchedules()">
+          <select class="filter-input" id="schedStatusFilter" onchange="loadSchedules()">
+            <option value="">All statuses</option>
+            <option value="requested">Requested</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select class="filter-input" id="schedAreaFilter" onchange="loadSchedules()">
+            <option value="">All areas</option>
+          </select>
+          <select class="filter-input" id="schedWorkerFilter" onchange="loadSchedules()">
+            <option value="">All team</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Team</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="schedulesBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Calendar ═══ -->
+    <section class="section" id="section-calendar">
+      <div class="section-card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <div class="section-title" style="margin-bottom:4px;">Cleaning Calendar <span class="admin-badge">Admin</span></div>
+            <div class="section-desc" style="margin-bottom:0;">Drag & drop to schedule cleanings. Same color = nearby areas.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="filter-input" id="calAreaFilter" onchange="filterCalendarByArea()">
+              <option value="">All areas</option>
+            </select>
+            <select class="filter-input" id="calWorkerFilter" onchange="filterCalendarByWorker()">
+              <option value="">All team</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;">
+          <div id="calendarContainer"></div>
+          <div class="unscheduled-panel">
+            <div class="unscheduled-header">
+              <span>📋 Unscheduled</span>
+              <span class="unscheduled-count" id="unschedCount">0</span>
+            </div>
+            <div class="unscheduled-list" id="unscheduledList">
+              <div class="empty-state" style="padding:20px;font-size:12px;">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <!-- Area Color Legend -->
+        <div class="area-legend" style="margin-top:16px;padding:12px;background:#f9f9f9;border-radius:8px;">
+          <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:8px;">AREA COLORS (by distance)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
+            <span class="area-legend-item" style="background:#3F51B5;color:#fff;">Indigo: SE Inner/East</span>
+            <span class="area-legend-item" style="background:#2196F3;color:#fff;">Blue: Inner South/SE Mid/CBD</span>
+            <span class="area-legend-item" style="background:#009688;color:#fff;">Teal: SE Outer/Melville/NE Inner</span>
+            <span class="area-legend-item" style="background:#4CAF50;color:#fff;">Green: NE Mid/West/Cockburn/Freo</span>
+            <span class="area-legend-item" style="background:#FFEB3B;color:#333;">Yellow: NE Outer/North Inner</span>
+            <span class="area-legend-item" style="background:#FF9800;color:#fff;">Orange: North Outer</span>
+            <span class="area-legend-item" style="background:#F44336;color:#fff;">Red: Rockingham</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Workers ═══ -->
+    <section class="section" id="section-workers">
+      <div class="section-card">
+        <div class="section-title">Haven+ Team <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">Manage service team members.</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+          <button class="btn-save" onclick="openWorkerModal()">+ Add Member</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>T-code</th><th>Name</th><th>Phone</th><th>Area</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="workersBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Subscribers ═══ -->
+    <section class="section" id="section-subscribers">
+      <div class="section-card">
+        <div class="section-title">Subscribers <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">All active and inactive subscribers.</div>
+        <div class="stat-row" id="subStats">
+          <div class="stat-mini"><div class="stat-mini-label">Total Active</div><div class="stat-mini-value" id="statActive">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Essential</div><div class="stat-mini-value" id="statEssential">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Smart</div><div class="stat-mini-value" id="statSmart">—</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Premium</div><div class="stat-mini-value" id="statPremium">—</div></div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="subSearch" placeholder="Search name or phone…" oninput="filterSubscribers()" style="flex:1;min-width:180px;">
+          <select class="filter-input" id="subPlanFilter" onchange="filterSubscribers()">
+            <option value="">All plans</option>
+            <option value="essential">Essential</option>
+            <option value="smart">Smart</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Status</th><th>Clean hrs</th><th>SH left</th><th>Start</th></tr></thead>
+            <tbody id="subsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Properties ═══ -->
+    <section class="section" id="section-properties">
+      <div class="section-card">
+        <div class="section-title">All Properties <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">View all registered properties and manage area assignments.</div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="propSearch" placeholder="Search address or suburb…" oninput="filterProperties()" style="flex:1;min-width:180px;">
+          <select class="filter-input" id="propAreaFilter" onchange="filterProperties()">
+            <option value="">All areas</option>
+          </select>
+          <button class="btn-save" onclick="autoAssignAllAreas()" style="white-space:nowrap;">Auto-assign Areas</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Address</th><th>Suburb</th><th>Area</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Actions</th></tr></thead>
+            <tbody id="propsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Customers ═══ -->
+    <section class="section" id="section-customers">
+      <div class="section-card">
+        <div class="section-title">Customers <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">All registered users.</div>
+        <div class="filter-bar">
+          <input type="text" class="filter-input" id="custSearch" placeholder="Search name, email, or phone…" oninput="filterCustomers()" style="flex:1;min-width:180px;">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Language</th><th>Role</th><th>Joined</th></tr></thead>
+            <tbody id="customersBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Hours Log ═══ -->
+    <section class="section" id="section-hourslog">
+      <div class="section-card">
+        <div class="section-title">Hours Log <span class="admin-badge">Admin</span></div>
+        <div class="section-desc">SH transaction history across all customers.</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Customer</th><th>Type</th><th>Amount</th><th>Voucher bal.</th><th>Purchased bal.</th><th>Note</th></tr></thead>
+            <tbody id="hoursBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Admin: Manage Data ═══ -->
+    <section class="section" id="section-manage">
+      <div class="section-card">
+        <div class="section-title">⚠ Manual Override <span class="admin-badge" style="background:#fff3e0;color:#e65100;">Caution</span></div>
+        <div class="section-desc" style="color:var(--red);">Directly modify subscription and service hours data — bypasses payment. Use with caution.</div>
+
+        <!-- Tabs -->
+        <div style="display:flex; gap:0; border-bottom:2px solid var(--border); margin:20px 0 24px;">
+          <button id="tabSubscriptions" onclick="switchManageTab('subscriptions')" style="border:none; background:none; padding:10px 20px; font-size:14px; font-weight:700; font-family:inherit; color:var(--navy); cursor:pointer; border-bottom:3px solid var(--navy); margin-bottom:-2px;">Subscriptions</button>
+          <button id="tabServiceHours" onclick="switchManageTab('serviceHours')" style="border:none; background:none; padding:10px 20px; font-size:14px; font-weight:700; font-family:inherit; color:var(--text-secondary); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px;">Service Hours</button>
+        </div>
+
+        <!-- Subscriptions Panel -->
+        <div id="panelSubscriptions" style="display: block;">
+          <div class="filter-bar">
+            <input type="text" class="filter-input" id="subSearchInput" placeholder="Search by name or phone" oninput="filterManageSubs()">
+            <button class="btn-action-sm" onclick="openAddSubModal()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; font-size: 13px;">+ Add Subscription</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>Property</th><th>Plan</th><th>Status</th><th>Clean Hrs</th><th>SH Hrs</th><th>Start Date</th><th>Actions</th></tr></thead>
+              <tbody id="manageSubsBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Service Hours Panel -->
+        <div id="panelServiceHours" style="display: none;">
+          <div class="filter-bar">
+            <input type="text" class="filter-input" id="shSearchInput" placeholder="Search by name or phone" oninput="filterManageSH()">
+            <button class="btn-action-sm" onclick="openAddSHModal()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; font-size: 13px;">+ Add SH Balance</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer</th><th>Purchased</th><th>Granted</th><th>Label</th><th>Balance</th><th>Actions</th></tr></thead>
+              <tbody id="manageSHBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══ Admin Modals ══════════════════════════════════════════ -->
+
+<!-- Job Request Edit Modal -->
+<div class="modal-overlay" id="jobEditModal" onclick="if(event.target===this)closeJobEditModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Edit Job Request</div>
+      <button class="modal-close" onclick="closeJobEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="jobEditAlert"></div>
+      <input type="hidden" id="jobEditId">
+
+      <!-- Reschedule Request Banner -->
+      <div id="jobRescheduleBanner" style="display:none;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📅 Reschedule Request Pending</div>
+        <div style="font-size:13px;color:#78350f;margin-bottom:10px;">
+          <span>Proposed date: <strong id="jobRescheduleProposedDate">—</strong></span>
+          <span id="jobRescheduleNoteWrap" style="display:none;"> · Note: <em id="jobRescheduleNote">—</em></span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="modal-btn modal-btn-primary" style="flex:1;background:#059669;" onclick="approveReschedule('service')">✓ Approve & Update Date</button>
+          <button class="modal-btn modal-btn-secondary" style="flex:1;" onclick="rejectReschedule('service')">✕ Reject</button>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Status</label>
+        <select id="jobEditStatus">
+          <option value="requested">Requested</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Scheduled Date</label>
+          <input type="date" id="jobEditDate">
+        </div>
+        <div class="modal-form-group">
+          <label>Scheduled Time</label>
+          <input type="hidden" id="jobEditTime">
+          <div id="jobTimeGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Assigned Team</label>
+        <select id="jobEditWorker">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>SH Estimate</label>
+          <input type="number" id="jobEditEstimate" step="0.5" min="0.5">
+        </div>
+        <div class="modal-form-group">
+          <label>Actual SH Used</label>
+          <input type="number" id="jobEditActual" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Admin Notes</label>
+        <textarea id="jobEditNotes" placeholder="Internal notes…"></textarea>
+      </div>
+      <div id="jobEditPhotosSection" style="display:none;margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-light);display:block;margin-bottom:8px;">📷 Customer Photos</label>
+        <div id="jobEditPhotosGrid" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeJobEditModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveJob" onclick="saveJobEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cleanings Edit Modal (Enhanced) -->
+<div class="modal-overlay" id="schedEditModal" onclick="if(event.target===this)closeSchedEditModal()">
+  <div class="modal-box" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title">Edit Cleaning</div>
+      <button class="modal-close" onclick="closeSchedEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="schedEditAlert"></div>
+      <input type="hidden" id="schedEditId">
+      
+      <!-- Property Info -->
+      <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;" id="schedEditAddress">—</div>
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-light);flex-wrap:wrap;">
+          <span id="schedEditAreaBadge" class="area-badge" style="font-size:11px;">—</span>
+          <span id="schedEditBedBath">— bed / — bath</span>
+        </div>
+      </div>
+      
+      <!-- Customer Preferences -->
+      <div style="background:#fff8e1;border-radius:10px;padding:14px;margin-bottom:16px;border-left:4px solid #f39c12;">
+        <div style="font-size:11px;font-weight:700;color:#b7791f;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📋 Customer Preferences</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
+          <div><span style="color:var(--text-light);">Day:</span> <strong id="schedEditPrefDay">—</strong></div>
+          <div><span style="color:var(--text-light);">Time:</span> <strong id="schedEditPrefTime">—</strong></div>
+          <div><span style="color:var(--text-light);">Presence:</span> <strong id="schedEditPrefPresence">—</strong></div>
+        </div>
+        <div id="schedEditCleaningNotes" style="margin-top:8px;font-size:12px;color:var(--text);display:none;"></div>
+      </div>
+      
+      <!-- Schedule -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📅 Schedule</div>
+        <div class="modal-form-row">
+          <div class="modal-form-group">
+            <label>Date</label>
+            <input type="date" id="schedEditDate" onchange="checkWorkerConflicts()">
+          </div>
+          <div class="modal-form-group">
+            <label>Start Time</label>
+            <input type="hidden" id="schedEditTime">
+            <div id="schedTimeGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;"></div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <label>Estimated cleaning duration (hours)</label>
+          <input type="number" id="schedEditDuration" step="0.5" min="0.5" value="2" onchange="updateChCalculation();checkWorkerConflicts()">
+        </div>
+      </div>
+      
+      <!-- Worker Assignment -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">👷 Assign Haven+ Team</div>
+        <div id="schedEditWorkerList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;">
+          <!-- Workers will be populated here -->
+        </div>
+        <div id="schedEditConflictAlert" style="margin-top:8px;display:none;"></div>
+      </div>
+      
+      <!-- Summary -->
+      <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📊 Summary</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
+          <div>Team: <strong id="schedEditWorkerCount">0</strong></div>
+          <div>Duration: <strong id="schedEditDurationDisplay">2 hrs</strong></div>
+          <div>End Time: <strong id="schedEditEndTime">—</strong></div>
+          <div>CH to deduct: <strong id="schedEditChDeduct">0 hrs</strong></div>
+        </div>
+      </div>
+      
+      <!-- Photos -->
+      <div id="schedPhotosSection" style="margin-bottom:16px;display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📷 Job Photos</div>
+        <div id="schedPhotosContent"></div>
+      </div>
+
+      <!-- Worker Notes -->
+      <div id="schedNotesSection" style="margin-bottom:16px;display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">📝 Worker Notes</div>
+        <div id="schedNotesContent" style="font-size:13px;color:var(--text);background:var(--bg);border-radius:8px;padding:10px 12px;border-left:3px solid var(--orange);"></div>
+      </div>
+
+      <!-- Reschedule Request Banner -->
+      <div id="schedRescheduleBanner" style="display:none;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📅 Reschedule Request Pending</div>
+        <div style="font-size:13px;color:#78350f;margin-bottom:10px;">
+          <span>Proposed date: <strong id="schedRescheduleProposedDate">—</strong></span>
+          <span id="schedRescheduleNoteWrap" style="display:none;"> · Note: <em id="schedRescheduleNote">—</em></span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="modal-btn modal-btn-primary" style="flex:1;background:#059669;" onclick="approveReschedule('cleaning')">✓ Approve & Update Date</button>
+          <button class="modal-btn modal-btn-secondary" style="flex:1;" onclick="rejectReschedule('cleaning')">✕ Reject</button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="modal-form-group">
+        <label>Status</label>
+        <select id="schedEditStatus">
+          <option value="requested">Requested</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px;">💡 Status auto-updates to "Scheduled" when team is assigned.</div>
+      </div>
+      
+      <!-- Reset Schedule -->
+      <div id="schedResetSection" style="margin-top:12px;padding:14px;background:#fff3e0;border-radius:10px;border:1px solid #ffcc80;display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#e65100;text-transform:uppercase;letter-spacing:.05em;">Reset Cleaning Schedule</div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Clears start month & deletes future visits. Customer can re-select from dashboard.</div>
+          </div>
+          <button class="btn-action-sm" onclick="resetScheduleFromCleaning()" style="background:#e65100;color:white;border:none;font-size:11px;white-space:nowrap;">Reset Schedule</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSchedEditModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveSched" onclick="saveSchedEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Add/Edit Modal -->
+<div class="modal-overlay" id="workerModal" onclick="if(event.target===this)closeWorkerModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="workerModalTitle">Add Team Member</div>
+      <button class="modal-close" onclick="closeWorkerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="workerAlert"></div>
+      <input type="hidden" id="workerEditId">
+      <div class="modal-form-group">
+        <label>Full Name *</label>
+        <input type="text" id="workerName" placeholder="e.g. John Smith">
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Phone</label>
+          <input type="tel" id="workerPhone" placeholder="04XX XXX XXX">
+        </div>
+        <div class="modal-form-group">
+          <label>Email</label>
+          <input type="email" id="workerEmail" placeholder="email@example.com">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group" style="flex:2;">
+          <label>Address</label>
+          <input type="text" id="workerAddress" placeholder="Start typing address..." autocomplete="off" oninput="matchWorkerArea()">
+        </div>
+        <div class="modal-form-group" style="flex:1;">
+          <label>Area <span id="workerAreaBadge" style="font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px;"></span></label>
+          <input type="text" id="workerAreaDisplay" readonly style="background:#f5f7fa;cursor:not-allowed;" placeholder="Auto-detected">
+          <input type="hidden" id="workerArea">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Member Type</label>
+          <select id="workerType">
+            <option value="cleaner">Cleaner</option>
+            <option value="handyman">Handyman</option>
+            <option value="electrician">Electrician</option>
+            <option value="plumber">Plumber</option>
+            <option value="multi">Multi-skilled</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Cleaning Rate ($/hr)</label>
+          <input type="number" id="workerCleaningRate" placeholder="e.g. 35" min="0" step="0.5">
+        </div>
+        <div class="modal-form-group">
+          <label>Technician Rate ($/hr)</label>
+          <input type="number" id="workerTechRate" placeholder="e.g. 55" min="0" step="0.5">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Status</label>
+        <select id="workerStatus" style="max-width:200px;">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Notes</label>
+        <textarea id="workerNotes" placeholder="Internal notes about this team member…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeWorkerModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSaveWorker" onclick="saveWorker()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Property Area Edit Modal -->
+<div class="modal-overlay" id="propAreaModal" onclick="if(event.target===this)closePropAreaModal()">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">Edit Property</div>
+      <button class="modal-close" onclick="closePropAreaModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="propAreaAlert"></div>
+      <input type="hidden" id="propAreaEditId">
+      <div class="modal-form-group">
+        <label>Address</label>
+        <input type="text" id="propAreaAddress">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="modal-form-group">
+          <label>Suburb</label>
+          <input type="text" id="propAreaSuburb">
+        </div>
+        <div class="modal-form-group">
+          <label>Postcode</label>
+          <input type="text" id="propEditPostcode" maxlength="4">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Property Type</label>
+        <select id="propEditType">
+          <option value="house">House</option>
+          <option value="apartment">Apartment</option>
+          <option value="townhouse">Townhouse</option>
+          <option value="unit">Unit</option>
+          <option value="studio">Studio</option>
+          <option value="villa">Villa</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="modal-form-group">
+          <label>Bedrooms</label>
+          <input type="number" id="propEditBedrooms" min="0" max="20">
+        </div>
+        <div class="modal-form-group">
+          <label>Bathrooms</label>
+          <input type="number" id="propEditBathrooms" min="0" max="20">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Area</label>
+        <select id="propAreaSelect">
+          <option value="">— Select Area —</option>
+        </select>
+      </div>
+      <div id="propAreaSuggestion" style="font-size:12px;color:var(--text-light);margin-top:-8px;margin-bottom:16px;"></div>
+      <div class="modal-form-group">
+        <label>Access Instructions</label>
+        <textarea id="propEditAccess" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;resize:vertical;" placeholder="e.g. Key under pot, gate code 1234…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closePropAreaModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="btnSavePropArea" onclick="savePropArea()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Subscription Modal -->
+<div class="modal-overlay" id="subManageModal" onclick="if(event.target===this)closeSubManageModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="subManageTitle">Add Subscription</div>
+      <button class="modal-close" onclick="closeSubManageModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="subManageAlert"></div>
+      <input type="hidden" id="subManageEditId">
+      <div class="modal-form-group">
+        <label>Customer *</label>
+        <select id="subManageCustomer" onchange="onSubCustomerChange()">
+          <option value="">Select a customer</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Property *</label>
+        <select id="subManageProperty" onchange="onSubPropertyChange()">
+          <option value="">Select a property</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Plan Type * <span id="subManagePlanHint" style="font-weight:400;font-size:11px;color:var(--text-light);"></span></label>
+        <select id="subManagePlan" onchange="onSubPlanChange()">
+          <option value="">— No Plan (Reset) —</option>
+          <option value="essential">Essential</option>
+          <option value="smart">Smart</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      <div class="modal-form-group">
+        <label>Status *</label>
+        <select id="subManageStatus">
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Start Date</label>
+          <input type="date" id="subManageStartDate">
+        </div>
+        <div class="modal-form-group">
+          <label>End Date</label>
+          <input type="date" id="subManageEndDate">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Cleaning Hours Total</label>
+          <input type="number" id="subManageCleaningTotal" step="1" min="0">
+        </div>
+        <div class="modal-form-group">
+          <label>Cleaning Hours Used</label>
+          <input type="number" id="subManageCleaningUsed" step="1" min="0">
+        </div>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>SH Hours Total</label>
+          <input type="number" id="subManageSHTotal" step="0.5" min="0">
+        </div>
+        <div class="modal-form-group">
+          <label>SH Hours Used</label>
+          <input type="number" id="subManageSHUsed" step="0.5" min="0">
+        </div>
+      </div>
+      <!-- Cleaning Start Month (edit only) -->
+      <div id="subManageCleaningStartSection" style="display:none;margin-bottom:16px;background:#f8f9fa;border-radius:10px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;">Cleaning Start Month</div>
+            <div id="subManageCleaningStartValue" style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;">—</div>
+          </div>
+          <button class="btn-action-sm" onclick="resetCleaningStartMonth()" style="background:#fff3e0;color:#e65100;border:1px solid #ffcc80;font-size:11px;">Reset Schedule</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Reset will clear the cleaning start month so the customer can re-select from their dashboard.</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSubManageModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveSubManage()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit SH Balance Modal -->
+<div class="modal-overlay" id="shManageModal" onclick="if(event.target===this)closeSHManageModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="shManageTitle">Add SH Balance</div>
+      <button class="modal-close" onclick="closeSHManageModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-alert" id="shManageAlert"></div>
+      <input type="hidden" id="shManageEditUserId">
+      <div class="modal-form-group">
+        <label>Customer *</label>
+        <select id="shManageCustomer">
+          <option value="">Select a customer</option>
+        </select>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;">Purchased SH</div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Total</label>
+          <input type="number" id="shManagePurchasedTotal" step="0.5" min="0">
+        </div>
+        <div class="modal-form-group">
+          <label>Used</label>
+          <input type="number" id="shManagePurchasedUsed" step="0.5" min="0">
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;">⚠ Admin Adjusted SH</div>
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Granted Total</label>
+          <input type="number" id="shManageGrantedTotal" step="0.5" min="0" value="0">
+        </div>
+        <div class="modal-form-group">
+          <label>Granted Used</label>
+          <input type="number" id="shManageGrantedUsed" step="0.5" min="0" value="0">
+        </div>
+      </div>
+      <div class="modal-form-group">
+        <label>Label / Reason</label>
+        <select id="shManageGrantLabel">
+          <option value="Bonus">Bonus</option>
+          <option value="Maintenance Compensation">Maintenance Compensation</option>
+          <option value="Referral Reward">Referral Reward</option>
+          <option value="Service Recovery">Service Recovery</option>
+          <option value="Initial Credit">Initial Credit</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="modal-form-group" id="shManageGrantLabelCustomWrap" style="display:none;">
+        <label>Custom Label</label>
+        <input type="text" id="shManageGrantLabelCustom" placeholder="Enter custom label">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeSHManageModal()">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveSHManage()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteConfirmModal" onclick="if(event.target===this)closeDeleteConfirmModal()">
+  <div class="modal-box" style="max-width: 420px;">
+    <div class="modal-header">
+      <div class="modal-title">Confirm Delete</div>
+      <button class="modal-close" onclick="closeDeleteConfirmModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: #fee; border-radius: 10px; padding: 14px; margin-bottom: 16px; border-left: 4px solid var(--red);">
+        <div style="font-weight: 700; color: var(--red); margin-bottom: 4px;">Are you sure?</div>
+        <div id="deleteConfirmMessage" style="font-size: 13px; color: var(--text);"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeDeleteConfirmModal()">Cancel</button>
+        <button class="modal-btn modal-btn-danger" id="deleteConfirmBtn" onclick="performConfirmedDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN Gate Modal for Manual Override -->
+<div class="modal-overlay" id="pinGateModal" onclick="if(event.target===this)closePinGate()">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">⚠ Manual Override</div>
+      <button class="modal-close" onclick="closePinGate()">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Enter 4-digit PIN to access Manual Override.</p>
+      <div class="modal-alert" id="pinGateAlert"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;" id="pinInputGroup">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,0)" onkeydown="onPinKeydown(event,0)">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,1)" onkeydown="onPinKeydown(event,1)">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,2)" onkeydown="onPinKeydown(event,2)">
+        <input type="password" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]" oninput="onPinInput(this,3)" onkeydown="onPinKeydown(event,3)">
+      </div>
+      <button class="modal-btn modal-btn-primary" style="width:100%;" onclick="verifyPin()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-
 /* ══════════════════════════════════════════════════════════
    Haven Plus — Profile  (v2)
    Fixed: Supabase key, nav parity, portal, email update,
@@ -746,6 +2068,7 @@ function switchSection(name) {
   if (name === 'workers')      loadWorkers();
   if (name === 'properties')   loadProperties();
   if (name === 'customers')    loadCustomers();
+  if (name === 'payments')     loadPaymentsSection();
   if (name === 'notifications') loadNotifPage();
   if (name === 'manage') {
     if (!manageUnlocked) { openPinGate(); return; }
@@ -4242,10 +5565,19 @@ async function performConfirmedDelete() {
     el.style.display = lang === 'ko' ? '' : 'none';
   });
 })();
-
 </script>
-<script>
 
+<!-- Admin Photo Lightbox -->
+<div class="admin-lightbox" id="adminLightbox" onclick="if(event.target===this)closeAdminLb()">
+  <button class="admin-lb-close" onclick="closeAdminLb()">×</button>
+  <img id="adminLbImage" src="">
+  <div class="admin-lb-label" id="adminLbLabel"></div>
+  <div class="admin-lb-nav">
+    <button onclick="navAdminLb(-1)">← Prev</button>
+    <button onclick="navAdminLb(1)">Next →</button>
+  </div>
+</div>
+<script>
 let adminLbImages = [], adminLbIndex = 0;
 function openAdminLb(imgEl, idx) {
   const row = imgEl.closest('.admin-photo-row');
@@ -4500,10 +5832,6 @@ async function markAllReadPage() {
   } catch(e) { console.warn('markAllReadPage error:', e); }
 }
 
-</script>
-<script>
-
-
 /* ══ Payments Section ════════════════════════════════════════════════ */
 
 let allPaymentsData = [];
@@ -4522,9 +5850,7 @@ function onPayPeriodChange() {
 async function loadPaymentsSection() {
   const tbody = document.getElementById('payTableBody');
   tbody.innerHTML = '<tr><td colspan="8" class="pay-empty">Loading...</td></tr>';
-
   try {
-    // 기간 필터 계산
     const periodType = document.getElementById('payPeriodType').value;
     const year = parseInt(document.getElementById('payYear').value);
     const month = parseInt(document.getElementById('payMonth').value);
@@ -4542,18 +5868,13 @@ async function loadPaymentsSection() {
       const pad = n => String(n).padStart(2, '0');
       query = query.gte('paid_at', `${year}-${pad(month)}-01`).lt('paid_at', `${nextYear}-${pad(nextMonth)}-01`);
     }
-
-    if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter);
-    }
+    if (statusFilter !== 'all') query = query.eq('status', statusFilter);
 
     const { data, error } = await query.limit(200);
     if (error) throw error;
-
     allPaymentsData = data || [];
     renderPaymentsTable(allPaymentsData);
     renderPaymentsSummary(allPaymentsData);
-
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="8" class="pay-empty">Error: ${e.message}</td></tr>`;
   }
@@ -4564,7 +5885,6 @@ function renderPaymentsSummary(data) {
   const fees = data.reduce((s, p) => s + parseFloat(p.stripe_fee || 0), 0);
   const net = data.reduce((s, p) => s + parseFloat(p.net_amount || 0), 0);
   const refunded = data.reduce((s, p) => s + parseFloat(p.refund_amount || 0), 0);
-
   document.getElementById('payTotalRevenue').textContent = `$${revenue.toFixed(2)}`;
   document.getElementById('payTotalFees').textContent = `$${fees.toFixed(2)}`;
   document.getElementById('payTotalNet').textContent = `$${net.toFixed(2)}`;
@@ -4573,16 +5893,8 @@ function renderPaymentsSummary(data) {
 
 function renderPaymentsTable(data) {
   const tbody = document.getElementById('payTableBody');
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="pay-empty">No payment records found.</td></tr>';
-    return;
-  }
-
-  const typeLabel = {
-    subscription: 'Subscription', sh_bundle: 'SH Bundle',
-    refund: 'Refund', additional_charge: 'Additional Charge'
-  };
-
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" class="pay-empty">No payment records found.</td></tr>'; return; }
+  const typeLabel = { subscription: 'Subscription', sh_bundle: 'SH Bundle', refund: 'Refund', additional_charge: 'Additional Charge' };
   tbody.innerHTML = data.map(p => {
     const date = new Date(p.paid_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const customer = p.profiles?.full_name || '—';
@@ -4593,9 +5905,7 @@ function renderPaymentsTable(data) {
     const net = p.net_amount ? `$${parseFloat(p.net_amount).toFixed(2)}` : '—';
     const status = p.status || 'paid';
     const refundInfo = p.refund_amount ? `<br><small style="color:#e65100">Refunded: -$${parseFloat(p.refund_amount).toFixed(2)}</small>` : '';
-
-    const canRefund = p.stripe_charge_id && !['refunded', 'cancelled'].includes(p.status) && p.payment_type !== 'additional_charge';
-
+    const canRefund = p.stripe_charge_id && !['refunded','cancelled'].includes(p.status) && p.payment_type !== 'additional_charge';
     return `<tr>
       <td style="white-space:nowrap">${date}</td>
       <td>${customer}</td>
@@ -4603,29 +5913,22 @@ function renderPaymentsTable(data) {
       <td>${amount}${refundInfo}</td>
       <td style="color:#888">${fee}</td>
       <td style="font-weight:700">${net}</td>
-      <td><span class="pay-badge ${status}">${status.replace('_', ' ')}</span></td>
-      <td>
-        ${canRefund ? `<button class="pay-btn refund" onclick="openRefundModal('${p.id}')">Refund</button>` : ''}
-      </td>
+      <td><span class="pay-badge ${status}">${status.replace(/_/g,' ')}</span></td>
+      <td>${canRefund ? `<button class="pay-btn refund" onclick="openRefundModal('${p.id}')">Refund</button>` : ''}</td>
     </tr>`;
   }).join('');
 }
 
-// ── 환불 모달 ──
 async function openRefundModal(paymentId) {
   const payment = allPaymentsData.find(p => p.id === paymentId);
   if (!payment) return;
-
   currentRefundPayment = payment;
-
   document.getElementById('refundCustomer').textContent = payment.profiles?.full_name || '—';
   document.getElementById('refundOriginal').textContent =
     `${payment.payment_type === 'sh_bundle' ? 'SH Bundle' : 'Subscription'} — $${parseFloat(payment.amount).toFixed(2)} on ${new Date(payment.paid_at).toLocaleDateString('en-AU')}`;
-
   document.getElementById('refundAmount').value = '';
   document.getElementById('refundReason').value = '';
   document.getElementById('refundCalc').textContent = 'Select refund type to calculate amount.';
-
   document.getElementById('refundModal').style.display = 'flex';
   onRefundTypeChange();
 }
@@ -4647,14 +5950,11 @@ async function onRefundTypeChange() {
     amountEl.value = amount.toFixed(2);
     amountEl.readOnly = true;
     calcEl.innerHTML = `<strong>Cooling-off (within 30 days)</strong><br>Full refund: <strong>$${amount.toFixed(2)}</strong>`;
-
   } else if (type === 'sh_bundle') {
-    // SH번들: 잔여SH × $99
     const { data: sub } = await sb.from('subscriptions').select('sh_hours_total, sh_hours_used').eq('id', p.subscription_id).maybeSingle();
     if (sub) {
-      const remaining = Math.max(0, parseFloat(sub.sh_hours_total) - parseFloat(sub.sh_hours_used || 0));
       const bundleSize = p.sh_bundle_size || 0;
-      const usedSH = bundleSize - remaining;
+      const usedSH = Math.max(0, bundleSize - (parseFloat(sub.sh_hours_total) - parseFloat(sub.sh_hours_used || 0)));
       const usedCost = usedSH * 99;
       const refund = Math.max(0, amount - usedCost);
       amountEl.value = refund.toFixed(2);
@@ -4662,48 +5962,30 @@ async function onRefundTypeChange() {
       calcEl.innerHTML = `<strong>SH Bundle Refund</strong><br>
         Bundle: ${bundleSize} SH ($${amount.toFixed(2)})<br>
         Used: ${usedSH.toFixed(2)} SH × $99 = $${usedCost.toFixed(2)}<br>
-        Remaining: ${remaining.toFixed(2)} SH<br>
         <strong>Refund: $${refund.toFixed(2)}</strong>`;
     }
-
   } else if (type === 'subscription_cancel') {
-    // 구독 취소: 경과월 계산
     const { data: sub } = await sb.from('subscriptions').select('start_date, plan_type').eq('id', p.subscription_id).maybeSingle();
     if (sub) {
       const start = new Date(sub.start_date);
-      const now = new Date();
-      const diffMs = now - start;
-      const elapsedMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30.44));
+      const elapsedMonths = Math.ceil((new Date() - start) / (1000 * 60 * 60 * 24 * 30.44));
       const remaining = Math.max(0, 12 - elapsedMonths);
       const monthly = PLAN_MONTHLY[sub.plan_type] || 0;
-
-      let termFee = 0;
-      let termFeeNote = '';
-      if (elapsedMonths <= 1) {
-        termFeeNote = 'Within cooling-off — no termination fee';
-      } else if (elapsedMonths <= 6) {
-        termFee = remaining * monthly * 0.2;
-        termFeeNote = `${remaining} months × $${monthly} × 20% = $${termFee.toFixed(2)}`;
-      } else {
-        termFee = remaining * monthly * 0.1;
-        termFeeNote = `${remaining} months × $${monthly} × 10% = $${termFee.toFixed(2)}`;
-      }
-
-      // 월납이면 환불 $0, 연납이면 잔여월 환불
+      let termFee = 0, termFeeNote = '';
+      if (elapsedMonths <= 1) { termFeeNote = 'Cooling-off — no termination fee'; }
+      else if (elapsedMonths <= 6) { termFee = remaining * monthly * 0.2; termFeeNote = `${remaining}m × $${monthly} × 20% = $${termFee.toFixed(2)}`; }
+      else { termFee = remaining * monthly * 0.1; termFeeNote = `${remaining}m × $${monthly} × 10% = $${termFee.toFixed(2)}`; }
       const isAnnual = amount >= monthly * 10;
       const subRefund = isAnnual ? remaining * (amount / 12) : 0;
       const netRefund = Math.max(0, subRefund - termFee);
-
       amountEl.value = netRefund.toFixed(2);
       amountEl.readOnly = true;
       calcEl.innerHTML = `<strong>Subscription Cancel</strong><br>
         Plan: ${sub.plan_type} / ${isAnnual ? 'Annual' : 'Monthly'}<br>
-        Elapsed: ${elapsedMonths} months / Remaining: ${remaining} months<br>
-        Subscription refund: $${subRefund.toFixed(2)}<br>
-        Early termination fee: ${termFeeNote}<br>
+        Elapsed: ${elapsedMonths}m / Remaining: ${remaining}m<br>
+        Sub refund: $${subRefund.toFixed(2)} / Term fee: ${termFeeNote}<br>
         <strong>Net Refund: $${netRefund.toFixed(2)}</strong>`;
     }
-
   } else {
     amountEl.readOnly = false;
     calcEl.textContent = 'Enter custom amount below.';
@@ -4714,29 +5996,18 @@ async function executeRefund() {
   const btn = document.getElementById('refundConfirmBtn');
   const amount = parseFloat(document.getElementById('refundAmount').value);
   const reason = document.getElementById('refundReason').value.trim();
-
   if (!amount || amount <= 0) { showToast('Enter a valid refund amount', 'error'); return; }
   if (!reason) { showToast('Please enter a reason', 'error'); return; }
-  if (!confirm(`Process refund of $${amount.toFixed(2)} AUD?
-
-This cannot be undone.`)) return;
-
+  if (!confirm(`Process refund of $${amount.toFixed(2)} AUD?\n\nThis cannot be undone.`)) return;
   btn.disabled = true; btn.textContent = 'Processing...';
-
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
-      body: JSON.stringify({
-        action: 'refund',
-        payment_id: currentRefundPayment.id,
-        refund_amount: amount,
-        refund_reason: reason,
-      }),
+      body: JSON.stringify({ action: 'refund', payment_id: currentRefundPayment.id, refund_amount: amount, refund_reason: reason }),
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Refund failed');
-
     showToast(`Refund of $${amount.toFixed(2)} processed successfully`);
     closeRefundModal();
     setTimeout(loadPaymentsSection, 2000);
@@ -4747,47 +6018,35 @@ This cannot be undone.`)) return;
   }
 }
 
-// ── 추가 납부 모달 ──
 async function openAdditionalChargeModal() {
-  // 고객 목록 로드
   const { data } = await sb.from('subscriptions')
     .select('user_id, plan_type, stripe_customer_id, start_date, profiles:user_id(full_name)')
     .eq('status', 'active');
-
   allSubscribersForCharge = data || [];
   const sel = document.getElementById('chargeCustomer');
   sel.innerHTML = '<option value="">Select customer...</option>' +
     allSubscribersForCharge.map(s => `<option value="${s.stripe_customer_id}">${s.profiles?.full_name || s.user_id} — ${s.plan_type}</option>`).join('');
-
   document.getElementById('chargeAmount').value = '';
   document.getElementById('chargeDescription').value = '';
   document.getElementById('chargeCalc').style.display = 'none';
   document.getElementById('additionalChargeModal').style.display = 'flex';
 }
 
-function closeAdditionalChargeModal() {
-  document.getElementById('additionalChargeModal').style.display = 'none';
-}
+function closeAdditionalChargeModal() { document.getElementById('additionalChargeModal').style.display = 'none'; }
 
 function onChargeCustomerChange() {
   const stripeId = document.getElementById('chargeCustomer').value;
   const sub = allSubscribersForCharge.find(s => s.stripe_customer_id === stripeId);
   if (!sub) return;
-
   const start = new Date(sub.start_date);
-  const now = new Date();
-  const elapsedMonths = Math.ceil((now - start) / (1000 * 60 * 60 * 24 * 30.44));
+  const elapsedMonths = Math.ceil((new Date() - start) / (1000 * 60 * 60 * 24 * 30.44));
   const remaining = Math.max(0, 12 - elapsedMonths);
   const monthly = PLAN_MONTHLY[sub.plan_type] || 0;
-
-  let termFee2to6 = remaining * monthly * 0.2;
-  let termFee7to12 = remaining * monthly * 0.1;
-
   const calcEl = document.getElementById('chargeCalc');
   calcEl.style.display = 'block';
   calcEl.innerHTML = `<strong>Early Termination Fee Reference</strong><br>
     Plan: ${sub.plan_type} / Elapsed: ${elapsedMonths}m / Remaining: ${remaining}m<br>
-    Month 2-6: $${termFee2to6.toFixed(2)} | Month 7-12: $${termFee7to12.toFixed(2)}`;
+    Month 2-6: $${(remaining * monthly * 0.2).toFixed(2)} | Month 7-12: $${(remaining * monthly * 0.1).toFixed(2)}`;
 }
 
 async function executeAdditionalCharge() {
@@ -4795,29 +6054,20 @@ async function executeAdditionalCharge() {
   const stripeId = document.getElementById('chargeCustomer').value;
   const amount = parseFloat(document.getElementById('chargeAmount').value);
   const desc = document.getElementById('chargeDescription').value.trim();
-
   if (!stripeId) { showToast('Select a customer', 'error'); return; }
   if (!amount || amount <= 0) { showToast('Enter a valid amount', 'error'); return; }
   if (!desc) { showToast('Enter a description', 'error'); return; }
   if (!confirm(`Send invoice of $${amount.toFixed(2)} AUD to customer?`)) return;
-
   btn.disabled = true; btn.textContent = 'Sending...';
-
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
-      body: JSON.stringify({
-        action: 'additional_charge',
-        customer_stripe_id: stripeId,
-        additional_amount: amount,
-        description: desc,
-      }),
+      body: JSON.stringify({ action: 'additional_charge', customer_stripe_id: stripeId, additional_amount: amount, description: desc }),
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed');
-
-    showToast(`Invoice sent successfully — $${amount.toFixed(2)}`);
+    showToast(`Invoice sent — $${amount.toFixed(2)}`);
     closeAdditionalChargeModal();
     loadPaymentsSection();
   } catch(e) {
@@ -4827,5 +6077,123 @@ async function executeAdditionalCharge() {
   }
 }
 
-
 </script>
+
+  <!-- ═══ Payments Section (Admin) ═══ -->
+  <section class="section" id="section-payments">
+    <div class="section-card">
+      <div class="section-title">Payments</div>
+      <div class="section-desc">All payment records, refunds, and additional charges.</div>
+      <div class="pay-filters">
+        <div class="pay-filter-group">
+          <span class="pay-filter-label">Period</span>
+          <select class="pay-select" id="payPeriodType" onchange="onPayPeriodChange()">
+            <option value="all">All Time</option>
+            <option value="year">Year</option>
+            <option value="month">Month</option>
+          </select>
+          <select class="pay-select" id="payYear" style="display:none" onchange="loadPaymentsSection()">
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+          </select>
+          <select class="pay-select" id="payMonth" style="display:none" onchange="loadPaymentsSection()">
+            <option value="1">Jan</option><option value="2">Feb</option>
+            <option value="3">Mar</option><option value="4">Apr</option>
+            <option value="5">May</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Aug</option>
+            <option value="9">Sep</option><option value="10">Oct</option>
+            <option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+        </div>
+        <div class="pay-filter-group">
+          <span class="pay-filter-label">Status</span>
+          <select class="pay-select" id="payStatus" onchange="loadPaymentsSection()">
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="refunded">Refunded</option>
+            <option value="partial_refunded">Partial Refunded</option>
+            <option value="additional_pending">Additional Pending</option>
+            <option value="additional_paid">Additional Paid</option>
+          </select>
+        </div>
+        <button class="pay-btn charge" onclick="openAdditionalChargeModal()">+ Additional Charge</button>
+      </div>
+      <div class="pay-summary">
+        <div class="pay-sum-card"><div class="pay-sum-label">Total Revenue</div><div class="pay-sum-value" id="payTotalRevenue">—</div></div>
+        <div class="pay-sum-card"><div class="pay-sum-label">Stripe Fees</div><div class="pay-sum-value red" id="payTotalFees">—</div></div>
+        <div class="pay-sum-card"><div class="pay-sum-label">Net Revenue</div><div class="pay-sum-value green" id="payTotalNet">—</div></div>
+        <div class="pay-sum-card"><div class="pay-sum-label">Refunded</div><div class="pay-sum-value red" id="payTotalRefunded">—</div></div>
+      </div>
+      <div class="pay-table-wrap">
+        <table class="pay-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Customer</th><th>Type</th>
+              <th>Amount</th><th>Stripe Fee</th><th>Net</th>
+              <th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="payTableBody">
+            <tr><td colspan="8" class="pay-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Refund Modal -->
+  <div class="pay-modal-overlay" id="refundModal" style="display:none">
+    <div class="pay-modal">
+      <div class="pay-modal-title">Process Refund</div>
+      <div class="pay-modal-row"><div class="pay-modal-label">Customer</div><div class="pay-modal-value" id="refundCustomer">—</div></div>
+      <div class="pay-modal-row"><div class="pay-modal-label">Original Payment</div><div class="pay-modal-value" id="refundOriginal">—</div></div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Refund Type</div>
+        <select class="pay-modal-input" id="refundType" onchange="onRefundTypeChange()">
+          <option value="cooling_off">Cooling-off (Full Refund)</option>
+          <option value="subscription_cancel">Subscription Cancel</option>
+          <option value="sh_bundle">SH Bundle Refund</option>
+          <option value="custom">Custom Amount</option>
+        </select>
+      </div>
+      <div class="pay-modal-calc" id="refundCalc">Select refund type to calculate amount.</div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Refund Amount (AUD)</div>
+        <input class="pay-modal-input" type="number" id="refundAmount" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Reason (internal note)</div>
+        <input class="pay-modal-input" type="text" id="refundReason" placeholder="e.g. Cooling-off period, customer request">
+      </div>
+      <div class="pay-modal-btns">
+        <button class="pay-modal-btn cancel" onclick="closeRefundModal()">Cancel</button>
+        <button class="pay-modal-btn confirm" id="refundConfirmBtn" onclick="executeRefund()">Process Refund</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Charge Modal -->
+  <div class="pay-modal-overlay" id="additionalChargeModal" style="display:none">
+    <div class="pay-modal">
+      <div class="pay-modal-title">Send Additional Charge</div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Customer</div>
+        <select class="pay-modal-input" id="chargeCustomer" onchange="onChargeCustomerChange()"></select>
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Amount (AUD)</div>
+        <input class="pay-modal-input" type="number" id="chargeAmount" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="pay-modal-row">
+        <div class="pay-modal-label">Description</div>
+        <input class="pay-modal-input" type="text" id="chargeDescription" placeholder="e.g. Early termination fee">
+      </div>
+      <div class="pay-modal-calc" id="chargeCalc" style="display:none"></div>
+      <div class="pay-modal-btns">
+        <button class="pay-modal-btn cancel" onclick="closeAdditionalChargeModal()">Cancel</button>
+        <button class="pay-modal-btn confirm" id="chargeConfirmBtn" onclick="executeAdditionalCharge()">Send Invoice</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
