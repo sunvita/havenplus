@@ -140,10 +140,17 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
+    aside.sidebar {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .content {
+      grid-column: 1;
+    }
     .sidebar {
       position: fixed;
       top: 0;
-      left: -280px;
+      left: -100%;
       width: 260px;
       height: 100vh;
       z-index: 300;
@@ -151,6 +158,7 @@
       overflow-y: auto;
       transition: left .28s cubic-bezier(.4,0,.2,1);
       box-shadow: none;
+      background: var(--surface);
     }
     .sidebar.open {
       left: 0;
