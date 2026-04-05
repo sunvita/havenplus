@@ -6062,7 +6062,7 @@ function renderPaymentsTable(data) {
     const date = new Date(p.paid_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const customer = p.profiles?.full_name || '—';
     const prop = p.subscriptions?.properties;
-    const propText = prop ? `${prop.suburb || prop.address || '—'}` : '—';
+    const propText = prop ? [prop.address, prop.suburb].filter(Boolean).join(', ') || '—' : '—';
     const type = typeLabel[p.payment_type] || p.payment_type;
     const shSize = p.sh_bundle_size ? ` (${p.sh_bundle_size}h)` : '';
     const amount = `$${parseFloat(p.amount || 0).toFixed(2)}`;
