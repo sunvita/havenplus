@@ -216,12 +216,9 @@ RESEND_API_KEY, ANTHROPIC_API_KEY, GITHUB_TOKEN — 모두 설정 완료
 ## 운영 주의사항 (2026-04-05 추가)
 
 ### Edge Function 재배포 후 필수 확인
-Supabase Edge Function 재배포 시 JWT verify가 기본값 ON으로 초기화됨.
-아래 함수는 재배포 후 **반드시 JWT verify OFF** 확인:
-- `stripe-webhook` ← Stripe가 JWT 없이 호출
-- `create-portal-session` ← 고객이 비인증 상태로 호출
-
-JWT가 ON이면 Stripe 웹훅 401 → 결제 DB 미반영 → 운영 치명적
+- `create-portal-session`: JWT verify OFF 유지 확인 (고객 비인증 호출)
+- `stripe-webhook`: 401 발생 시 STRIPE_WEBHOOK_SECRET 값 Supabase Secrets에서 재확인
+  (Stripe Dashboard → Developers → Webhooks → Signing secret과 일치 여부)
 
 ### Stripe 웹훅 장애 대응 절차
 1. Stripe → Developers → Webhooks → Recent deliveries에서 실패 이벤트 확인
@@ -260,5 +257,5 @@ Edge Function 수정 및 배포 시 아래 절차를 반드시 따를 것.
    - "배포 진행해" 요청이 와도 위 절차 없이 present_file 하지 않음
 
 5. **배포 후 확인**
-   - JWT verify OFF 재확인 (stripe-webhook, create-portal-session)
-   - 실제 웹훅 테스트 이벤트로 정상 동작 확인
+   - JWT verify OFF 재확인 (create-portal-session만 해당)
+   - Stripe Dashboard에서 테스트 이벤트 발송 후 Supabase 로그 정상 여부 확인
