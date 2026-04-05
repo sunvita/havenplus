@@ -54,3 +54,16 @@ USING (
     WHERE id = auth.uid() AND role = 'admin'
   )
 );
+
+-- ── 2차 정리 (2026-04-05) ─────────────────────────────────────────
+-- 워커 앱은 Supabase Auth를 사용하지 않음 (worker_code 기반 인증)
+-- 따라서 authenticated role 기반 정책은 실제로 작동하지 않아 삭제
+DROP POLICY IF EXISTS "Workers can upload job photos"           ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can view job photos" ON storage.objects;
+DROP POLICY IF EXISTS "Workers can update job photos"           ON storage.objects;
+DROP POLICY IF EXISTS "Workers can delete job photos"           ON storage.objects;
+-- 결과: anon(public) 기반 정책 4개만 유지
+--   public_can_read_job_photos    SELECT  public
+--   anon_can_upload_job_photos    INSERT  public
+--   anon_can_update_job_photos    UPDATE  public
+--   admins_can_all_job_photos     ALL     public
