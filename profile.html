@@ -1338,13 +1338,13 @@
         <table class="pay-table">
           <thead>
             <tr>
-              <th>Date</th><th>Customer</th><th>Type</th>
+              <th>Date</th><th>Customer</th><th>Property</th><th>Type</th>
               <th>Amount</th><th>Stripe Fee</th><th>Net</th>
               <th>Status</th><th>Manage</th>
             </tr>
           </thead>
           <tbody id="payTableBody">
-            <tr><td colspan="8" class="pay-empty">Loading...</td></tr>
+            <tr><td colspan="9" class="pay-empty">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -6012,7 +6012,7 @@ function onPayPeriodChange() {
 
 async function loadPaymentsSection() {
   const tbody = document.getElementById('payTableBody');
-  tbody.innerHTML = '<tr><td colspan="8" class="pay-empty">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="pay-empty">Loading...</td></tr>';
   try {
     const periodType = document.getElementById('payPeriodType').value;
     const year = parseInt(document.getElementById('payYear').value);
@@ -6020,7 +6020,7 @@ async function loadPaymentsSection() {
     const statusFilter = document.getElementById('payStatus').value;
 
     let query = sb.from('payments')
-      .select('*, profiles:user_id(full_name), subscriptions:subscription_id(plan_type, stripe_customer_id)')
+      .select('*, profiles:user_id(full_name), subscriptions:subscription_id(plan_type, stripe_customer_id, property_id, properties:property_id(address, suburb))')
       .order('paid_at', { ascending: false });
 
     if (periodType === 'year') {
@@ -6039,7 +6039,7 @@ async function loadPaymentsSection() {
     renderPaymentsTable(allPaymentsData);
     renderPaymentsSummary(allPaymentsData);
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="8" class="pay-empty">Error: ${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="pay-empty">Error: ${e.message}</td></tr>`;
   }
 }
 
@@ -6056,11 +6056,13 @@ function renderPaymentsSummary(data) {
 
 function renderPaymentsTable(data) {
   const tbody = document.getElementById('payTableBody');
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" class="pay-empty">No payment records found.</td></tr>'; return; }
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="9" class="pay-empty">No payment records found.</td></tr>'; return; }
   const typeLabel = { subscription: 'Subscription', sh_bundle: 'SH Bundle', refund: 'Refund', additional_charge: 'Additional Charge' };
   tbody.innerHTML = data.map(p => {
     const date = new Date(p.paid_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const customer = p.profiles?.full_name || '—';
+    const prop = p.subscriptions?.properties;
+    const propText = prop ? `${prop.suburb || prop.address || '—'}` : '—';
     const type = typeLabel[p.payment_type] || p.payment_type;
     const shSize = p.sh_bundle_size ? ` (${p.sh_bundle_size}h)` : '';
     const amount = `$${parseFloat(p.amount || 0).toFixed(2)}`;
@@ -6072,6 +6074,7 @@ function renderPaymentsTable(data) {
     return `<tr>
       <td style="white-space:nowrap">${date}</td>
       <td>${customer}</td>
+      <td style="color:#666;font-size:12px">${propText}</td>
       <td><span class="pay-type-badge">${type}${shSize}</span></td>
       <td>${amount}${refundInfo}</td>
       <td style="color:#888">${fee}</td>
