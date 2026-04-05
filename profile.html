@@ -6142,11 +6142,12 @@ function renderPaymentsSummary(data) {
   const fees = data.reduce((s, p) => s + parseFloat(p.stripe_fee || 0), 0);
   const net = data.reduce((s, p) => s + parseFloat(p.net_amount || 0), 0);
   const refunded = data.reduce((s, p) => s + parseFloat(p.refund_amount || 0), 0);
-  // 환불된 건의 stripe_fee도 손실 (Stripe 수수료 미환급)
+  // 환불된 건: net_amount에 수수료 반영됨 → refund_amount만 차감
+  // net $147.15 - refund $150.00 = -$2.85 (수수료 $2.85 손실)
   const refundedFees = data
     .filter(p => parseFloat(p.refund_amount || 0) > 0)
     .reduce((s, p) => s + parseFloat(p.stripe_fee || 0), 0);
-  const netAfterRefund = net - refunded - refundedFees;
+  const netAfterRefund = net - refunded;
 
   document.getElementById('payTotalRevenue').innerHTML =
     `$${revenue.toFixed(2)}${refunded > 0 ? `<div style="font-size:11px;color:var(--red);font-weight:600;margin-top:2px">-$${refunded.toFixed(2)} refunded</div>` : ''}`;
@@ -6176,8 +6177,9 @@ function renderPaymentsTable(data) {
     const fee = p.stripe_fee ? `$${parseFloat(p.stripe_fee).toFixed(2)}` : '—';
     const refundAmt = parseFloat(p.refund_amount || 0);
     const netAmt = parseFloat(p.net_amount || 0);
-    const feeAmt = parseFloat(p.stripe_fee || 0);
-    const actualNet = refundAmt > 0 ? netAmt - refundAmt - feeAmt : netAmt;
+    // 환불된 건: net_amount에 이미 수수료 반영됨 → refund_amount만 차감
+    // 예) net $147.15 - refund $150.00 = -$2.85 (수수료 손실)
+    const actualNet = refundAmt > 0 ? netAmt - refundAmt : netAmt;
     const netColor = actualNet < 0 ? 'color:var(--red)' : 'font-weight:700';
     const net = p.net_amount ? `$${actualNet.toFixed(2)}` : '—';
     const status = p.status || 'paid';
