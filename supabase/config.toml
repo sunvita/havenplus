@@ -1,0 +1,11 @@
+# Supabase Function Configuration
+# 이 파일이 있으면 배포 시 Dashboard 설정을 덮어씀
+# JWT 설정이 배포마다 초기화되는 문제를 영구적으로 해결
+
+# stripe-webhook: Stripe는 JWT 없이 호출하므로 반드시 OFF
+[functions.stripe-webhook]
+verify_jwt = false
+
+# create-portal-session: 고객이 비인증 상태로 호출하므로 OFF
+[functions.create-portal-session]
+verify_jwt = false
