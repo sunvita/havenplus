@@ -507,7 +507,4001 @@
   .admin-lb-nav button:hover { background: rgba(255,255,255,.25); }
   .admin-lb-label { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 8px; }
 </style>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC03KO68dQ459iJ1RCXn2Loe8tJJ-thKYk&libraries=places" async defer>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC03KO68dQ459iJ1RCXn2Loe8tJJ-thKYk&libraries=places" async defer></script>
+<script>
+
+/* ══════════════════════════════════════════════════════════
+   Haven Plus — Profile  (v2)
+   Fixed: Supabase key, nav parity, portal, email update,
+          postal address, deletion mailto
+   ══════════════════════════════════════════════════════════ */
+
+const SUPABASE_URL  = 'https://rtkgnlcgepromqtoelre.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0a2dubGNnZXByb21xdG9lbHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDIxNTAsImV4cCI6MjA4ODE3ODE1MH0.6jpFp-gn6m4iuTEJYhzK-EoSnsg7il0NCPakILxKo0A';
+
+const PLAN_META = {
+  essential: { name:'Essential Care', price:'$55/mo', visits:'4× per year', hours:'8 hrs', vouchers:'2 / year' },
+  smart:     { name:'Smart Care',     price:'$75/mo', visits:'6× per year', hours:'12 hrs', vouchers:'3 / year' },
+  premium:   { name:'Premium Care',   price:'$150/mo',visits:'12× per year',hours:'24 hrs', vouchers:'6 / year' },
+};
+
+/* ═══ Perth Area Definitions ═══════════════════════════════════ */
+const PERTH_AREAS = {
+  'CBD': {
+    name: 'CBD & Inner',
+    suburbs: ['Perth', 'West Perth', 'East Perth', 'Northbridge', 'Highgate', 'Mount Lawley', 'Leederville']
+  },
+  'INNER_SOUTH': {
+    name: 'Inner South',
+    suburbs: ['South Perth', 'Victoria Park', 'East Victoria Park', 'Carlisle', 'Kensington', 'Como', 'Manning']
+  },
+  'WEST': {
+    name: 'Western Suburbs',
+    suburbs: ['Cottesloe', 'Claremont', 'Nedlands', 'Dalkeith', 'Peppermint Grove', 'Mosman Park', 'Swanbourne', 'Subiaco']
+  },
+  'FREMANTLE': {
+    name: 'Fremantle',
+    suburbs: ['Fremantle', 'North Fremantle', 'East Fremantle', 'Beaconsfield', 'South Fremantle', 'White Gum Valley']
+  },
+  'MELVILLE': {
+    name: 'Melville',
+    suburbs: ['Melville', 'Palmyra', 'Bicton', 'Attadale', 'Alfred Cove', 'Myaree', 'Booragoon', 'Applecross']
+  },
+  'NORTH_INNER': {
+    name: 'North Inner',
+    suburbs: ['Scarborough', 'Innaloo', 'Karrinyup', 'Stirling', 'Doubleview', 'Woodlands', 'Gwelup', 'Trigg']
+  },
+  'NORTH_OUTER': {
+    name: 'North Outer',
+    suburbs: ['Joondalup', 'Wanneroo', 'Clarkson', 'Mindarie', 'Currambine', 'Kinross', 'Butler', 'Alkimos']
+  },
+  'NE_INNER': {
+    name: 'North East Inner',
+    suburbs: ['Morley', 'Dianella', 'Yokine', 'Coolbinia', 'Menora', 'Inglewood', 'Bedford', 'Bayswater']
+  },
+  'NE_MID': {
+    name: 'North East Mid',
+    suburbs: ['Noranda', 'Beechboro', 'Kiara', 'Lockridge', 'Eden Hill', 'Bassendean', 'Ashfield', 'Embleton']
+  },
+  'NE_OUTER': {
+    name: 'North East Outer',
+    suburbs: ['Midland', 'Guildford', 'Woodbridge', 'Midvale', 'Swan View', 'Stratton', 'Jane Brook', 'Helena Valley']
+  },
+  'EAST': {
+    name: 'East (Airport)',
+    suburbs: ['Belmont', 'Redcliffe', 'Cloverdale', 'Kewdale', 'Rivervale', 'Ascot', 'Perth Airport']
+  },
+  'SE_INNER': {
+    name: 'South East Inner',
+    suburbs: ['Bentley', 'East Cannington', 'Cannington', 'Queens Park', 'Riverton', 'Willetton', 'St James']
+  },
+  'SE_MID': {
+    name: 'South East Mid',
+    suburbs: ['Maddington', 'Kenwick', 'Thornlie', 'Langford', 'Lynwood', 'Parkwood', 'Ferndale', 'Beckenham']
+  },
+  'SE_OUTER': {
+    name: 'South East Outer',
+    suburbs: ['Gosnells', 'Southern River', 'Huntingdale', 'Canning Vale', 'Piara Waters', 'Harrisdale']
+  },
+  'ARMADALE': {
+    name: 'Armadale',
+    suburbs: ['Armadale', 'Kelmscott', 'Roleystone', 'Mount Nasura', 'Camillo', 'Champion Lakes', 'Seville Grove']
+  },
+  'COCKBURN': {
+    name: 'Cockburn',
+    suburbs: ['Cockburn Central', 'Success', 'Aubin Grove', 'Hammond Park', 'Atwell', 'Jandakot', 'Bibra Lake', 'Yangebup']
+  },
+  'ROCKINGHAM': {
+    name: 'Rockingham',
+    suburbs: ['Rockingham', 'Baldivis', 'Waikiki', 'Safety Bay', 'Warnbro', 'Port Kennedy', 'Secret Harbour']
+  }
+};
+
+function suggestAreaForSuburb(suburb) {
+  if (!suburb) return { area: null, confidence: 'none' };
+  const normalized = suburb.trim();
+  
+  // Exact match
+  for (const [code, data] of Object.entries(PERTH_AREAS)) {
+    if (data.suburbs.some(s => s.toLowerCase() === normalized.toLowerCase())) {
+      return { area: code, confidence: 'high', name: data.name };
+    }
+  }
+  
+  // Partial match (e.g., "East Cannington" matches "Cannington")
+  const baseName = normalized.replace(/^(East|West|North|South)\s+/i, '');
+  for (const [code, data] of Object.entries(PERTH_AREAS)) {
+    if (data.suburbs.some(s => 
+      s.toLowerCase().includes(baseName.toLowerCase()) || 
+      baseName.toLowerCase().includes(s.toLowerCase())
+    )) {
+      return { area: code, confidence: 'medium', name: data.name };
+    }
+  }
+  
+  return { area: null, confidence: 'none' };
+}
+
+function getAreaName(code) {
+  return PERTH_AREAS[code]?.name || code || '—';
+}
+
+/* Enhanced area matching — shared by Worker and Property area assignment */
+function enhancedAreaMatch(suburb, address) {
+  /* 1. Try suburb directly */
+  if (suburb) {
+    const result = suggestAreaForSuburb(suburb);
+    if (result.area) return result;
+  }
+  /* 2. Try full address as-is */
+  if (address) {
+    const result = suggestAreaForSuburb(address);
+    if (result.area) return result;
+    /* 3. Parse from comma-separated */
+    const parts = address.split(',').map(p => p.trim());
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const clean = parts[i].replace(/\s*(WA|VIC|NSW|QLD|SA|TAS|NT|ACT)\s*\d{4}\s*$/i, '').trim();
+      if (clean) {
+        const r = suggestAreaForSuburb(clean);
+        if (r.area) return r;
+      }
+    }
+    /* 4. Word-by-word scan including two-word combos */
+    const words = address.replace(/[,\d]/g, '').split(/\s+/).filter(w => w.length > 2);
+    for (let i = words.length - 1; i >= 0; i--) {
+      const r = suggestAreaForSuburb(words[i]);
+      if (r.area) return r;
+      if (i > 0) {
+        const r2 = suggestAreaForSuburb(words[i-1] + ' ' + words[i]);
+        if (r2.area) return r2;
+      }
+    }
+  }
+  return { area: null, confidence: 'none' };
+}
+
+let sb, currentUser, isAdmin = false;
+let allSubscribers = [];
+
+/* ── Init ────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    currentUser = session.user;
+
+    const meta = currentUser.user_metadata || {};
+    const name = meta.full_name || currentUser.email.split('@')[0];
+    const initial = name.charAt(0).toUpperCase();
+
+    // Nav
+    document.getElementById('navUserName').textContent = name;
+
+    // Sidebar
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarEmail').textContent = currentUser.email;
+
+    // Security section email display
+    document.getElementById('securityEmail').textContent = currentUser.email;
+
+    // Check admin & load profile
+    let profile = null;
+    try {
+      const { data } = await sb.from('profiles').select('role, full_name, phone, preferred_language, postal_address').eq('id', currentUser.id).maybeSingle();
+      profile = data;
+    } catch(e) { console.warn('profiles query error:', e.message); }
+
+    isAdmin = profile?.role === 'admin';
+    if (isAdmin) {
+      document.getElementById('adminNav').style.display = 'block';
+      document.getElementById('adminPinSection').style.display = 'block';
+      loadAdminPin();
+    }
+    loadNotifications();
+    setupNotifRealtime();
+
+    // Pre-fill personal info
+    document.getElementById('fieldName').value   = profile?.full_name || meta.full_name || '';
+    document.getElementById('fieldPhone').value  = profile?.phone || meta.phone || '';
+    document.getElementById('fieldEmail').value  = currentUser.email;
+    document.getElementById('fieldPostal').value = profile?.postal_address || '';
+    document.getElementById('fieldLang').value   = profile?.preferred_language || meta.preferred_language || 'en';
+
+    // Build deletion email link (avoid Cloudflare email obfuscation)
+    buildDeletionLink();
+
+    // Handle ?section= param
+    const section = new URLSearchParams(location.search).get('section');
+    if (section) switchSection(section);
+
+    document.getElementById('loadingScreen').classList.add('hide');
+  } catch(e) {
+    console.error('Profile init error:', e);
+    document.getElementById('loadingScreen').classList.add('hide');
+    showToast('Failed to load profile. Please refresh.', true);
+  }
+});
+
+/* ── Section switching ──────────────────────────────────── */
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('section-' + name);
+  const btn = document.querySelector(`[data-section="${name}"]`);
+  if (sec) sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+  history.replaceState(null, '', '?section=' + name);
+
+  if (name === 'dashboard')     { loadDashboard(); loadAIDashboardSummary(); }
+  if (name === 'aitasks')       { loadAITasks(); }
+  if (name === 'subscription') loadSubscription();
+  if (name === 'subscribers')  loadSubscribers();
+  if (name === 'cleanings')    loadSchedules();
+  if (name === 'calendar')     loadCalendar();
+  if (name === 'hourslog')     loadHoursLog();
+  if (name === 'jobrequests')  loadJobRequests();
+  if (name === 'workers')      loadWorkers();
+  if (name === 'properties')   loadProperties();
+  if (name === 'customers')    loadCustomers();
+  if (name === 'notifications') loadNotifPage();
+  if (name === 'manage') {
+    if (!manageUnlocked) { openPinGate(); return; }
+    loadManageData();
+  }
+}
+
+/* ── Gallery PIN ──────────────────────────────────────── */
+function toggleGalleryPinForm() {
+  const f = document.getElementById('galleryPinForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveGalleryPin() {
+  const pinNew = document.getElementById('galleryPinNew').value;
+  const pinConfirm = document.getElementById('galleryPinConfirm').value;
+  const err = document.getElementById('galleryPinError');
+  const suc = document.getElementById('galleryPinSuccess');
+  err.textContent = ''; suc.textContent = '';
+
+  if (!/^\d{4}$/.test(pinNew)) { err.textContent = '4자리 숫자를 입력하세요.'; return; }
+  if (pinNew !== pinConfirm) { err.textContent = 'PIN이 일치하지 않습니다.'; return; }
+
+  const enc = new TextEncoder().encode(pinNew);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const { error } = await sb.from('admin_settings').upsert({ key: 'gallery_pin', value: hash }, { onConflict: 'key' });
+  if (error) { err.textContent = '저장 실패: ' + error.message; return; }
+
+  suc.textContent = 'Gallery PIN이 업데이트되었습니다.';
+  document.getElementById('galleryPinNew').value = '';
+  document.getElementById('galleryPinConfirm').value = '';
+  setTimeout(() => toggleGalleryPinForm(), 1500);
+}
+
+/* ── Manual Override PIN Gate ──────────────────────────── */
+let manageUnlocked = false;
+let storedPinHash = null;
+
+async function loadAdminPin() {
+  if (!sb || !isAdmin) return;
+  try {
+    const { data } = await sb.from('admin_settings').select('value').eq('key', 'override_pin').maybeSingle();
+    storedPinHash = data?.value || null;
+  } catch(e) { /* table may not exist yet */ }
+}
+
+function openPinGate() {
+  const inputs = document.querySelectorAll('#pinInputGroup .pin-input');
+  inputs.forEach(i => i.value = '');
+  const alert = document.getElementById('pinGateAlert');
+  alert.className = 'modal-alert';
+  alert.textContent = '';
+  document.getElementById('pinGateModal').classList.add('open');
+  setTimeout(() => inputs[0]?.focus(), 100);
+}
+
+function closePinGate() {
+  document.getElementById('pinGateModal').classList.remove('open');
+}
+
+function onPinInput(el, idx) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value && idx < 3) {
+    document.querySelectorAll('#pinInputGroup .pin-input')[idx + 1].focus();
+  }
+}
+
+function onPinKeydown(e, idx) {
+  if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+    document.querySelectorAll('#pinInputGroup .pin-input')[idx - 1].focus();
+  }
+  if (e.key === 'Enter') verifyPin();
+}
+
+async function verifyPin() {
+  const inputs = document.querySelectorAll('#pinInputGroup .pin-input');
+  const pin = Array.from(inputs).map(i => i.value).join('');
+  const alert = document.getElementById('pinGateAlert');
+
+  if (pin.length !== 4) {
+    alert.className = 'modal-alert error';
+    alert.textContent = 'Please enter a 4-digit PIN.';
+    return;
+  }
+
+  // If no PIN set yet, accept any and prompt to set one
+  if (!storedPinHash) {
+    manageUnlocked = true;
+    closePinGate();
+    switchSection('manage');
+    showToast('No PIN set yet. Please set one in Security settings.', true);
+    return;
+  }
+
+  const hash = await hashPin(pin);
+  if (hash === storedPinHash) {
+    manageUnlocked = true;
+    closePinGate();
+    switchSection('manage');
+  } else {
+    alert.className = 'modal-alert error';
+    alert.textContent = 'Incorrect PIN.';
+    inputs.forEach(i => i.value = '');
+    inputs[0].focus();
+  }
+}
+
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin + '_havenplus_override');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ── Admin PIN Change (Security section) ──────────────── */
+function togglePinForm() {
+  const form = document.getElementById('pinForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('pinError').style.display = 'none';
+  document.getElementById('pinSuccess').style.display = 'none';
+  document.getElementById('pinNew').value = '';
+  document.getElementById('pinConfirm').value = '';
+}
+
+async function saveAdminPin() {
+  const pin = document.getElementById('pinNew').value.trim();
+  const confirm = document.getElementById('pinConfirm').value.trim();
+  const errEl = document.getElementById('pinError');
+  const sucEl = document.getElementById('pinSuccess');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!/^\d{4}$/.test(pin)) {
+    errEl.textContent = 'PIN must be exactly 4 digits.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (pin !== confirm) {
+    errEl.textContent = 'PINs do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btnPinSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const hash = await hashPin(pin);
+  const { error } = await sb.from('admin_settings').upsert({ key: 'override_pin', value: hash }, { onConflict: 'key' });
+
+  btn.disabled = false; btn.textContent = 'Update PIN';
+
+  if (error) {
+    errEl.textContent = 'Failed to save: ' + error.message;
+    errEl.style.display = 'block';
+  } else {
+    storedPinHash = hash;
+    sucEl.textContent = 'PIN updated successfully.';
+    sucEl.style.display = 'block';
+    showToast('Override PIN updated.');
+    setTimeout(() => togglePinForm(), 1500);
+  }
+}
+
+/* ── Personal Info ──────────────────────────────────────── */
+async function savePersonalInfo() {
+  const name   = document.getElementById('fieldName').value.trim();
+  const phone  = document.getElementById('fieldPhone').value.trim();
+  const postal = document.getElementById('fieldPostal').value.trim();
+  const lang   = document.getElementById('fieldLang').value;
+  const errEl  = document.getElementById('personalError');
+  const sucEl  = document.getElementById('personalSuccess');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Full name is required.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btnSavePersonal');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const [authRes, dbRes] = await Promise.all([
+    sb.auth.updateUser({ data: { full_name: name, phone, preferred_language: lang } }),
+    sb.from('profiles').update({
+      full_name: name,
+      phone,
+      preferred_language: lang,
+      postal_address: postal || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', currentUser.id),
+  ]);
+
+  btn.disabled = false; btn.textContent = 'Save Changes';
+
+  if (authRes.error || dbRes.error) {
+    errEl.textContent = (authRes.error || dbRes.error).message;
+    errEl.style.display = 'block';
+  } else {
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('navUserName').textContent = name;
+    document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
+    sucEl.textContent = 'Changes saved successfully.';
+    sucEl.style.display = 'block';
+    setTimeout(() => sucEl.style.display = 'none', 3000);
+  }
+}
+
+/* ── Subscription ──────────────────────────────────────── */
+async function loadSubscription() {
+  const el = document.getElementById('subContent');
+  el.innerHTML = '<div style="color:#888;font-size:14px;">Loading…</div>';
+
+  try {
+    // Fetch all active subscriptions (user may have multiple properties)
+    const { data: subs, error: subErr } = await sb
+      .from('subscriptions')
+      .select('plan_type, status, start_date, end_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used, preferred_week, confirmed_date, cleaning_start_month, property_id')
+      .eq('user_id', currentUser.id)
+      .eq('status', 'active');
+
+    if (subErr) throw subErr;
+
+    let shBal = null;
+    try {
+      const { data } = await sb.from('sh_balance').select('purchased_total, purchased_used').eq('user_id', currentUser.id).maybeSingle();
+      shBal = data;
+    } catch(e) { /* sh_balance table may not exist yet */ }
+
+    // Fetch properties for name display
+    let props = [];
+    try {
+      const { data } = await sb.from('properties').select('id, address, suburb').eq('user_id', currentUser.id);
+      props = data || [];
+    } catch(e) {}
+    const propMap = {};
+    props.forEach(p => { propMap[p.id] = `${p.address}, ${p.suburb}`; });
+
+    if ((!subs || subs.length === 0) && !shBal) {
+      el.innerHTML = '<p style="font-size:14px;color:#888;">No active subscription found. <a href="plans.html" style="color:var(--navy);font-weight:600;">View plans →</a></p>';
+      return;
+    }
+
+    let html = '';
+
+    if (subs && subs.length > 0) {
+      subs.forEach(sub => {
+        const plan = PLAN_META[sub.plan_type] || { name: sub.plan_type, price:'—', visits:'—', hours:'—', vouchers:'—' };
+        const endDate = sub.end_date
+          ? new Date(sub.end_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+          : '—';
+        const startDate = sub.start_date
+          ? new Date(sub.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})
+          : '—';
+        const cleanRem   = Math.round(((sub.cleaning_hours_total || 0) - (sub.cleaning_hours_used || 0)) * 10) / 10;
+        const shVouchRem = Math.round(((sub.sh_hours_total || 0) - (sub.sh_hours_used || 0)) * 10) / 10;
+        const propLabel  = sub.property_id && propMap[sub.property_id] ? propMap[sub.property_id] : '';
+
+        // Next payment date calculation
+        let nextPayDate = '—';
+        if (sub.start_date) {
+          const sd = new Date(sub.start_date);
+          const now = new Date();
+          const isAnnual = sub.plan_type === 'premium';
+          if (isAnnual) {
+            // Annual: next anniversary of start_date
+            const next = new Date(sd);
+            next.setFullYear(now.getFullYear());
+            if (next <= now) next.setFullYear(now.getFullYear() + 1);
+            nextPayDate = next.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+          } else {
+            // Monthly: next month anniversary of start_date
+            const next = new Date(sd);
+            next.setMonth(now.getMonth());
+            next.setFullYear(now.getFullYear());
+            if (next <= now) next.setMonth(next.getMonth() + 1);
+            nextPayDate = next.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        }
+
+        html += `
+          <div class="sub-card">
+            <div class="sub-card-header">
+              <div class="sub-card-header-top">
+                <div class="sub-plan-name">${plan.name}</div>
+                <div class="sub-plan-price">${plan.price}</div>
+                <span class="sub-badge">${sub.status}</span>
+              </div>
+              ${propLabel ? `<div style="font-size:12px;color:#888;margin-top:4px;">${propLabel}</div>` : ''}
+            </div>
+            <div class="sub-details">
+              <div class="sub-detail-item">Cleaning hours left<strong>${cleanRem} hrs</strong></div>
+              <div class="sub-detail-item">SH vouchers left<strong>${shVouchRem} hrs</strong></div>
+              <div class="sub-detail-item">Start date<strong>${startDate}</strong></div>
+              <div class="sub-detail-item">Contract ends<strong>${endDate}</strong></div>
+              <div class="sub-detail-item">Visits / year<strong>${plan.visits}</strong></div>
+              <div class="sub-detail-item">Next payment<strong>${nextPayDate}</strong></div>
+            </div>
+          </div>`;
+      });
+    }
+
+    if (shBal) {
+      const shPurchRem = (shBal.purchased_total || 0) - (shBal.purchased_used || 0);
+      const shPurchUsed = shBal.purchased_used || 0;
+      if (shPurchRem > 0 || shPurchUsed > 0) {
+        html += `
+          <div class="sub-card" style="margin-top:12px;">
+            <div class="sub-card-header">
+              <div>
+                <div class="sub-plan-name">Purchased Service Hours</div>
+              </div>
+            </div>
+            <div class="sub-details" style="grid-template-columns:1fr 1fr;">
+              <div class="sub-detail-item">SH remaining<strong>${shPurchRem} hrs</strong></div>
+              <div class="sub-detail-item">SH used<strong>${shPurchUsed} hrs</strong></div>
+            </div>
+          </div>`;
+      }
+    }
+
+    html += '<p class="sub-note">To upgrade or cancel your subscription, contact us at <a href="#" id="subEmailLink" style="color:var(--navy);">hi&#64;havenpluscare.com</a>.</p>';
+    el.innerHTML = html;
+
+    // Build mailto for subscription section
+    const subLink = document.getElementById('subEmailLink');
+    if (subLink) {
+      subLink.href = 'mai' + 'lto:' + 'hi' + '@' + 'havenpluscare.com';
+      subLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location = this.href;
+      });
+    }
+  } catch(e) {
+    console.error('loadSubscription error:', e);
+    el.innerHTML = '<p style="font-size:14px;color:#c0392b;">Failed to load subscription info. Please try again.</p>';
+  }
+}
+
+/* ── Payment Portal ─────────────────────────────────────── */
+async function openPortal() {
+  const btn = document.getElementById('portalBtn');
+  const statusEl = document.getElementById('portalStatus');
+
+  showToast('Redirecting to payment portal…');
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('Session expired. Please log in again.');
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-portal-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token
+      },
+      body: JSON.stringify({ user_id: currentUser.id }),
+    });
+
+    if (!res.ok) {
+      const status = res.status;
+      if (status === 404) throw new Error('no_subscription');
+      throw new Error('Server error: ' + status);
+    }
+
+    const data = await res.json();
+    if (data.error && data.error.includes('No active subscription')) throw new Error('no_subscription');
+    if (data.error) throw new Error(data.error);
+    if (!data.url)  throw new Error('No portal URL returned.');
+
+    window.open(data.url, '_blank');
+  } catch(e) {
+    console.warn('Portal error:', e.message);
+
+    statusEl.style.display = 'flex';
+    if (e.message === 'no_subscription') {
+      statusEl.className = 'payment-status not-connected';
+      document.getElementById('portalStatusText').innerHTML =
+        'No active subscription found. <a href="plans.html" style="color:var(--navy);font-weight:600;">Choose a plan →</a>';
+    } else {
+      statusEl.className = 'payment-status not-connected';
+      document.getElementById('portalStatusText').textContent =
+        'Payment portal unavailable right now. Please contact hi@havenpluscare.com';
+    }
+  }
+}
+
+/* ── Security: Email Update ─────────────────────────────── */
+function toggleEmailForm() {
+  const f = document.getElementById('emailForm');
+  f.classList.toggle('open');
+  if (!f.classList.contains('open')) {
+    document.getElementById('emailNew').value = '';
+    document.getElementById('emailError').style.display = 'none';
+    document.getElementById('emailSuccess').style.display = 'none';
+  }
+}
+
+async function saveEmail() {
+  const newEmail = document.getElementById('emailNew').value.trim();
+  const errEl = document.getElementById('emailError');
+  const sucEl = document.getElementById('emailSuccess');
+  errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+  if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (newEmail === currentUser.email) {
+    errEl.textContent = 'This is already your current email.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btnEmailSave');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const { error } = await sb.auth.updateUser({ email: newEmail });
+  btn.disabled = false; btn.textContent = 'Send Confirmation';
+
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+  } else {
+    sucEl.textContent = 'Confirmation email sent to both addresses. Please check your inbox.';
+    sucEl.style.display = 'block';
+    document.getElementById('emailNew').value = '';
+  }
+}
+
+/* ── Security: Password ─────────────────────────────────── */
+function togglePwForm() {
+  const f = document.getElementById('pwForm');
+  f.classList.toggle('open');
+  if (!f.classList.contains('open')) {
+    document.getElementById('pwNew').value = '';
+    document.getElementById('pwConfirm').value = '';
+    document.getElementById('pwError').style.display = 'none';
+    document.getElementById('pwSuccess').style.display = 'none';
+  }
+}
+
+async function savePassword() {
+  const newPw = document.getElementById('pwNew').value;
+  const conPw = document.getElementById('pwConfirm').value;
+  const errEl = document.getElementById('pwError');
+  const sucEl = document.getElementById('pwSuccess');
+  errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+  if (!newPw || newPw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== conPw) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btnPwSave');
+  btn.disabled = true; btn.textContent = 'Updating…';
+
+  const { error } = await sb.auth.updateUser({ password: newPw });
+  btn.disabled = false; btn.textContent = 'Update Password';
+
+  if (error) {
+    // Supabase 원문 메시지 → 친절한 메시지로 변환
+    let msg = error.message;
+    if (msg.includes('at least one character') || msg.includes('password') && msg.includes('character')) {
+      msg = 'Password must include uppercase, lowercase, and a number. Special characters optional (e.g. MyPass123 or MyPass@123).';
+    } else if (msg.includes('at least 6') || msg.includes('at least 8')) {
+      msg = 'Password must be at least 8 characters.';
+    } else if (msg.includes('same as old') || msg.includes('different')) {
+      msg = 'New password must be different from your current password.';
+    }
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+  else {
+    sucEl.textContent = 'Password updated successfully.';
+    sucEl.style.display = 'block';
+    document.getElementById('pwNew').value = '';
+    document.getElementById('pwConfirm').value = '';
+    setTimeout(() => { sucEl.style.display = 'none'; togglePwForm(); }, 2000);
+  }
+}
+
+function togglePW(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+/* ── Deletion Email Link (JS-built to avoid Cloudflare obfuscation) ── */
+function buildDeletionLink() {
+  const el = document.getElementById('deletionEmailLink');
+  if (!el) return;
+  const e = 'hi' + '@' + 'havenpluscare.com';
+  const s = 'Account Deletion Request';
+  const b = 'Hi Haven Plus,%0D%0A%0D%0AI would like to request the deletion of my account and all associated data.%0D%0A%0D%0ARegistered email: (please confirm)%0D%0A%0D%0AThank you.';
+  el.href = 'mai' + 'lto:' + e + '?subject=' + encodeURIComponent(s) + '&body=' + b;
+}
+
+/* ── Logout ─────────────────────────────────────────────── */
+async function handleLogout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
+
+/* ── Toast ──────────────────────────────────────────────── */
+function showToast(msg, isErr = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+/* ══ Admin: Subscribers ══════════════════════════════════ */
+async function loadSubscribers() {
+  if (!isAdmin) return;
+  const body = document.getElementById('subsBody');
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  const { data: subs } = await sb.from('subscriptions')
+    .select('user_id, plan_type, status, start_date, cleaning_hours_total, cleaning_hours_used, sh_hours_total, sh_hours_used')
+    .order('start_date', { ascending: false });
+  if (!subs?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No subscribers found.</td></tr>'; return; }
+
+  const userIds = [...new Set(subs.map(s => s.user_id))];
+  const { data: profiles } = await sb.from('profiles').select('id, full_name, phone').in('id', userIds);
+  const profileMap = {};
+  (profiles || []).forEach(p => profileMap[p.id] = p);
+
+  allSubscribers = subs.map(s => ({ ...s, profile: profileMap[s.user_id] || {} }));
+
+  // Stats
+  const active = subs.filter(s => s.status === 'active');
+  document.getElementById('statActive').textContent    = active.length;
+  document.getElementById('statEssential').textContent = active.filter(s => s.plan_type === 'essential').length;
+  document.getElementById('statSmart').textContent     = active.filter(s => s.plan_type === 'smart').length;
+  document.getElementById('statPremium').textContent   = active.filter(s => s.plan_type === 'premium').length;
+
+  renderSubscribers(allSubscribers);
+}
+
+function renderSubscribers(list) {
+  const body = document.getElementById('subsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  body.innerHTML = list.map(s => {
+    const p = s.profile;
+    const planBadge   = `<span class="badge badge-${s.plan_type}">${s.plan_type}</span>`;
+    const statusBadge = `<span class="badge badge-${s.status === 'active' ? 'active' : 'inactive'}">${s.status}</span>`;
+    const cleanRem = Math.round(((s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0)) * 10) / 10;
+    const shRem    = Math.round(((s.sh_hours_total || 0) - (s.sh_hours_used || 0)) * 10) / 10;
+    const start    = s.start_date ? new Date(s.start_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    return `<tr>
+      <td style="font-weight:600;">${p.full_name || '—'}</td>
+      <td style="color:var(--text-light);">${p.phone || '—'}</td>
+      <td>${planBadge}</td>
+      <td>${statusBadge}</td>
+      <td>${cleanRem} / ${s.cleaning_hours_total || 0}</td>
+      <td>${shRem}</td>
+      <td style="color:var(--text-light);">${start}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSubscribers() {
+  const q    = document.getElementById('subSearch').value.toLowerCase();
+  const plan = document.getElementById('subPlanFilter').value;
+  const filtered = allSubscribers.filter(s => {
+    const name  = (s.profile?.full_name || '').toLowerCase();
+    const phone = (s.profile?.phone || '').toLowerCase();
+    const matchQ    = !q    || name.includes(q) || phone.includes(q);
+    const matchPlan = !plan || s.plan_type === plan;
+    return matchQ && matchPlan;
+  });
+  renderSubscribers(filtered);
+}
+
+/* ══ Admin: Schedules (Enhanced) ══════════════════════════ */
+let allSchedules = [], allWorkers = [];
+
+function handlePeriodChange() {
+  const period = document.getElementById('schedPeriodFilter').value;
+  const fromEl = document.getElementById('schedDateFrom');
+  const toEl = document.getElementById('schedDateTo');
+  
+  if (period === 'custom') {
+    fromEl.style.display = 'block';
+    toEl.style.display = 'block';
+    // Set default range: today to 1 month ahead
+    const today = new Date();
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    fromEl.value = today.toISOString().split('T')[0];
+    toEl.value = nextMonth.toISOString().split('T')[0];
+  } else {
+    fromEl.style.display = 'none';
+    toEl.style.display = 'none';
+  }
+  loadSchedules();
+}
+
+function initAreaDropdowns() {
+  const areaOptions = '<option value="">All areas</option>' + 
+    Object.entries(PERTH_AREAS).map(([code, data]) => 
+      `<option value="${code}">${data.name}</option>`
+    ).join('');
+  
+  ['schedAreaFilter', 'propAreaFilter', 'propAreaSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'propAreaSelect') {
+        el.innerHTML = '<option value="">— Select Area —</option>' + 
+          Object.entries(PERTH_AREAS).map(([code, data]) => 
+            `<option value="${code}">${data.name}</option>`
+          ).join('');
+      } else {
+        el.innerHTML = areaOptions;
+      }
+    }
+  });
+}
+
+async function loadSchedules() {
+  if (!isAdmin) return;
+  const body = document.getElementById('schedulesBody');
+  const status = document.getElementById('schedStatusFilter').value;
+  const worker = document.getElementById('schedWorkerFilter').value;
+  const area = document.getElementById('schedAreaFilter').value;
+  const period = document.getElementById('schedPeriodFilter').value;
+  
+  body.innerHTML = '<tr><td colspan="9" class="empty-state">Loading…</td></tr>';
+
+  // Load workers for dropdown if not already loaded
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+  
+  // Initialize area dropdowns
+  initAreaDropdowns();
+
+  // Calculate date range
+  let dateFrom = null, dateTo = null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (period === '1m') {
+    // This month: from 1st of current month to end of current month
+    dateFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+    dateTo = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
+  } else if (period === '2m') {
+    // Until next month: from 1st of current month to end of next month
+    dateFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+    dateTo = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+  } else if (period === 'custom') {
+    const fromVal = document.getElementById('schedDateFrom').value;
+    const toVal = document.getElementById('schedDateTo').value;
+    if (fromVal) dateFrom = new Date(fromVal);
+    if (toVal) dateTo = new Date(toVal);
+  }
+  // 'all' = no date filter
+
+  /* Fetch two sets: overdue incomplete + date-filtered */
+  const selectCols = 'id, planned_date, planned_time, duration_hours, actual_duration, status, property_id, assigned_worker_id, assigned_workers, user_id, before_photos, after_photos, worker_notes, reschedule_requested, reschedule_proposed_date, reschedule_note, reschedule_count';
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  let q = sb.from('cleaning_schedule').select(selectCols)
+    .order('planned_date', { ascending: true }).limit(200);
+
+  if (status) q = q.eq('status', status);
+  if (dateFrom) q = q.gte('planned_date', dateFrom.toISOString().split('T')[0]);
+  if (dateTo) q = q.lte('planned_date', dateTo.toISOString().split('T')[0]);
+
+  /* Also fetch overdue incomplete (past date + not completed/cancelled) */
+  let overdueQ = null;
+  if (dateFrom && !status) {
+    overdueQ = sb.from('cleaning_schedule').select(selectCols)
+      .lt('planned_date', todayStr)
+      .in('status', ['requested', 'scheduled', 'confirmed'])
+      .order('planned_date', { ascending: true }).limit(50);
+  }
+  
+  const [mainRes, overdueRes] = await Promise.all([
+    q, overdueQ || Promise.resolve({ data: [] })
+  ]);
+
+  /* Merge and deduplicate by id */
+  const seenIds = new Set();
+  const data = [];
+  for (const item of [...(overdueRes.data || []), ...(mainRes.data || [])]) {
+    if (!seenIds.has(item.id)) { seenIds.add(item.id); data.push(item); }
+  }
+  /* Sort: overdue first, then by date */
+  data.sort((a, b) => new Date(a.planned_date) - new Date(b.planned_date));
+
+  if (!data?.length) {
+    body.innerHTML = '<tr><td colspan="9" class="empty-state">No schedules found for this period.</td></tr>'; 
+    return; 
+  }
+
+  // Get property info (including area, bedrooms, bathrooms)
+  const propIds = [...new Set(data.map(r => r.property_id).filter(Boolean))];
+  const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+  
+  let propMap = {}, profileMap = {};
+  if (propIds.length) {
+    const { data: props } = await sb.from('properties').select('id, address, suburb, area, bedrooms, bathrooms').in('id', propIds);
+    (props || []).forEach(p => propMap[p.id] = p);
+  }
+  if (userIds.length) {
+    const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+    (profiles || []).forEach(p => profileMap[p.id] = p);
+  }
+
+  const workerMap = {};
+  allWorkers.forEach(w => workerMap[w.id] = w);
+
+  // Filter by area and worker (client-side for assigned_workers support)
+  let filteredData = data;
+  
+  // Worker filter - check both assigned_worker_id and assigned_workers array
+  if (worker) {
+    filteredData = filteredData.filter(r => {
+      // Check assigned_workers JSONB array first
+      if (r.assigned_workers && Array.isArray(r.assigned_workers) && r.assigned_workers.length > 0) {
+        return r.assigned_workers.includes(worker);
+      }
+      // Fallback to assigned_worker_id
+      return r.assigned_worker_id === worker;
+    });
+  }
+  
+  // Area filter
+  if (area) {
+    filteredData = filteredData.filter(r => {
+      const prop = propMap[r.property_id];
+      return prop?.area === area;
+    });
+  }
+
+  // Stats (based on filtered data)
+  const pending = filteredData.filter(s => s.status === 'requested').length;
+  const scheduled = filteredData.filter(s => s.status === 'scheduled' || s.status === 'confirmed').length;
+  const completed = filteredData.filter(s => s.status === 'completed').length;
+  const thisMonth = filteredData.filter(s => {
+    if (!s.planned_date) return false;
+    const d = new Date(s.planned_date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  
+  document.getElementById('statSchedPending').textContent = pending;
+  document.getElementById('statSchedScheduled').textContent = scheduled;
+  document.getElementById('statSchedCompleted').textContent = completed;
+  document.getElementById('statSchedThisMonth').textContent = thisMonth;
+
+  allSchedules = data.map(r => ({ ...r, prop: propMap[r.property_id] }));
+
+  if (!filteredData.length) {
+    body.innerHTML = '<tr><td colspan="9" class="empty-state">No schedules found for selected filters.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = filteredData.map(r => {
+    const d = r.planned_date ? new Date(r.planned_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const prop = propMap[r.property_id];
+    const propLabel = prop ? `${prop.address}, ${prop.suburb}` : '—';
+    const areaName = prop?.area ? getAreaName(prop.area) : '—';
+    const areaClass = prop?.area ? `area-cell area-bg-${prop.area}` : 'area-cell area-bg-unknown';
+    const customer = profileMap[r.user_id]?.full_name || '—';
+    
+    // Display multiple workers
+    let workerDisplay = 'Unassigned';
+    const workerIds = (r.assigned_workers && Array.isArray(r.assigned_workers) && r.assigned_workers.length > 0)
+      ? r.assigned_workers
+      : (r.assigned_worker_id ? [r.assigned_worker_id] : []);
+    
+    if (workerIds.length === 1) {
+      workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unassigned';
+    } else if (workerIds.length > 1) {
+      const names = workerIds.map(wid => workerMap[wid]?.full_name || '?').filter(Boolean);
+      workerDisplay = `${names[0]} +${names.length - 1}`;
+    }
+    
+    const badgeClass = r.status === 'completed' ? 'completed' : r.status === 'cancelled' ? 'cancelled' : r.status === 'requested' ? 'pending' : 'scheduled';
+    
+    return `<tr>
+      <td style="font-weight:600;">${d}</td>
+      <td>${r.planned_time || '—'}</td>
+      <td class="${areaClass}">${areaName}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
+      <td>${customer}</td>
+      <td>${workerDisplay}</td>
+      <td style="font-size:12px;white-space:nowrap;">${r.duration_hours || '—'}h${r.actual_duration ? ' → <strong>' + (Math.round(r.actual_duration * 10) / 10) + 'h</strong>' : ''}</td>
+      <td><span class="badge badge-${badgeClass}">${r.status || '—'}</span></td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openSchedEditModal('${r.id}')">Edit</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ Admin: Calendar ═══════════════════════════════════════ */
+let calendar = null;
+let calendarData = { scheduled: [], unscheduled: [] };
+
+const AREA_COLORS = {
+  'SE_INNER': '#3F51B5', 'EAST': '#3F51B5',
+  'INNER_SOUTH': '#2196F3', 'SE_MID': '#2196F3', 'CBD': '#1976D2',
+  'SE_OUTER': '#009688', 'MELVILLE': '#00897B', 'NE_INNER': '#00796B', 'ARMADALE': '#00695C',
+  'NE_MID': '#4CAF50', 'WEST': '#43A047', 'COCKBURN': '#388E3C', 'FREMANTLE': '#2E7D32',
+  'NE_OUTER': '#FFEB3B', 'NORTH_INNER': '#FDD835',
+  'NORTH_OUTER': '#FF9800', 'ROCKINGHAM': '#F44336'
+};
+
+async function loadCalendar() {
+  if (!isAdmin) return;
+  
+  // Load workers for dropdowns
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+  
+  // Populate calendar filters
+  initAreaDropdowns();
+  const calWorkerFilter = document.getElementById('calWorkerFilter');
+  if (calWorkerFilter) {
+    calWorkerFilter.innerHTML = '<option value="">All workers</option>' + 
+      allWorkers.map(w => `<option value="${w.id}">${w.full_name}</option>`).join('');
+  }
+  
+  // Load cleaning data
+  const { data: schedules } = await sb.from('cleaning_schedule')
+    .select('id, planned_date, planned_time, duration_hours, status, property_id, assigned_worker_id, user_id')
+    .order('planned_date', { ascending: true });
+  
+  if (!schedules) return;
+  
+  // Get property info
+  const propIds = [...new Set(schedules.map(s => s.property_id).filter(Boolean))];
+  let propMap = {};
+  if (propIds.length) {
+    const { data: props } = await sb.from('properties').select('id, address, suburb, area, bedrooms, bathrooms').in('id', propIds);
+    (props || []).forEach(p => propMap[p.id] = p);
+  }
+  
+  // Separate scheduled vs unscheduled
+  calendarData.scheduled = schedules.filter(s => s.planned_date && s.status !== 'requested').map(s => ({
+    ...s, prop: propMap[s.property_id] || {}
+  }));
+  calendarData.unscheduled = schedules.filter(s => !s.planned_date || s.status === 'requested').map(s => ({
+    ...s, prop: propMap[s.property_id] || {}
+  }));
+  
+  // Render unscheduled panel
+  renderUnscheduledPanel();
+  
+  // Initialize or update calendar
+  if (!calendar) {
+    initCalendar();
+  } else {
+    refreshCalendarEvents();
+  }
+}
+
+function initCalendar() {
+  const calendarEl = document.getElementById('calendarContainer');
+  
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'timeGridWeek',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    slotMinTime: '07:00:00',
+    slotMaxTime: '19:00:00',
+    slotDuration: '00:30:00',
+    allDaySlot: false,
+    weekends: true,
+    editable: true,
+    droppable: true,
+    eventDurationEditable: true,
+    selectable: true,
+    selectMirror: true,
+    nowIndicator: true,
+    events: getCalendarEvents(),
+    
+    // Event drop (reschedule)
+    eventDrop: async function(info) {
+      const schedId = info.event.id;
+      const newDate = info.event.start.toISOString().split('T')[0];
+      const newTime = info.event.start.toTimeString().slice(0,5);
+      
+      const { error } = await sb.from('cleaning_schedule').update({
+        planned_date: newDate,
+        planned_time: newTime
+      }).eq('id', schedId);
+      
+      if (error) {
+        showToast('Failed to reschedule', true);
+        info.revert();
+      } else {
+        showToast('Cleaning rescheduled');
+      }
+    },
+    
+    // Event resize (change duration)
+    eventResize: async function(info) {
+      const schedId = info.event.id;
+      const duration = (info.event.end - info.event.start) / (1000 * 60 * 60);
+      
+      const { error } = await sb.from('cleaning_schedule').update({
+        duration_hours: duration
+      }).eq('id', schedId);
+      
+      if (error) {
+        showToast('Failed to update duration', true);
+        info.revert();
+      } else {
+        showToast('Duration updated');
+      }
+    },
+    
+    // Click on event
+    eventClick: function(info) {
+      openSchedEditModal(info.event.id);
+    },
+    
+    // External drop (from unscheduled panel)
+    drop: async function(info) {
+      const schedId = info.draggedEl.dataset.schedId;
+      const newDate = info.date.toISOString().split('T')[0];
+      const newTime = info.date.toTimeString().slice(0,5);
+      
+      const { error } = await sb.from('cleaning_schedule').update({
+        planned_date: newDate,
+        planned_time: newTime,
+        status: 'scheduled'
+      }).eq('id', schedId);
+      
+      if (error) {
+        showToast('Failed to schedule', true);
+      } else {
+        showToast('Cleaning scheduled');
+        info.draggedEl.remove();
+        loadCalendar();
+      }
+    }
+  });
+  
+  calendar.render();
+  
+  // Make unscheduled items draggable
+  makeUnscheduledDraggable();
+}
+
+function getCalendarEvents() {
+  return calendarData.scheduled.map(s => {
+    const prop = s.prop || {};
+    const area = prop.area || '';
+    const color = AREA_COLORS[area] || '#999';
+    const duration = s.duration_hours || 2;
+    
+    let startTime = s.planned_time || '09:00';
+    if (startTime.length === 5) startTime += ':00';
+    
+    return {
+      id: s.id,
+      title: `${prop.address || 'Unknown'} (${prop.suburb || ''})`,
+      start: `${s.planned_date}T${startTime}`,
+      end: calculateEndTime(s.planned_date, startTime, duration),
+      backgroundColor: color,
+      borderColor: color,
+      textColor: ['NE_OUTER', 'NORTH_INNER'].includes(area) ? '#333' : '#fff',
+      extendedProps: {
+        area: area,
+        suburb: prop.suburb,
+        beds: prop.bedrooms,
+        baths: prop.bathrooms,
+        status: s.status
+      }
+    };
+  });
+}
+
+function calculateEndTime(date, startTime, durationHours) {
+  const start = new Date(`${date}T${startTime}`);
+  start.setMinutes(start.getMinutes() + (durationHours * 60));
+  return start.toISOString();
+}
+
+function refreshCalendarEvents() {
+  calendar.removeAllEvents();
+  calendar.addEventSource(getCalendarEvents());
+}
+
+function renderUnscheduledPanel() {
+  const list = document.getElementById('unscheduledList');
+  const count = document.getElementById('unschedCount');
+  
+  count.textContent = calendarData.unscheduled.length;
+  
+  if (!calendarData.unscheduled.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:20px;font-size:12px;">All cleanings scheduled! 🎉</div>';
+    return;
+  }
+  
+  list.innerHTML = calendarData.unscheduled.map(s => {
+    const prop = s.prop || {};
+    const area = prop.area || '';
+    const color = AREA_COLORS[area] || '#ccc';
+    
+    return `<div class="unscheduled-item" data-sched-id="${s.id}" style="border-left-color:${color};">
+      <div class="item-address">${prop.address || 'Unknown'}</div>
+      <div class="item-meta">${prop.suburb || ''} • ${prop.bedrooms || '?'}bd/${prop.bathrooms || '?'}ba</div>
+      ${area ? `<span class="item-area" style="background:${color};color:${['NE_OUTER','NORTH_INNER'].includes(area)?'#333':'#fff'};">${getAreaName(area)}</span>` : ''}
+    </div>`;
+  }).join('');
+  
+  makeUnscheduledDraggable();
+}
+
+function makeUnscheduledDraggable() {
+  document.querySelectorAll('.unscheduled-item').forEach(el => {
+    new FullCalendar.Draggable(el, {
+      eventData: function(eventEl) {
+        const schedId = eventEl.dataset.schedId;
+        const sched = calendarData.unscheduled.find(s => s.id === schedId);
+        const prop = sched?.prop || {};
+        const area = prop.area || '';
+        const color = AREA_COLORS[area] || '#999';
+        
+        return {
+          id: schedId,
+          title: `${prop.address || 'Unknown'}`,
+          duration: { hours: sched?.duration_hours || 2 },
+          backgroundColor: color,
+          borderColor: color,
+          create: false
+        };
+      }
+    });
+  });
+}
+
+function filterCalendarByArea() {
+  const area = document.getElementById('calAreaFilter').value;
+  // For now just reload - could optimize with client-side filtering
+  loadCalendar();
+}
+
+function filterCalendarByWorker() {
+  const worker = document.getElementById('calWorkerFilter').value;
+  // For now just reload - could optimize with client-side filtering
+  loadCalendar();
+}
+
+async function loadWorkersForDropdowns() {
+  try {
+    const { data } = await sb.from('workers').select('id, full_name, area').eq('is_active', true).order('full_name');
+    allWorkers = data || [];
+    
+    // Populate worker filter dropdown
+    const schedWorkerFilter = document.getElementById('schedWorkerFilter');
+    if (schedWorkerFilter) {
+      schedWorkerFilter.innerHTML = '<option value="">All workers</option>' + 
+        allWorkers.map(w => `<option value="${w.id}">${w.full_name}</option>`).join('');
+    }
+    
+    // Populate job edit modal worker dropdown
+    const jobEditWorker = document.getElementById('jobEditWorker');
+    if (jobEditWorker) {
+      jobEditWorker.innerHTML = '<option value="">Unassigned</option>' + 
+        allWorkers.map(w => `<option value="${w.id}">${w.full_name}</option>`).join('');
+    }
+  } catch(e) {
+    console.warn('Workers table may not exist:', e.message);
+    allWorkers = [];
+  }
+}
+
+// Selected workers for multi-assignment
+let selectedWorkerIds = [];
+let currentSchedData = null;
+let workerScheduleCache = {};
+
+async function openSchedEditModal(schedId) {
+  const sched = allSchedules.find(s => s.id === schedId);
+  if (!sched) return;
+  
+  currentSchedData = sched;
+  
+  // Load assigned_workers from JSONB array, fallback to assigned_worker_id
+  if (sched.assigned_workers && Array.isArray(sched.assigned_workers) && sched.assigned_workers.length > 0) {
+    selectedWorkerIds = [...sched.assigned_workers];
+  } else if (sched.assigned_worker_id) {
+    selectedWorkerIds = [sched.assigned_worker_id];
+  } else {
+    selectedWorkerIds = [];
+  }
+  
+  // Reset UI
+  document.getElementById('schedEditId').value = schedId;
+  document.getElementById('schedEditAlert').className = 'modal-alert';
+  document.getElementById('schedEditAlert').textContent = '';
+  document.getElementById('schedEditConflictAlert').style.display = 'none';
+  
+  // Property Info
+  const prop = sched.prop || {};
+  document.getElementById('schedEditAddress').textContent = `${prop.address || 'Unknown'}, ${prop.suburb || ''}`;
+  
+  const areaBadge = document.getElementById('schedEditAreaBadge');
+  if (prop.area) {
+    areaBadge.textContent = getAreaName(prop.area);
+    areaBadge.className = `area-badge area-${prop.area}`;
+  } else {
+    areaBadge.textContent = 'No Area';
+    areaBadge.className = 'area-badge area-unknown';
+  }
+  
+  document.getElementById('schedEditBedBath').textContent = `${prop.bedrooms || '?'} bed / ${prop.bathrooms || '?'} bath`;
+  
+  // Customer Preferences - need to fetch from properties
+  try {
+    const { data: propData } = await sb.from('properties')
+      .select('pref_day, pref_time, pref_presence, cleaning_notes')
+      .eq('id', sched.property_id).single();
+    
+    if (propData) {
+      document.getElementById('schedEditPrefDay').textContent = propData.pref_day || 'Any';
+      document.getElementById('schedEditPrefTime').textContent = propData.pref_time ? propData.pref_time.replace('_', ' ') : 'Any';
+      document.getElementById('schedEditPrefPresence').textContent = propData.pref_presence || 'Not specified';
+      
+      const notesEl = document.getElementById('schedEditCleaningNotes');
+      if (propData.cleaning_notes) {
+        notesEl.innerHTML = `<strong>Notes:</strong> ${propData.cleaning_notes}`;
+        notesEl.style.display = 'block';
+      } else {
+        notesEl.style.display = 'none';
+      }
+    }
+  } catch(e) { console.warn('Could not load preferences:', e); }
+  
+  // Schedule
+  document.getElementById('schedEditDate').value = sched.planned_date || '';
+  document.getElementById('schedEditTime').value = sched.planned_time || '';
+  buildTimeGrid(sched.planned_time || '', 'schedTimeGrid', 'schedEditTime');
+  document.getElementById('schedEditDuration').value = sched.duration_hours || 2;
+  document.getElementById('schedEditStatus').value = sched.status || 'requested';
+
+  // Photos & Notes
+  const beforePhotos = Array.isArray(sched.before_photos) ? sched.before_photos.filter(Boolean) : [];
+  const afterPhotos = Array.isArray(sched.after_photos) ? sched.after_photos.filter(Boolean) : [];
+  const hasPhotos = beforePhotos.length > 0 || afterPhotos.length > 0;
+
+  const photoSection = document.getElementById('schedPhotosSection');
+  const photoContent = document.getElementById('schedPhotosContent');
+  if (hasPhotos) {
+    let html = '';
+    if (beforePhotos.length) {
+      html += '<div class="admin-photo-label">Before (' + beforePhotos.length + ')</div>';
+      html += '<div class="admin-photo-row">' + beforePhotos.map((url, i) =>
+        '<img class="admin-photo-thumb" src="' + url + '" onclick="event.stopPropagation();openAdminLb(this,' + i + ')">'
+      ).join('') + '</div>';
+    }
+    if (afterPhotos.length) {
+      html += '<div class="admin-photo-label">After (' + afterPhotos.length + ')</div>';
+      html += '<div class="admin-photo-row">' + afterPhotos.map((url, i) =>
+        '<img class="admin-photo-thumb" src="' + url + '" onclick="event.stopPropagation();openAdminLb(this,' + i + ')">'
+      ).join('') + '</div>';
+    }
+    photoContent.innerHTML = html;
+    photoSection.style.display = '';
+  } else {
+    photoSection.style.display = 'none';
+  }
+
+  const notesSection = document.getElementById('schedNotesSection');
+  const notesContent = document.getElementById('schedNotesContent');
+  if (sched.worker_notes) {
+    notesContent.textContent = sched.worker_notes;
+    notesSection.style.display = '';
+  } else {
+    notesSection.style.display = 'none';
+  }
+
+  // Load workers with distance sorting
+  await loadWorkerSchedulesForDate(sched.planned_date);
+  renderWorkerCheckboxList(prop.area);
+  updateChCalculation();
+
+  // Show reset section only if subscription linked
+  document.getElementById('schedResetSection').style.display = sched.subscription_id ? 'block' : 'none';
+
+  // Show reschedule banner if pending
+  const banner = document.getElementById('schedRescheduleBanner');
+  if (sched.reschedule_requested && sched.reschedule_proposed_date) {
+    const d = new Date(sched.reschedule_proposed_date + 'T00:00:00');
+    document.getElementById('schedRescheduleProposedDate').textContent =
+      d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const noteWrap = document.getElementById('schedRescheduleNoteWrap');
+    if (sched.reschedule_note) {
+      document.getElementById('schedRescheduleNote').textContent = sched.reschedule_note;
+      noteWrap.style.display = '';
+    } else {
+      noteWrap.style.display = 'none';
+    }
+    banner.style.display = '';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  document.getElementById('schedEditModal').classList.add('open');
+}
+
+async function loadWorkerSchedulesForDate(date) {
+  if (!date) { workerScheduleCache = {}; return; }
+  
+  try {
+    const { data } = await sb.from('cleaning_schedule')
+      .select('id, assigned_worker_id, assigned_workers, planned_date, planned_time, duration_hours, properties(address)')
+      .eq('planned_date', date)
+      .in('status', ['scheduled', 'confirmed', 'in_progress']);
+    
+    workerScheduleCache = {};
+    (data || []).forEach(s => {
+      // Check assigned_workers JSONB array first, fallback to assigned_worker_id
+      const workerIds = (s.assigned_workers && Array.isArray(s.assigned_workers) && s.assigned_workers.length > 0)
+        ? s.assigned_workers
+        : (s.assigned_worker_id ? [s.assigned_worker_id] : []);
+      
+      workerIds.forEach(wid => {
+        if (!workerScheduleCache[wid]) workerScheduleCache[wid] = [];
+        workerScheduleCache[wid].push(s);
+      });
+    });
+  } catch(e) {
+    console.warn('Could not load worker schedules:', e);
+    workerScheduleCache = {};
+  }
+}
+
+function renderWorkerCheckboxList(propertyArea) {
+  const container = document.getElementById('schedEditWorkerList');
+  
+  if (!allWorkers.length) {
+    container.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-light);">No workers available. Add workers first.</div>';
+    return;
+  }
+  
+  // Sort workers by distance to property area
+  const sortedWorkers = [...allWorkers].sort((a, b) => {
+    const distA = getAreaDistance(a.area, propertyArea);
+    const distB = getAreaDistance(b.area, propertyArea);
+    return distA - distB;
+  });
+  
+  container.innerHTML = sortedWorkers.map(w => {
+    const isSelected = selectedWorkerIds.includes(w.id);
+    const distance = getAreaDistance(w.area, propertyArea);
+    const distanceText = distance === 0 ? 'Same area' : `~${distance} min`;
+    const conflict = checkWorkerConflictStatus(w.id);
+    
+    let statusClass = 'available';
+    let statusText = '✓ Available';
+    if (conflict.type === 'overlap') {
+      statusClass = 'conflict';
+      statusText = '✕ Conflict';
+    } else if (conflict.type === 'tight') {
+      statusClass = 'warning';
+      statusText = '⚠ Tight';
+    }
+    
+    const itemClass = isSelected ? (conflict.type === 'overlap' ? 'selected conflict' : conflict.type === 'tight' ? 'selected warning' : 'selected') : '';
+    
+    return `<label class="worker-checkbox-item ${itemClass}" data-worker-id="${w.id}">
+      <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleWorkerSelection('${w.id}')">
+      <div class="worker-info">
+        <div class="worker-name">${w.full_name || w.name || '?'}</div>
+        <div class="worker-meta">${w.area ? getAreaName(w.area) : 'No area'}</div>
+      </div>
+      <div class="worker-distance">${distanceText}</div>
+      <div class="worker-status ${statusClass}">${statusText}</div>
+    </label>`;
+  }).join('');
+}
+
+function toggleWorkerSelection(workerId) {
+  const idx = selectedWorkerIds.indexOf(workerId);
+  if (idx >= 0) {
+    selectedWorkerIds.splice(idx, 1);
+  } else {
+    selectedWorkerIds.push(workerId);
+  }
+  
+  // Update UI
+  const prop = currentSchedData?.prop || {};
+  renderWorkerCheckboxList(prop.area);
+  updateChCalculation();
+  checkWorkerConflicts();
+  
+  // Auto-update status to scheduled if workers assigned
+  if (selectedWorkerIds.length > 0) {
+    const statusEl = document.getElementById('schedEditStatus');
+    if (statusEl.value === 'requested') {
+      statusEl.value = 'scheduled';
+    }
+  }
+}
+
+function getAreaDistance(workerArea, propertyArea) {
+  if (!workerArea || !propertyArea) return 30;
+  if (workerArea === propertyArea) return 0;
+  
+  // Simplified distance matrix (minutes)
+  const distances = {
+    'SE_INNER': { 'EAST': 8, 'INNER_SOUTH': 8, 'SE_MID': 8, 'CBD': 12, 'SE_OUTER': 12, 'MELVILLE': 15, 'NE_INNER': 15, 'ARMADALE': 20 },
+    'EAST': { 'SE_INNER': 8, 'SE_MID': 10, 'CBD': 15, 'NE_INNER': 12 },
+    'NE_INNER': { 'NE_MID': 8, 'CBD': 12, 'EAST': 12, 'SE_INNER': 15, 'NE_OUTER': 15 },
+    'NE_MID': { 'NE_INNER': 8, 'NE_OUTER': 10 },
+    'CBD': { 'INNER_SOUTH': 8, 'SE_INNER': 12, 'WEST': 15, 'NE_INNER': 12 },
+    'WEST': { 'CBD': 15, 'FREMANTLE': 12, 'MELVILLE': 12 },
+    'FREMANTLE': { 'WEST': 12, 'MELVILLE': 10, 'COCKBURN': 15 },
+    'MELVILLE': { 'SE_INNER': 15, 'FREMANTLE': 10, 'COCKBURN': 12 },
+    'COCKBURN': { 'MELVILLE': 12, 'FREMANTLE': 15, 'ROCKINGHAM': 20 },
+    'ROCKINGHAM': { 'COCKBURN': 20 }
+  };
+  
+  return distances[workerArea]?.[propertyArea] || distances[propertyArea]?.[workerArea] || 25;
+}
+
+function checkWorkerConflictStatus(workerId) {
+  const schedId = document.getElementById('schedEditId').value;
+  const date = document.getElementById('schedEditDate').value;
+  const time = document.getElementById('schedEditTime').value;
+  const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
+  
+  if (!date || !time) return { type: null };
+  
+  const workerScheds = (workerScheduleCache[workerId] || []).filter(s => s.id !== schedId);
+  if (!workerScheds.length) return { type: null };
+  
+  const newStart = timeToMinutes(time);
+  const newEnd = newStart + (duration * 60);
+  
+  for (const s of workerScheds) {
+    if (!s.planned_time) continue;
+    const existStart = timeToMinutes(s.planned_time);
+    const existEnd = existStart + ((s.duration_hours || 2) * 60);
+    
+    // Calculate gap (negative = overlap, positive = gap between cleanings)
+    let gap = null;
+    if (newEnd <= existStart) {
+      // New cleaning ends before existing starts
+      gap = existStart - newEnd;
+    } else if (newStart >= existEnd) {
+      // New cleaning starts after existing ends
+      gap = newStart - existEnd;
+    } else {
+      // Overlapping - calculate how much they overlap (as negative gap)
+      gap = Math.max(newStart - existEnd, existStart - newEnd);
+    }
+    
+    // Overlap or gap < 10 min → 🔴 Conflict (cannot save)
+    if (gap !== null && gap < 10) {
+      return { type: 'overlap', sched: s, gap };
+    }
+    
+    // Gap 10-19 min → 🟠 Tight (warning, can save)
+    if (gap !== null && gap < 20) {
+      return { type: 'tight', sched: s, gap };
+    }
+  }
+  
+  return { type: null };
+}
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function minutesToTime(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+}
+
+function buildTimeGrid(selectedTime, gridId, inputId) {
+  gridId = gridId || 'schedTimeGrid';
+  inputId = inputId || 'schedEditTime';
+  const grid = document.getElementById(gridId);
+  const slots = [];
+  for (let h = 7; h <= 17; h++) {
+    slots.push(`${h.toString().padStart(2,'0')}:00`);
+    if (h < 17) slots.push(`${h.toString().padStart(2,'0')}:30`);
+  }
+  const selShort = (selectedTime || '').substring(0,5);
+  const isCustom = selectedTime && !slots.includes(selShort);
+  let html = slots.map(t => {
+    const sel = t === selShort ? ' selected' : '';
+    const hr = parseInt(t); const mn = t.substring(3);
+    const label = hr > 12 ? `${hr-12}:${mn}pm` : (hr === 12 ? `12:${mn}pm` : `${hr}:${mn}am`);
+    return `<button type="button" class="time-btn${sel}" onclick="pickTime('${t}','${gridId}','${inputId}',this)">${label}</button>`;
+  }).join('');
+  /* Custom time input */
+  html += `<input type="time" class="time-btn${isCustom ? ' selected' : ''}" value="${isCustom ? selShort : ''}" placeholder="Other" style="font-size:11px;text-align:center;" onchange="pickCustomTime(this,'${gridId}','${inputId}')">`;
+  grid.innerHTML = html;
+}
+function pickTime(val, gridId, inputId, btn) {
+  document.getElementById(inputId).value = val;
+  document.querySelectorAll('#' + gridId + ' .time-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (gridId === 'schedTimeGrid') checkWorkerConflicts();
+}
+function pickCustomTime(input, gridId, inputId) {
+  if (!input.value) return;
+  document.getElementById(inputId).value = input.value;
+  document.querySelectorAll('#' + gridId + ' .time-btn').forEach(b => b.classList.remove('selected'));
+  input.classList.add('selected');
+  if (gridId === 'schedTimeGrid') checkWorkerConflicts();
+}
+
+function checkWorkerConflicts() {
+  const alertEl = document.getElementById('schedEditConflictAlert');
+  const btn = document.getElementById('btnSaveSched');
+  
+  let hasConflict = false;
+  let hasWarning = false;
+  let messages = [];
+  
+  for (const wid of selectedWorkerIds) {
+    const worker = allWorkers.find(w => w.id === wid);
+    const conflict = checkWorkerConflictStatus(wid);
+    
+    if (conflict.type === 'overlap') {
+      hasConflict = true;
+      messages.push(`🔴 ${worker?.full_name || 'Worker'} is already assigned to "${conflict.sched.properties?.address || 'another cleaning'}" at this time.`);
+    } else if (conflict.type === 'tight') {
+      hasWarning = true;
+      messages.push(`🟠 ${worker?.full_name || 'Worker'} has another cleaning with only ${conflict.gap} min gap.`);
+    }
+  }
+  
+  if (hasConflict) {
+    alertEl.innerHTML = `<div class="conflict-alert error"><span class="conflict-alert-icon">⛔</span><div>${messages.join('<br>')}<br><strong>Cannot save with conflicts.</strong></div></div>`;
+    alertEl.style.display = 'block';
+    btn.disabled = true;
+  } else if (hasWarning) {
+    alertEl.innerHTML = `<div class="conflict-alert warning"><span class="conflict-alert-icon">⚠️</span><div>${messages.join('<br>')}</div></div>`;
+    alertEl.style.display = 'block';
+    btn.disabled = false;
+  } else {
+    alertEl.style.display = 'none';
+    btn.disabled = false;
+  }
+  
+  // Re-render to update status badges
+  const prop = currentSchedData?.prop || {};
+  renderWorkerCheckboxList(prop.area);
+}
+
+function updateChCalculation() {
+  const workerCount = selectedWorkerIds.length;
+  const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
+  const time = document.getElementById('schedEditTime').value;
+  
+  document.getElementById('schedEditWorkerCount').textContent = workerCount;
+  document.getElementById('schedEditDurationDisplay').textContent = `${duration} hrs`;
+  
+  // End time
+  if (time) {
+    const startMins = timeToMinutes(time);
+    const endMins = startMins + (duration * 60);
+    document.getElementById('schedEditEndTime').textContent = minutesToTime(endMins);
+  } else {
+    document.getElementById('schedEditEndTime').textContent = '—';
+  }
+  
+  // CH calculation: workers × duration
+  const ch = workerCount * duration;
+  document.getElementById('schedEditChDeduct').textContent = `${ch} hrs`;
+}
+
+function closeSchedEditModal() {
+  document.getElementById('schedEditModal').classList.remove('open');
+  currentSchedData = null;
+  selectedWorkerIds = [];
+}
+
+// ── Reschedule Approval ──────────────────────────────────
+async function approveReschedule(type) {
+  const isCleaning = type === 'cleaning';
+  const id = isCleaning
+    ? document.getElementById('schedEditId').value
+    : document.getElementById('jobEditId').value;
+  const job = isCleaning ? currentSchedData : allJobRequests.find(j => j.id === id);
+  if (!job) return;
+
+  const proposedDate = job.reschedule_proposed_date;
+  if (!proposedDate) return;
+
+  const btn = isCleaning
+    ? document.querySelector('#schedRescheduleBanner .modal-btn-primary')
+    : document.querySelector('#jobRescheduleBanner .modal-btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Approving…';
+
+  try {
+    const table = isCleaning ? 'cleaning_schedule' : 'service_requests';
+    const dateField = isCleaning ? 'planned_date' : 'scheduled_date';
+
+    const { error } = await sb.from(table).update({
+      [dateField]: proposedDate,
+      reschedule_requested: false,
+      reschedule_proposed_date: null,
+      reschedule_approved_by: (await sb.auth.getUser()).data.user?.id || null,
+    }).eq('id', id);
+    if (error) throw error;
+
+    // Send confirmation email to customer
+    const prop = isCleaning ? (currentSchedData?.prop || {}) : (job.properties || {});
+    const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+    const customerId = job.user_id;
+    const refType = isCleaning ? 'cleaning' : 'service';
+    const d = new Date(proposedDate + 'T00:00:00');
+    const dateFormatted = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    if (customerId) {
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'reschedule_confirmed',
+          recipients: [{ id: customerId, type: 'customer' }],
+          reference_id: id,
+          reference_type: refType,
+          details: {
+            address: addr,
+            date: dateFormatted,
+            original_date: isCleaning ? job.planned_date : job.scheduled_date,
+          },
+        }),
+      }).catch(e => console.warn('Customer notification failed:', e));
+    }
+
+    showToast('Reschedule approved — customer will be notified');
+    if (isCleaning) { closeSchedEditModal(); loadSchedules(); }
+    else { closeJobEditModal(); loadJobRequests(); }
+
+  } catch(e) {
+    showToast('Error: ' + (e.message || 'Failed to approve'), 'error');
+    btn.disabled = false;
+    btn.textContent = '✓ Approve & Update Date';
+  }
+}
+
+async function rejectReschedule(type) {
+  const isCleaning = type === 'cleaning';
+  const id = isCleaning
+    ? document.getElementById('schedEditId').value
+    : document.getElementById('jobEditId').value;
+
+  const table = isCleaning ? 'cleaning_schedule' : 'service_requests';
+  const { error } = await sb.from(table).update({
+    reschedule_requested: false,
+    reschedule_proposed_date: null,
+    reschedule_note: null,
+  }).eq('id', id);
+
+  if (!error) {
+    showToast('Reschedule request rejected');
+    if (isCleaning) { closeSchedEditModal(); loadSchedules(); }
+    else { closeJobEditModal(); loadJobRequests(); }
+  }
+}
+
+async function resetScheduleFromCleaning() {
+  if (!currentSchedData) return;
+  const subId = currentSchedData.subscription_id;
+  if (!subId) { showToast('No subscription linked to this cleaning.', true); return; }
+  if (!confirm('Reset cleaning schedule?\n\nThis will:\n• Clear the cleaning start month\n• Delete all future visits (requested/scheduled/confirmed)\n• Customer will need to re-select from dashboard')) return;
+
+  try {
+    const { error } = await sb.from('subscriptions')
+      .update({ cleaning_start_month: null, preferred_week: null, confirmed_date: null })
+      .eq('id', subId);
+    if (error) throw error;
+
+    await sb.from('cleaning_schedule')
+      .delete()
+      .eq('subscription_id', subId)
+      .in('status', ['requested', 'scheduled', 'confirmed']);
+
+    showToast('Cleaning schedule reset. Customer can re-select start month.');
+    closeSchedEditModal();
+    loadSchedules();
+    if (typeof loadCalendar === 'function') loadCalendar();
+  } catch(e) {
+    showToast('Failed to reset: ' + e.message, true);
+    console.error(e);
+  }
+}
+
+async function saveSchedEdit() {
+  const id = document.getElementById('schedEditId').value;
+  const status = document.getElementById('schedEditStatus').value;
+  const date = document.getElementById('schedEditDate').value;
+  const time = document.getElementById('schedEditTime').value;
+  const duration = parseFloat(document.getElementById('schedEditDuration').value) || 2;
+  const alertEl = document.getElementById('schedEditAlert');
+  
+  // Check for conflicts before saving
+  for (const wid of selectedWorkerIds) {
+    const conflict = checkWorkerConflictStatus(wid);
+    if (conflict.type === 'overlap') {
+      alertEl.textContent = 'Cannot save: Worker has conflicting schedule.';
+      alertEl.className = 'modal-alert error';
+      return;
+    }
+  }
+  
+  const btn = document.getElementById('btnSaveSched');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  try {
+    // Save all selected workers to assigned_workers JSONB array
+    // Keep assigned_worker_id for backward compatibility (first worker)
+    const workerId = selectedWorkerIds.length > 0 ? selectedWorkerIds[0] : null;
+    const chDeducted = selectedWorkerIds.length * duration;
+    
+    const schedUpdatePayload = {
+      status,
+      planned_date: date || null,
+      planned_time: time || null,
+      assigned_worker_id: workerId,
+      assigned_workers: selectedWorkerIds,
+      duration_hours: duration,
+      ch_deducted: chDeducted,
+      updated_at: new Date().toISOString()
+    };
+    if (status === 'in_progress') {
+      schedUpdatePayload.actual_start = currentSchedData?.actual_start || new Date().toISOString();
+    } else if (['requested', 'scheduled', 'confirmed'].includes(status)) {
+      schedUpdatePayload.actual_start = null;
+    }
+    const { error } = await sb.from('cleaning_schedule').update(schedUpdatePayload).eq('id', id);
+    if (error) throw error;
+
+    // ── Send notification when status is scheduled/confirmed ──
+    if (status === 'scheduled' || status === 'confirmed') {
+      const sched = currentSchedData;
+      const prop = sched?.prop || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || 'Property';
+      const notifRecipients = [];
+      if (sched?.user_id) {
+        notifRecipients.push({ id: sched.user_id, type: 'customer' });
+      }
+      for (const wid of selectedWorkerIds) {
+        notifRecipients.push({ id: wid, type: 'worker' });
+      }
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'scheduled',
+          recipients: notifRecipients,
+          reference_id: id,
+          reference_type: 'cleaning',
+          details: { address: addr, date: date || '', time: time || '' },
+        }),
+      }).catch(e => console.warn('Notification send failed:', e));
+    }
+
+    // ── Admin alert when new cleaning request arrives (status: requested) ──
+    if (status === 'requested') {
+      const sched = currentSchedData;
+      const prop = sched?.prop || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'new_request',
+          notify_admins: true,
+          reference_id: id,
+          reference_type: 'cleaning',
+          details: { address: addr, date: date || '', time: time || '' },
+        }),
+      }).catch(e => console.warn('Admin notification failed:', e));
+    }
+
+    showToast('Cleaning updated successfully');
+    closeSchedEditModal();
+    loadSchedules();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
+/* ══ Admin: Job Requests ════════════════════════════════════ */
+let allJobRequests = [];
+
+async function loadJobRequests() {
+  if (!isAdmin) return;
+  const body = document.getElementById('jobsBody');
+  const status = document.getElementById('jobStatusFilter').value;
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  // Load workers for dropdown if not already loaded
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+
+  let q = sb.from('service_requests')
+    .select('*, properties(address, suburb)')
+    .order('created_at', { ascending: false }).limit(100);
+  if (status) q = q.eq('status', status);
+  const { data } = await q;
+
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="9" class="empty-state">No job requests found.</td></tr>'; return; }
+
+  // Get user info
+  const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+  let profileMap = {};
+  if (userIds.length) {
+    const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+    (profiles || []).forEach(p => profileMap[p.id] = p);
+  }
+
+  // Stats
+  const pending = data.filter(j => j.status === 'requested').length;
+  const confirmed = data.filter(j => j.status === 'confirmed').length;
+  const inProgress = data.filter(j => j.status === 'in_progress').length;
+  const completed = data.filter(j => j.status === 'completed').length;
+  
+  document.getElementById('statJobPending').textContent = pending;
+  document.getElementById('statJobConfirmed').textContent = confirmed;
+  document.getElementById('statJobInProgress').textContent = inProgress;
+  document.getElementById('statJobCompleted').textContent = completed;
+
+  allJobRequests = data.map(j => ({ ...j, profile: profileMap[j.user_id] || {} }));
+  renderJobRequests(allJobRequests);
+}
+
+function renderJobRequests(list) {
+  const body = document.getElementById('jobsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="9" class="empty-state">No results.</td></tr>'; return; }
+  
+  const workerMap = {};
+  allWorkers.forEach(w => workerMap[w.id] = w);
+
+  body.innerHTML = list.map(j => {
+    const d = new Date(j.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+    const customer = j.profile?.full_name || '—';
+    const prop = j.properties || {};
+    const addrLine = prop.address ? `${prop.address}${prop.suburb ? ', ' + prop.suburb : ''}` : '—';
+    const category = (j.category || '—').replace(/_/g, ' ');
+    const urgency = j.urgency === 'same_day' ? '⚡ Same Day' : j.urgency === 'after_hours' ? '🌙 After Hrs' : 'Standard';
+    const estimate = j.sh_estimate ? `${j.sh_estimate}${j.sh_multiplier > 1 ? '×'+j.sh_multiplier : ''}` : '—';
+    const actualSH = j.sh_used ? Math.round(j.sh_used * 10) / 10 + ' SH' : '—';
+    const workerName = j.assigned_worker_id ? (workerMap[j.assigned_worker_id]?.full_name || '—') : '—';
+    const badgeClass = j.status || 'requested';
+
+    return `<tr>
+      <td style="color:var(--text-light);">${d}</td>
+      <td style="font-weight:600;">${customer}</td>
+      <td style="font-size:12px;color:var(--text-light);">${addrLine}</td>
+      <td style="text-transform:capitalize;">${category}</td>
+      <td style="font-size:12px;">${urgency}</td>
+      <td>${estimate} SH</td>
+      <td style="font-weight:600;">${actualSH}</td>
+      <td>${workerName}</td>
+      <td><span class="badge badge-${badgeClass}">${j.status || 'requested'}</span></td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openJobEditModal('${j.id}')">Edit</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterJobRequests() {
+  const q = document.getElementById('jobSearch').value.toLowerCase();
+  const filtered = allJobRequests.filter(j => {
+    const name = (j.profile?.full_name || '').toLowerCase();
+    const desc = (j.description || '').toLowerCase();
+    return !q || name.includes(q) || desc.includes(q);
+  });
+  renderJobRequests(filtered);
+}
+
+async function openJobEditModal(jobId) {
+  const job = allJobRequests.find(j => j.id === jobId);
+  if (!job) return;
+  
+  // Ensure workers are loaded for dropdown
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+  
+  document.getElementById('jobEditId').value = jobId;
+  document.getElementById('jobEditStatus').value = job.status || 'requested';
+  document.getElementById('jobEditDate').value = job.scheduled_date || job.preferred_date || '';
+  document.getElementById('jobEditTime').value = job.scheduled_time || '';
+  buildTimeGrid(job.scheduled_time || '', 'jobTimeGrid', 'jobEditTime');
+  document.getElementById('jobEditWorker').value = job.assigned_worker_id || '';
+  document.getElementById('jobEditEstimate').value = job.sh_estimate || 1;
+  document.getElementById('jobEditActual').value = job.sh_used || '';
+  document.getElementById('jobEditNotes').value = job.admin_notes || '';
+  document.getElementById('jobEditAlert').className = 'modal-alert';
+  document.getElementById('jobEditAlert').textContent = '';
+
+  // Show customer request photos if any
+  const photos = Array.isArray(job.request_photos) ? job.request_photos.filter(Boolean) : [];
+  const photoSection = document.getElementById('jobEditPhotosSection');
+  const photoGrid = document.getElementById('jobEditPhotosGrid');
+  if (photos.length) {
+    photoGrid.innerHTML = photos.map(url =>
+      `<a href="${url}" target="_blank"><img src="${url}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;"></a>`
+    ).join('');
+    photoSection.style.display = '';
+  } else {
+    photoSection.style.display = 'none';
+  }
+
+  // Show reschedule banner if pending
+  const jobBanner = document.getElementById('jobRescheduleBanner');
+  if (job.reschedule_requested && job.reschedule_proposed_date) {
+    const d = new Date(job.reschedule_proposed_date + 'T00:00:00');
+    document.getElementById('jobRescheduleProposedDate').textContent =
+      d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const noteWrap = document.getElementById('jobRescheduleNoteWrap');
+    if (job.reschedule_note) {
+      document.getElementById('jobRescheduleNote').textContent = job.reschedule_note;
+      noteWrap.style.display = '';
+    } else {
+      noteWrap.style.display = 'none';
+    }
+    jobBanner.style.display = '';
+  } else {
+    jobBanner.style.display = 'none';
+  }
+
+  document.getElementById('jobEditModal').classList.add('open');
+}
+
+function closeJobEditModal() {
+  document.getElementById('jobEditModal').classList.remove('open');
+}
+
+async function saveJobEdit() {
+  const id = document.getElementById('jobEditId').value;
+  let status = document.getElementById('jobEditStatus').value;
+  const date = document.getElementById('jobEditDate').value;
+  const time = document.getElementById('jobEditTime').value;
+  const worker = document.getElementById('jobEditWorker').value;
+  const estimate = parseFloat(document.getElementById('jobEditEstimate').value) || 1;
+  const actual = parseFloat(document.getElementById('jobEditActual').value) || null;
+  const notes = document.getElementById('jobEditNotes').value.trim();
+  const alertEl = document.getElementById('jobEditAlert');
+
+  /* Auto-upgrade status when worker + date assigned */
+  if (worker && date && (status === 'requested' || status === 'confirmed')) {
+    status = 'scheduled';
+  } else if (worker && !date && status === 'requested') {
+    status = 'confirmed';
+  }
+
+  const btn = document.getElementById('btnSaveJob');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    // 어드민이 in_progress로 강제 설정 시 actual_start 자동 세팅
+    const existingJob = allJobRequests?.find(j => j.id === id);
+    const actualStart = status === 'in_progress'
+      ? (existingJob?.actual_start || new Date().toISOString())
+      : (status === 'requested' || status === 'scheduled' || status === 'confirmed' ? null : undefined);
+
+    const updatePayload = {
+      status,
+      scheduled_date: date || null,
+      scheduled_time: time || null,
+      assigned_worker_id: worker || null,
+      sh_estimate: estimate,
+      sh_used: actual,
+      admin_notes: notes || null,
+      updated_at: new Date().toISOString()
+    };
+    if (actualStart !== undefined) updatePayload.actual_start = actualStart;
+
+    const { error } = await sb.from('service_requests').update(updatePayload).eq('id', id);
+    
+    if (error) throw error;
+
+    // ── Admin alert when job request is updated to requested/confirmed ──
+    if (status === 'requested' || status === 'confirmed') {
+      const jobData = allJobRequests?.find(j => j.id === id);
+      const prop = jobData?.property || {};
+      const addr = [prop.address, prop.suburb].filter(Boolean).join(', ') || '';
+      fetch(SUPABASE_URL + '/functions/v1/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          type: 'new_request',
+          notify_admins: true,
+          reference_id: id,
+          reference_type: 'service',
+          details: {
+            address: addr,
+            date: date || '',
+            time: time || '',
+            category: jobData?.category || '',
+          },
+        }),
+      }).catch(e => console.warn('Admin notification failed:', e));
+    }
+
+    showToast('Job request updated successfully');
+    closeJobEditModal();
+    loadJobRequests();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
+/* ══ Admin: Workers ═════════════════════════════════════════ */
+let allWorkersData = [];
+
+async function loadWorkers() {
+  if (!isAdmin) return;
+  const body = document.getElementById('workersBody');
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Loading…</td></tr>';
+
+  try {
+    const { data, error } = await sb.from('workers').select('*').order('full_name');
+    if (error) throw error;
+    
+    if (!data?.length) { 
+      body.innerHTML = '<tr><td colspan="7" class="empty-state">No team members found. Add your first member above.</td></tr>'; 
+      return; 
+    }
+    
+    allWorkersData = data;
+    
+    body.innerHTML = data.map(w => {
+      const statusBadge = w.is_active ? 'active' : 'inactive';
+      const areaLabel = w.area ? (PERTH_AREAS[w.area]?.name || w.area) : '—';
+      const typeLabel = w.worker_type ? w.worker_type.charAt(0).toUpperCase() + w.worker_type.slice(1) : 'Cleaner';
+      return `<tr>
+        <td><code style="background:#e8f0fb;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:var(--navy);white-space:nowrap;">${w.worker_code || '—'}</code></td>
+        <td style="font-weight:600;white-space:nowrap;">${w.full_name || '—'}</td>
+        <td style="white-space:nowrap;">${w.phone || '—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${areaLabel}</td>
+        <td style="text-transform:capitalize;white-space:nowrap;">${typeLabel}</td>
+        <td style="white-space:nowrap;"><span class="badge badge-${statusBadge}">${w.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td class="action-cell" style="white-space:nowrap;">
+          <button class="btn-action-sm" onclick="openWorkerModal('${w.id}')">Edit</button>
+          <button class="btn-action-sm danger" onclick="deleteWorker('${w.id}', '${(w.full_name || '').replace(/'/g, "\\'")}')">Remove</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">Haven+ Team table not available. Please create it first.</td></tr>';
+    console.warn('Workers load error:', e.message);
+  }
+}
+
+function openWorkerModal(workerId = null) {
+  const worker = workerId ? allWorkersData.find(w => w.id === workerId) : null;
+  
+  document.getElementById('workerModalTitle').textContent = worker ? 'Edit Team Member' : 'Add Team Member';
+  document.getElementById('workerEditId').value = workerId || '';
+  document.getElementById('workerName').value = worker?.full_name || '';
+  document.getElementById('workerPhone').value = worker?.phone || '';
+  document.getElementById('workerEmail').value = worker?.email || '';
+  document.getElementById('workerAddress').value = worker?.address || '';
+  document.getElementById('workerType').value = worker?.worker_type || 'cleaner';
+  document.getElementById('workerCleaningRate').value = worker?.cleaning_rate || '';
+  document.getElementById('workerTechRate').value = worker?.tech_rate || '';
+  document.getElementById('workerStatus').value = worker?.is_active ? 'active' : 'inactive';
+  document.getElementById('workerNotes').value = worker?.notes || '';
+  document.getElementById('workerAlert').className = 'modal-alert';
+  document.getElementById('workerAlert').textContent = '';
+  
+  // Set area from existing data or match from address
+  document.getElementById('workerArea').value = worker?.area || '';
+  document.getElementById('workerAreaDisplay').value = worker?.area ? getAreaName(worker.area) : '';
+  updateWorkerAreaBadge(worker?.area);
+  
+  document.getElementById('workerModal').classList.add('open');
+  initWorkerPlaces();
+}
+
+let workerPlacesAC = null;
+function initWorkerPlaces() {
+  const input = document.getElementById('workerAddress');
+  if (!input || !window.google?.maps?.places) return;
+  if (workerPlacesAC) return; // already initialized
+  workerPlacesAC = new google.maps.places.Autocomplete(input, {
+    componentRestrictions: { country: 'au' },
+    types: ['address'],
+    fields: ['address_components', 'formatted_address'],
+  });
+  workerPlacesAC.addListener('place_changed', () => {
+    const place = workerPlacesAC.getPlace();
+    if (!place.address_components) return;
+    input.value = place.formatted_address || '';
+    /* Extract suburb from Places + use enhancedAreaMatch */
+    let suburb = '';
+    place.address_components.forEach(c => {
+      if (c.types.includes('locality')) suburb = c.long_name;
+    });
+    const result = enhancedAreaMatch(suburb, input.value);
+    document.getElementById('workerArea').value = result.area || '';
+    document.getElementById('workerAreaDisplay').value = result.area ? getAreaName(result.area) : '';
+    updateWorkerAreaBadge(result.area, result.confidence);
+  });
+}
+
+function matchWorkerArea() {
+  const address = document.getElementById('workerAddress').value.trim();
+  if (!address) { updateWorkerAreaBadge(null); return; }
+
+  const result = enhancedAreaMatch(null, address);
+  document.getElementById('workerArea').value = result.area || '';
+  document.getElementById('workerAreaDisplay').value = result.area ? getAreaName(result.area) : '';
+  updateWorkerAreaBadge(result.area, result.confidence);
+}
+
+function updateWorkerAreaBadge(area, confidence = 'high') {
+  const badge = document.getElementById('workerAreaBadge');
+  if (!area) {
+    badge.textContent = '';
+    badge.style.background = '';
+    return;
+  }
+  
+  if (confidence === 'high') {
+    badge.textContent = '✓ Matched';
+    badge.style.background = '#dcfce7';
+    badge.style.color = '#166534';
+  } else if (confidence === 'medium') {
+    badge.textContent = '~ Partial';
+    badge.style.background = '#fef3c7';
+    badge.style.color = '#92400e';
+  } else {
+    badge.textContent = '';
+    badge.style.background = '';
+  }
+}
+
+function closeWorkerModal() {
+  document.getElementById('workerModal').classList.remove('open');
+}
+
+async function saveWorker() {
+  const id = document.getElementById('workerEditId').value;
+  const name = document.getElementById('workerName').value.trim();
+  const phone = document.getElementById('workerPhone').value.trim();
+  const email = document.getElementById('workerEmail').value.trim();
+  const address = document.getElementById('workerAddress').value.trim();
+  const area = document.getElementById('workerArea')?.value || null;
+  const workerType = document.getElementById('workerType').value;
+  const cleaningRate = parseFloat(document.getElementById('workerCleaningRate').value) || null;
+  const techRate = parseFloat(document.getElementById('workerTechRate').value) || null;
+  const status = document.getElementById('workerStatus').value;
+  const notes = document.getElementById('workerNotes').value.trim();
+  const alertEl = document.getElementById('workerAlert');
+  
+  if (!name) {
+    alertEl.textContent = 'Name is required';
+    alertEl.className = 'modal-alert error';
+    return;
+  }
+  
+  const btn = document.getElementById('btnSaveWorker');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  try {
+    const payload = {
+      full_name: name,
+      phone: phone || null,
+      email: email || null,
+      address: address || null,
+      area: area,
+      worker_type: workerType,
+      cleaning_rate: cleaningRate,
+      tech_rate: techRate,
+      is_active: status === 'active',
+      notes: notes || null,
+      updated_at: new Date().toISOString()
+    };
+    
+    let error;
+    if (id) {
+      ({ error } = await sb.from('workers').update(payload).eq('id', id));
+    } else {
+      // worker_code is auto-generated by DB trigger
+      ({ error } = await sb.from('workers').insert(payload));
+    }
+    
+    if (error) throw error;
+    
+    showToast(id ? 'Team member updated' : 'Team member added');
+    closeWorkerModal();
+    loadWorkers();
+    allWorkers = []; // Reset to force reload in dropdowns
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function deleteWorker(workerId, workerName) {
+  if (!confirm(`Remove worker "${workerName}"?\n\nThis will permanently delete this worker record.`)) return;
+  
+  try {
+    const { error } = await sb.from('workers').delete().eq('id', workerId);
+    if (error) throw error;
+    
+    showToast('Worker removed');
+    loadWorkers();
+    allWorkers = []; // Reset to force reload in dropdowns
+  } catch(e) {
+    showToast(e.message || 'Failed to remove worker', true);
+  }
+}
+
+/* ══ AI Tasks — 승인 패널 ══════════════════════════════════ */
+
+async function loadAIDashboardSummary() {
+  if (!isAdmin) return;
+  try {
+    const { data, error } = await sb
+      .from('admin_approvals')
+      .select('id, status, created_at')
+      .eq('status', 'pending');
+    if (error) throw error;
+    const count = data?.length || 0;
+    const desc = document.getElementById('aiSummaryDesc');
+    const badge = document.getElementById('aiSummaryBadge');
+    const sidebarBadge = document.getElementById('sidebarAIBadge');
+    if (desc) desc.textContent = count > 0
+      ? `검토 대기 ${count}건 — 클릭하여 확인하세요`
+      : '검토 대기 중인 태스크가 없습니다 · 다음 보고: 금요일 오전';
+    if (badge) {
+      badge.textContent = count > 0 ? `${count}건 대기` : '';
+      badge.style.display = count > 0 ? 'block' : 'none';
+    }
+    if (sidebarBadge) {
+      sidebarBadge.textContent = count > 0 ? count : '';
+      sidebarBadge.style.display = count > 0 ? 'inline' : 'none';
+    }
+  } catch(e) {
+    const desc = document.getElementById('aiSummaryDesc');
+    if (desc) desc.textContent = '로드 실패';
+  }
+}
+
+let aiCurrentTab = 'pending';
+
+function switchAITab(tab) {
+  aiCurrentTab = tab;
+  const pending = document.getElementById('aiTab-pending');
+  const history = document.getElementById('aiTab-history');
+  if (pending && history) {
+    pending.style.borderBottomColor = tab === 'pending' ? 'var(--orange)' : 'transparent';
+    pending.style.color = tab === 'pending' ? 'var(--navy)' : 'var(--text-light)';
+    history.style.borderBottomColor = tab === 'history' ? 'var(--orange)' : 'transparent';
+    history.style.color = tab === 'history' ? 'var(--navy)' : 'var(--text-light)';
+  }
+  tab === 'pending' ? loadAITasks() : loadAIHistory();
+}
+
+const _sevColor = { urgent:'#dc2626', normal:'#059669', longterm:'#2563eb' };
+const _sevBg    = { urgent:'#fef2f2', normal:'#f0fdf4', longterm:'#eff6ff' };
+const _sevLabel = { urgent:'긴급', normal:'일반', longterm:'장기' };
+const _ownerLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)', both:'Sunny + Jaden' };
+const _agentLabel = { 'ai-ceo-weekly':'CEO 에이전트', 'ai-dev-agent':'Dev 에이전트', 'ai-support-agent':'지원 에이전트' };
+const _statusLabel = { approved:'승인됨', rejected:'거절됨', modified:'검토 보류' };
+const _statusColor = { approved:'#059669', rejected:'#dc2626', modified:'#d97706' };
+const _statusBg    = { approved:'#f0fdf4', rejected:'#fef2f2', modified:'#fffbeb' };
+
+async function loadAITasks() {
+  if (!isAdmin) return;
+  const container = document.getElementById('aiTasksList');
+  if (!container) return;
+  try {
+    const { data: approvals, error } = await sb
+      .from('admin_approvals')
+      .select('*, admin_tasks(*)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    if (!approvals || approvals.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-light)"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:13px;font-weight:600">검토 대기 중인 태스크가 없습니다</div><div style="font-size:12px;margin-top:4px">다음 보고는 금요일 오전에 도착합니다</div></div>`;
+      return;
+    }
+    container.innerHTML = approvals.map(a => {
+      const task = a.admin_tasks;
+      if (!task) return '';
+      const proposals = task.proposals || [];
+      const agentName = _agentLabel[a.requester] || a.requester || 'AI 에이전트';
+      const proposalHTML = proposals.map((p, i) => `
+        <label style="display:flex;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='#ff6b35'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <input type="radio" name="proposal_${a.id}" value="${i}" ${i===1?'checked':''} style="margin-top:2px;flex-shrink:0">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">제안 ${i+1}: ${p.title}</div>
+            <div style="font-size:12px;color:#555;margin-bottom:4px">${p.description}</div>
+            <div style="font-size:11px;color:#888">난이도: ${p.effort} · 예상 효과: ${p.expected_impact}</div>
+          </div>
+        </label>`).join('');
+      return `
+        <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px" id="task-card-${a.id}">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${_sevBg[task.severity]||'#f9f9f9'};color:${_sevColor[task.severity]||'#666'}">${_sevLabel[task.severity]||task.severity}</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#f0f4ff;color:#3730a3;font-weight:600">${agentName}</span>
+            <span style="font-size:11px;color:#aaa">담당: ${_ownerLabel[task.owner]||task.owner}</span>
+            <span style="font-size:11px;color:#aaa">${new Date(a.created_at).toLocaleDateString('ko-KR')}</span>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:4px">${task.title}</div>
+          <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:12px">${task.description||''}</div>
+          ${proposals.length > 0 ? `<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">제안 선택:</div>${proposalHTML}</div>` : ''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onclick="approveTask('${a.id}','${task.id}')" style="padding:8px 18px;background:#ff6b35;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✓ 승인 및 실행</button>
+            <button onclick="holdTask('${a.id}','${task.id}')" style="padding:8px 14px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;font-size:13px;cursor:pointer">⏸ 검토 보류</button>
+            <button onclick="rejectTask('${a.id}','${task.id}')" style="padding:8px 14px;background:white;color:#666;border:1px solid #ddd;border-radius:8px;font-size:13px;cursor:pointer">✗ 거절</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div style="font-size:13px;color:#dc2626;padding:12px 0">로드 실패: ${e.message}</div>`;
+  }
+}
+
+async function loadAIHistory() {
+  if (!isAdmin) return;
+  const container = document.getElementById('aiTasksList');
+  if (!container) return;
+  try {
+    const { data: approvals, error } = await sb
+      .from('admin_approvals')
+      .select('*, admin_tasks(*)')
+      .in('status', ['approved', 'rejected', 'modified'])
+      .order('decided_at', { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    if (!approvals || approvals.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-light)"><div style="font-size:13px">결정된 내역이 없습니다</div></div>`;
+      return;
+    }
+    container.innerHTML = approvals.map(a => {
+      const task = a.admin_tasks;
+      if (!task) return '';
+      const agentName = _agentLabel[a.requester] || a.requester || 'AI 에이전트';
+      const deciderLabel = { sunny:'Sunny (MD)', jaden:'Jaden (FD)' }[a.decided_by] || a.decided_by || '—';
+      const decidedAt = a.decided_at ? new Date(a.decided_at).toLocaleDateString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+      const isModified = a.status === 'modified';
+      const isApproved = a.status === 'approved';
+      const proposals = task.proposals || [];
+      const proposalHTML = proposals.map((p, i) => `
+        <div style="padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:2px">제안 ${i+1}: ${p.title}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:4px">${p.description}</div>
+          <div style="font-size:11px;color:#888">난이도: ${p.effort} · 예상 효과: ${p.expected_impact}</div>
+        </div>`).join('');
+      const detailId = 'hist-detail-' + a.id;
+      const borderColor = isModified ? '#fde68a' : '#e5e7eb';
+      const bgColor = isModified ? '#fffdf5' : 'white';
+      const detailBorderTop = isModified ? '1px solid #fde68a' : '1px solid #f3f4f6';
+      const hintColor = isModified ? '#d97706' : '#aaa';
+      // 승인된 태스크의 실행 상태
+      const taskStatusBadge = (() => {
+        if (!isApproved) return '';
+        const cfg = {
+          executing: { bg:'#eff6ff', color:'#1d4ed8', text:'⚙ 실행 중' },
+          done:      { bg:'#f0fdf4', color:'#166534', text:'✓ 배포 완료' },
+          approved:  { bg:'#fef9f0', color:'#92400e', text:'⏳ 대기 중' },
+          proposed:  { bg:'#fef9f0', color:'#92400e', text:'⏳ 대기 중' },
+        }[task.status] || { bg:'#f9fafb', color:'#6b7280', text:task.status };
+        return `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${cfg.bg};color:${cfg.color}">${cfg.text}</span>`;
+      })();
+      return `
+        <div style="border:1px solid ${borderColor};border-radius:12px;margin-bottom:8px;opacity:${a.status==='rejected'?'.65':'1'};background:${bgColor};overflow:hidden">
+          <div onclick="toggleHistDetail('${detailId}')" style="padding:14px 16px;cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+              <div style="flex:1">
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                  <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${_statusBg[a.status]||'#f9f9f9'};color:${_statusColor[a.status]||'#666'}">${_statusLabel[a.status]||a.status}</span>
+                  <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#f0f4ff;color:#3730a3;font-weight:600">${agentName}</span>
+                  ${taskStatusBadge}
+                  <span style="font-size:11px;color:#aaa">${_sevLabel[task.severity]||task.severity}</span>
+                  <span style="font-size:11px;color:${hintColor}" id="${detailId}-hint">내용 보기 ›</span>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">${task.title}</div>
+                ${a.comment ? `<div style="font-size:12px;color:#92400e;margin-top:4px;font-style:italic">💬 "${a.comment}"</div>` : ''}
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:11px;color:#aaa">${deciderLabel}</div>
+                <div style="font-size:11px;color:#aaa">${decidedAt}</div>
+              </div>
+            </div>
+          </div>
+          <div id="${detailId}" style="display:none;padding:0 16px 16px;border-top:${detailBorderTop}">
+            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:12px;padding-top:12px">${task.description||''}</div>
+            ${proposals.length > 0 ? `<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px">제안 내용:</div>${proposalHTML}</div>` : ''}
+            ${isModified ? `
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="reinstateTask('${a.id}','${task.id}')" style="padding:7px 14px;background:#ff6b35;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">↩ 검토 대기로 되돌리기</button>
+              <button onclick="rejectFromHistory('${a.id}','${task.id}')" style="padding:7px 12px;background:white;color:#666;border:1px solid #ddd;border-radius:8px;font-size:12px;cursor:pointer">✗ 최종 거절</button>
+            </div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div style="font-size:13px;color:#dc2626;padding:12px 0">로드 실패: ${e.message}</div>`;
+  }
+}
+
+async function approveTask(approvalId, taskId) {
+  const radios = document.querySelectorAll(`input[name="proposal_${approvalId}"]`);
+  let selectedProposal = 1;
+  radios.forEach(r => { if (r.checked) selectedProposal = parseInt(r.value); });
+  try {
+    await sb.from('admin_approvals').update({
+      status: 'approved', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+      payload: { selected_proposal: selectedProposal },
+    }).eq('id', approvalId);
+    await sb.from('admin_tasks').update({ selected_proposal: selectedProposal, status: 'approved' }).eq('id', taskId);
+    const session = (await sb.auth.getSession()).data.session;
+    fetch('https://rtkgnlcgepromqtoelre.supabase.co/functions/v1/ai-dev-agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ approval_id: approvalId }),
+    });
+    showToast('승인 완료 — Dev 에이전트가 실행 중입니다…');
+    document.getElementById(`task-card-${approvalId}`)?.remove();
+    if (!document.querySelector('[id^="task-card-"]')) loadAITasks();
+  } catch(e) { showToast('승인 실패: ' + e.message, true); }
+}
+
+async function holdTask(approvalId, taskId) {
+  const comment = prompt('보류 사유 또는 추가 검토 내용을 입력하세요 (선택사항):', '') ?? '';
+  try {
+    await sb.from('admin_approvals').update({
+      status: 'modified', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+      comment: comment || '검토 보류',
+    }).eq('id', approvalId);
+    await sb.from('admin_tasks').update({ status: 'proposed' }).eq('id', taskId);
+    showToast('검토 보류 처리되었습니다.');
+    document.getElementById(`task-card-${approvalId}`)?.remove();
+    if (!document.querySelector('[id^="task-card-"]')) loadAITasks();
+  } catch(e) { showToast('처리 실패: ' + e.message, true); }
+}
+
+async function rejectTask(approvalId, taskId) {
+  try {
+    await sb.from('admin_approvals').update({
+      status: 'rejected', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+    }).eq('id', approvalId);
+    await sb.from('admin_tasks').update({ status: 'rejected' }).eq('id', taskId);
+    showToast('거절되었습니다.');
+    document.getElementById(`task-card-${approvalId}`)?.remove();
+    if (!document.querySelector('[id^="task-card-"]')) loadAITasks();
+  } catch(e) { showToast('거절 실패: ' + e.message, true); }
+}
+
+async function reinstateTask(approvalId, taskId) {
+  try {
+    // approval을 pending으로 되돌리고 comment 초기화
+    await sb.from('admin_approvals').update({
+      status: 'pending',
+      decided_by: null,
+      decided_at: null,
+      comment: null,
+    }).eq('id', approvalId);
+    // task도 proposed로 되돌려서 검토 대기 탭에 표시
+    await sb.from('admin_tasks').update({ status: 'proposed' }).eq('id', taskId);
+    showToast('검토 대기로 이동했습니다.');
+    // 히스토리 탭 새로고침
+    loadAIHistory();
+  } catch(e) { showToast('처리 실패: ' + e.message, true); }
+}
+
+async function rejectFromHistory(approvalId, taskId) {
+  if (!confirm('이 태스크를 최종 거절하시겠습니까?')) return;
+  try {
+    await sb.from('admin_approvals').update({
+      status: 'rejected', decided_by: 'sunny',
+      decided_at: new Date().toISOString(),
+      comment: '검토 후 최종 거절',
+    }).eq('id', approvalId);
+    await sb.from('admin_tasks').update({ status: 'rejected' }).eq('id', taskId);
+    showToast('최종 거절되었습니다.');
+    loadAIHistory();
+  } catch(e) { showToast('처리 실패: ' + e.message, true); }
+}
+
+function toggleHistDetail(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  const hint = document.getElementById(id + '-hint');
+  if (hint) hint.textContent = isOpen ? '내용 보기 ›' : '닫기 ›';
+}
+
+/* ══ Admin: Dashboard ═══════════════════════════════════════ */
+async function loadDashboard() {
+  if (!isAdmin) return;
+  
+  try {
+    // Parallel fetch all data needed
+    const [
+      jobsRes,
+      subsRes,
+      propsRes,
+      cleaningsRes
+    ] = await Promise.all([
+      // Pending job requests
+      sb.from('service_requests').select('id').eq('status', 'requested'),
+      // All active/suspended subscriptions
+      sb.from('subscriptions').select('id, status, plan_type, user_id, property_id, cleaning_hours_total, cleaning_hours_used').in('status', ['active', 'suspended']),
+      // All properties
+      sb.from('properties').select('id, address, suburb, user_id'),
+      // Cleanings this month
+      sb.from('cleaning_schedule').select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers, ch_deducted, duration_hours, actual_duration')
+        .gte('planned_date', getMonthStart())
+        .lte('planned_date', getMonthEnd())
+    ]);
+    
+    const jobs = jobsRes.data || [];
+    const subs = subsRes.data || [];
+    const props = propsRes.data || [];
+    const cleanings = cleaningsRes.data || [];
+    
+    if (subsRes.error) console.error('Subs error:', subsRes.error);
+    if (jobsRes.error) console.error('Jobs error:', jobsRes.error);
+    
+    // 1. Pending Jobs (service requests + cleanings pending/requested)
+    const pendingCleanings = cleanings.filter(c => c.status === 'requested' || c.status === 'pending').length;
+    const pendingJobs = jobs.length + pendingCleanings;
+    document.getElementById('ctaPendingJobs').textContent = pendingJobs;
+    updateCtaCardState('cta-pending', pendingJobs);
+    
+    // 2. Payment Issues (suspended subscriptions)
+    const paymentIssues = subs.filter(s => s.status === 'suspended').length;
+    document.getElementById('ctaPaymentIssues').textContent = paymentIssues;
+    updateCtaCardState('cta-payment', paymentIssues);
+    
+    // 3. No Plan Properties
+    const propsWithPlan = new Set(subs.map(s => s.property_id).filter(Boolean));
+    const noPlanProps = props.filter(p => !propsWithPlan.has(p.id)).length;
+    document.getElementById('ctaNoPlanProps').textContent = noPlanProps;
+    updateCtaCardState('cta-noplan', noPlanProps);
+    
+    // 4. CH Low Alert (remaining hours <= 2)
+    const chLowSubs = subs.filter(s => {
+      if (s.status !== 'active') return false;
+      const remaining = (s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0);
+      return remaining <= 2;
+    }).length;
+    document.getElementById('ctaChLow').textContent = chLowSubs;
+    updateCtaCardState('cta-chlow', chLowSubs);
+    
+    // 5. Revenue this month (from payments table)
+    const paymentsRes = await sb.from('payments')
+      .select('amount, stripe_fee, net_amount')
+      .eq('status', 'paid')
+      .gte('paid_at', getMonthStart())
+      .lte('paid_at', getMonthEnd() + 'T23:59:59');
+
+    const payments = paymentsRes.data || [];
+    const totalRevenue = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    const totalFees = payments.reduce((sum, p) => sum + (parseFloat(p.stripe_fee) || 0), 0);
+    const totalNet = payments.reduce((sum, p) => sum + (parseFloat(p.net_amount) || 0), 0);
+
+    // DB에 달러 단위로 저장됨 (cents 아님)
+    document.getElementById('ctaRevenueMonth').textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('ctaFeesMonth').textContent = `$${totalFees.toFixed(2)}`;
+    document.getElementById('ctaNetMonth').textContent = `$${totalNet.toFixed(2)}`;
+    
+    // This Month Stats
+    const completedCleanings = cleanings.filter(c => c.status === 'completed').length;
+    const totalChUsed = cleanings.filter(c => c.status === 'completed').reduce((sum, c) => sum + (c.actual_duration || c.ch_deducted || c.duration_hours || 2), 0);
+    
+    document.getElementById('dashCleaningsMonth').textContent = cleanings.length;
+    document.getElementById('dashActiveSubs').textContent = subs.filter(s => s.status === 'active').length;
+    document.getElementById('dashChUsed').textContent = `${totalChUsed.toFixed(1)} hrs`;
+    
+    // Jobs completed this month (cleanings + service requests)
+    const completedServices = await sb.from('service_requests').select('id')
+      .eq('status', 'completed')
+      .gte('scheduled_date', getMonthStart())
+      .lte('scheduled_date', getMonthEnd());
+    const totalCompleted = completedCleanings + (completedServices.data || []).length;
+    document.getElementById('dashJobsMonth').textContent = totalCompleted;
+    
+    // Cleanings & Job Requests
+    await loadDashboardJobs();
+    
+  } catch(e) {
+    console.error('Dashboard load error:', e);
+  }
+}
+
+function updateCtaCardState(cardClass, value) {
+  const card = document.querySelector(`.cta-card.${cardClass}`);
+  if (!card) return;
+  
+  if (value === 0) {
+    card.classList.add('cta-ok');
+  } else {
+    card.classList.remove('cta-ok');
+  }
+}
+
+function getMonthStart() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+}
+
+function getMonthEnd() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+}
+
+async function loadDashboardJobs() {
+  const body = document.getElementById('dashUpcomingBody');
+  const typeFilter = document.getElementById('dashJobTypeFilter')?.value || 'all';
+  const periodFilter = document.getElementById('dashPeriodFilter')?.value || '7days';
+
+  const today = new Date().toISOString().split('T')[0];
+  const weekLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  let allItems = [];
+
+  // ── Cleanings ──
+  if (typeFilter === 'all' || typeFilter === 'cleaning') {
+    let q = sb.from('cleaning_schedule')
+      .select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers')
+      .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
+      .order('planned_date', { ascending: true });
+
+    if (periodFilter === '7days') {
+      q = q.gte('planned_date', today).lte('planned_date', weekLater);
+    } else if (periodFilter === 'month') {
+      q = q.gte('planned_date', getMonthStart()).lte('planned_date', getMonthEnd());
+    }
+
+    const { data } = await q.limit(50);
+    (data || []).forEach(c => allItems.push({ ...c, _type: 'cleaning', _desc: null }));
+  }
+
+  // ── Job Requests (Service Requests) ──
+  if (typeFilter === 'all' || typeFilter === 'service') {
+    let q = sb.from('service_requests')
+      .select('id, scheduled_date, scheduled_time, status, property_id, assigned_worker_id, assigned_workers, category, description')
+      .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress', 'completed'])
+      .order('scheduled_date', { ascending: true });
+
+    if (periodFilter === '7days') {
+      q = q.gte('scheduled_date', today).lte('scheduled_date', weekLater);
+    } else if (periodFilter === 'month') {
+      q = q.gte('scheduled_date', getMonthStart()).lte('scheduled_date', getMonthEnd());
+    }
+
+    const { data } = await q.limit(50);
+    (data || []).forEach(s => allItems.push({
+      id: s.id,
+      planned_date: s.scheduled_date,
+      planned_time: s.scheduled_time,
+      status: s.status,
+      property_id: s.property_id,
+      assigned_worker_id: s.assigned_worker_id,
+      assigned_workers: s.assigned_workers,
+      _type: 'service',
+      _desc: s.category || s.description || 'Service'
+    }));
+  }
+
+  // Sort by date ascending
+  allItems.sort((a, b) => (a.planned_date || '9999').localeCompare(b.planned_date || '9999'));
+
+  if (!allItems.length) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-state">No jobs found.</td></tr>';
+    return;
+  }
+
+  // Get property and worker info
+  const propIds = [...new Set(allItems.map(c => c.property_id).filter(Boolean))];
+  let propMap = {};
+  if (propIds.length) {
+    const { data: props } = await sb.from('properties').select('id, address, suburb').in('id', propIds);
+    (props || []).forEach(p => propMap[p.id] = p);
+  }
+
+  if (!allWorkers.length) await loadWorkersForDropdowns();
+  const workerMap = {};
+  allWorkers.forEach(w => workerMap[w.id] = w);
+
+  body.innerHTML = allItems.map(c => {
+    const d = c.planned_date ? new Date(c.planned_date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+    const prop = propMap[c.property_id];
+    const propLabel = c._type === 'service' && c._desc
+      ? c._desc
+      : (prop ? `${prop.address}, ${prop.suburb}` : '—');
+
+    const workerIds = (c.assigned_workers && Array.isArray(c.assigned_workers) && c.assigned_workers.length > 0)
+      ? c.assigned_workers
+      : (c.assigned_worker_id ? [c.assigned_worker_id] : []);
+
+    let workerDisplay = 'Unassigned';
+    if (workerIds.length === 1) {
+      workerDisplay = workerMap[workerIds[0]]?.full_name || 'Unknown';
+    } else if (workerIds.length > 1) {
+      workerDisplay = `${workerMap[workerIds[0]]?.full_name || '?'} +${workerIds.length - 1}`;
+    }
+
+    const typeLabel = c._type === 'cleaning'
+      ? '<span style="color:#1976d2;font-weight:600;font-size:11px;">🧹 Cleaning</span>'
+      : '<span style="color:#e65100;font-weight:600;font-size:11px;">🔧 Service</span>';
+
+    const badgeMap = { requested: 'pending', scheduled: 'scheduled', confirmed: 'scheduled', in_progress: 'active', completed: 'completed' };
+    const badgeClass = badgeMap[c.status] || 'pending';
+
+    return `<tr>
+      <td style="font-weight:600;">${d}</td>
+      <td>${c.planned_time || '—'}</td>
+      <td>${typeLabel}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${propLabel}">${propLabel}</td>
+      <td>${workerDisplay}</td>
+      <td><span class="badge badge-${badgeClass}">${c.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ Admin: Properties ══════════════════════════════════════ */
+let allPropertiesData = [];
+
+async function loadProperties() {
+  if (!isAdmin) return;
+  const body = document.getElementById('propsBody');
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+  
+  // Initialize area dropdowns
+  initAreaDropdowns();
+
+  const { data } = await sb.from('properties')
+    .select('id, address, suburb, postcode, area, property_type, bedrooms, bathrooms, access_instructions, user_id')
+    .order('created_at', { ascending: false }).limit(200);
+    
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No properties found.</td></tr>'; return; }
+
+  // Get owners and subscriptions
+  const userIds = [...new Set(data.map(p => p.user_id).filter(Boolean))];
+  let profileMap = {}, subMap = {};
+  
+  if (userIds.length) {
+    const [profilesRes, subsRes] = await Promise.all([
+      sb.from('profiles').select('id, full_name').in('id', userIds),
+      sb.from('subscriptions').select('user_id, plan_type, property_id').eq('status', 'active')
+    ]);
+    (profilesRes.data || []).forEach(p => profileMap[p.id] = p);
+    (subsRes.data || []).forEach(s => { if(s.property_id) subMap[s.property_id] = s; });
+  }
+
+  allPropertiesData = data.map(p => ({
+    ...p,
+    owner: profileMap[p.user_id]?.full_name || '—',
+    plan: subMap[p.id]?.plan_type || null
+  }));
+  
+  renderProperties(allPropertiesData);
+}
+
+function renderProperties(list) {
+  const body = document.getElementById('propsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  
+  body.innerHTML = list.map(p => {
+    const areaCode = p.area || '';
+    const areaName = p.area ? getAreaName(p.area) : 'Not set';
+    const areaClass = p.area ? `area-cell area-bg-${p.area}` : 'area-cell area-bg-unknown';
+    const suggestion = !p.area ? suggestAreaForSuburb(p.suburb) : null;
+    const suggestionHint = suggestion?.area ? ` <span style="font-size:10px;color:#888;">(→ ${suggestion.name})</span>` : '';
+    
+    return `<tr>
+      <td style="font-weight:600;">${p.address || '—'}</td>
+      <td>${p.suburb || '—'}${suggestionHint}</td>
+      <td class="${areaClass}">${areaName}</td>
+      <td style="text-transform:capitalize;">${(p.property_type || '—').replace(/_/g, ' ')}</td>
+      <td>${p.bedrooms || '—'} / ${p.bathrooms || '—'}</td>
+      <td>${p.owner}</td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openPropAreaModal('${p.id}')">Edit</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterProperties() {
+  const q = document.getElementById('propSearch').value.toLowerCase();
+  const area = document.getElementById('propAreaFilter').value;
+  const filtered = allPropertiesData.filter(p => {
+    const addr = (p.address || '').toLowerCase();
+    const suburb = (p.suburb || '').toLowerCase();
+    const matchQ = !q || addr.includes(q) || suburb.includes(q);
+    const matchArea = !area || p.area === area;
+    return matchQ && matchArea;
+  });
+  renderProperties(filtered);
+}
+
+function openPropAreaModal(propId) {
+  const prop = allPropertiesData.find(p => p.id === propId);
+  if (!prop) return;
+
+  document.getElementById('propAreaEditId').value = propId;
+  document.getElementById('propAreaAddress').value = prop.address || '';
+  document.getElementById('propAreaSuburb').value = prop.suburb || '';
+  document.getElementById('propEditPostcode').value = prop.postcode || '';
+  document.getElementById('propEditType').value = (prop.property_type || 'house').toLowerCase();
+  document.getElementById('propEditBedrooms').value = prop.bedrooms || '';
+  document.getElementById('propEditBathrooms').value = prop.bathrooms || '';
+  document.getElementById('propEditAccess').value = prop.access_instructions || '';
+  document.getElementById('propAreaSelect').value = prop.area || '';
+  document.getElementById('propAreaAlert').className = 'modal-alert';
+  document.getElementById('propAreaAlert').textContent = '';
+
+  // Show suggestion using enhanced matching
+  const suggestion = enhancedAreaMatch(prop.suburb, prop.address);
+  const suggEl = document.getElementById('propAreaSuggestion');
+  if (suggestion.area) {
+    document.getElementById('propAreaSelect').value = suggestion.area;
+    if (suggestion.area !== prop.area) {
+      suggEl.innerHTML = `💡 Suggested: <strong>${suggestion.name}</strong> (${suggestion.confidence} confidence)`;
+    } else {
+      suggEl.textContent = '✓ Current area matches suggestion';
+      suggEl.style.color = '#27ae60';
+    }
+  } else {
+    suggEl.textContent = '';
+  }
+  
+  document.getElementById('propAreaModal').classList.add('open');
+}
+
+function closePropAreaModal() {
+  document.getElementById('propAreaModal').classList.remove('open');
+}
+
+async function savePropArea() {
+  const id = document.getElementById('propAreaEditId').value;
+  const alertEl = document.getElementById('propAreaAlert');
+
+  const payload = {
+    address: document.getElementById('propAreaAddress').value.trim(),
+    suburb: document.getElementById('propAreaSuburb').value.trim(),
+    postcode: document.getElementById('propEditPostcode').value.trim(),
+    property_type: document.getElementById('propEditType').value,
+    bedrooms: parseInt(document.getElementById('propEditBedrooms').value) || null,
+    bathrooms: parseInt(document.getElementById('propEditBathrooms').value) || null,
+    access_instructions: document.getElementById('propEditAccess').value.trim() || null,
+    area: document.getElementById('propAreaSelect').value || null
+  };
+
+  if (!payload.address || !payload.suburb) {
+    alertEl.textContent = 'Address and suburb are required.';
+    alertEl.className = 'modal-alert error';
+    return;
+  }
+
+  const btn = document.getElementById('btnSavePropArea');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const { error } = await sb.from('properties').update(payload).eq('id', id);
+    if (error) throw error;
+
+    showToast('Property updated');
+    closePropAreaModal();
+    loadProperties();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.className = 'modal-alert error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function autoAssignAllAreas() {
+  if (!confirm('This will auto-assign areas to all properties without an area based on suburb. Continue?')) return;
+  
+  const propsToUpdate = allPropertiesData.filter(p => !p.area);
+  if (!propsToUpdate.length) {
+    showToast('All properties already have areas assigned');
+    return;
+  }
+  
+  let updated = 0, failed = 0;
+  
+  for (const prop of propsToUpdate) {
+    const suggestion = suggestAreaForSuburb(prop.suburb);
+    if (suggestion.area) {
+      try {
+        const { error } = await sb.from('properties').update({ area: suggestion.area }).eq('id', prop.id);
+        if (!error) updated++;
+        else failed++;
+      } catch(e) {
+        failed++;
+      }
+    }
+  }
+  
+  showToast(`Auto-assigned ${updated} properties${failed ? `, ${failed} failed` : ''}`);
+  loadProperties();
+}
+
+/* ══ Admin: Customers ═══════════════════════════════════════ */
+let allCustomersData = [];
+
+async function loadCustomers() {
+  if (!isAdmin) return;
+  const body = document.getElementById('customersBody');
+  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+
+  const { data } = await sb.from('profiles')
+    .select('id, full_name, phone, preferred_language, role, created_at')
+    .order('created_at', { ascending: false }).limit(200);
+    
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>'; return; }
+
+  // Get emails from auth (we store email in profiles or fetch via user lookup)
+  // Since we can't directly query auth.users, we rely on profiles data
+  // The email might need to be added to profiles table if not there
+  
+  allCustomersData = data;
+  renderCustomers(allCustomersData);
+}
+
+function renderCustomers(list) {
+  const body = document.getElementById('customersBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No results.</td></tr>'; return; }
+  
+  body.innerHTML = list.map(c => {
+    const joined = c.created_at ? new Date(c.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    const roleBadge = c.role === 'admin' ? '<span class="admin-badge">Admin</span>' : '';
+    const lang = c.preferred_language === 'ko' ? '한국어' : 'English';
+    return `<tr>
+      <td style="font-weight:600;">${c.full_name || '—'}</td>
+      <td style="color:var(--text-light);">—</td>
+      <td>${c.phone || '—'}</td>
+      <td>${lang}</td>
+      <td>${roleBadge || 'Customer'}</td>
+      <td style="color:var(--text-light);">${joined}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterCustomers() {
+  const q = document.getElementById('custSearch').value.toLowerCase();
+  const filtered = allCustomersData.filter(c => {
+    const name = (c.full_name || '').toLowerCase();
+    const phone = (c.phone || '').toLowerCase();
+    return !q || name.includes(q) || phone.includes(q);
+  });
+  renderCustomers(filtered);
+}
+
+/* ══ Admin: Hours Log ═══════════════════════════════════ */
+async function loadHoursLog() {
+  if (!isAdmin) return;
+  const body = document.getElementById('hoursBody');
+  body.innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  const { data } = await sb.from('sh_transactions')
+    .select('created_at, user_id, transaction_type, sh_amount, balance_after_voucher, balance_after_purchased, description')
+    .order('created_at', { ascending: false }).limit(100);
+  if (!data?.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No transactions found.</td></tr>'; return; }
+
+  const userIds = [...new Set(data.map(r => r.user_id))];
+  const { data: profiles } = await sb.from('profiles').select('id, full_name').in('id', userIds);
+  const profileMap = {};
+  (profiles || []).forEach(p => profileMap[p.id] = p);
+
+  body.innerHTML = data.map(r => {
+    const d    = new Date(r.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    const name = profileMap[r.user_id]?.full_name || r.user_id?.slice(0,8) + '…';
+    const amt  = r.sh_amount > 0 ? `+${r.sh_amount}` : r.sh_amount;
+    const color= r.sh_amount > 0 ? 'color:var(--green-txt);font-weight:700;' : 'color:var(--red);font-weight:700;';
+    return `<tr>
+      <td style="color:var(--text-light);">${d}</td>
+      <td style="font-weight:600;">${name}</td>
+      <td><span class="badge badge-essential">${r.transaction_type}</span></td>
+      <td style="${color}">${amt} hrs</td>
+      <td>${r.balance_after_voucher ?? '—'}</td>
+      <td>${r.balance_after_purchased ?? '—'}</td>
+      <td style="color:var(--text-light);font-size:12px;">${r.description || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Keyboard shortcut ─────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('pwForm').classList.contains('open')) togglePwForm();
+    if (document.getElementById('emailForm').classList.contains('open')) toggleEmailForm();
+    closeJobEditModal();
+    closeSchedEditModal();
+    closeWorkerModal();
+    closePropAreaModal();
+  }
+});
+
+/* ── Language Toggle ── */
+let currentLang = localStorage.getItem('hp_lang') || 'en';
+function toggleLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('hp_lang', lang);
+  document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('lang-' + lang);
+  if (el) el.classList.add('active');
+  
+  // Toggle lang-en / lang-ko elements
+  document.querySelectorAll('.lang-en').forEach(el => {
+    el.style.display = lang === 'en' ? '' : 'none';
+  });
+  document.querySelectorAll('.lang-ko').forEach(el => {
+    el.style.display = lang === 'ko' ? '' : 'none';
+  });
+}
+/* ══════════════════════════════════════════════════════════════
+   Admin Manage Data (Subscriptions & SH Balance)
+   ══════════════════════════════════════════════════════════════ */
+
+let manageDataState = {
+  subscriptions: [],
+  shBalance: [],
+  profiles: [],
+  properties: [],
+  allProfilesForDropdown: [],
+};
+let currentDeleteAction = null;
+
+async function loadManageData() {
+  try {
+    // Load all necessary data
+    const [subsRes, shRes, profilesRes, propsRes] = await Promise.all([
+      sb.from('subscriptions').select('*'),
+      sb.from('sh_balance').select('*'),
+      sb.from('profiles').select('id, full_name, phone'),
+      sb.from('properties').select('id, user_id, address'),
+    ]);
+
+    manageDataState.subscriptions = subsRes.data || [];
+    manageDataState.shBalance = shRes.data || [];
+    manageDataState.profiles = profilesRes.data || [];
+    manageDataState.properties = propsRes.data || [];
+    manageDataState.allProfilesForDropdown = profilesRes.data || [];
+
+    // Populate dropdowns
+    populateCustomerDropdowns();
+
+    // Render the active tab
+    const activeTab = document.getElementById('panelSubscriptions').style.display === 'block' ? 'subscriptions' : 'serviceHours';
+    if (activeTab === 'subscriptions') {
+      renderManageSubs(manageDataState.subscriptions);
+    } else {
+      renderManageSH(manageDataState.shBalance);
+    }
+  } catch (err) {
+    console.error('Error loading manage data:', err);
+    showToast('Failed to load data', true);
+  }
+}
+
+function switchManageTab(tab) {
+  const subPanel = document.getElementById('panelSubscriptions');
+  const shPanel = document.getElementById('panelServiceHours');
+  const subTab = document.getElementById('tabSubscriptions');
+  const shTab = document.getElementById('tabServiceHours');
+
+  if (tab === 'subscriptions') {
+    subPanel.style.display = 'block';
+    shPanel.style.display = 'none';
+    subTab.style.borderBottom = '3px solid var(--navy)';
+    subTab.style.color = 'var(--navy)';
+    shTab.style.borderBottom = '3px solid transparent';
+    shTab.style.color = 'var(--text-secondary)';
+    renderManageSubs(manageDataState.subscriptions);
+  } else {
+    subPanel.style.display = 'none';
+    shPanel.style.display = 'block';
+    subTab.style.borderBottom = '3px solid transparent';
+    subTab.style.color = 'var(--text-secondary)';
+    shTab.style.borderBottom = '3px solid var(--navy)';
+    shTab.style.color = 'var(--navy)';
+    renderManageSH(manageDataState.shBalance);
+  }
+}
+
+function populateCustomerDropdowns() {
+  const subCustomerSelect = document.getElementById('subManageCustomer');
+  const shCustomerSelect = document.getElementById('shManageCustomer');
+
+  [subCustomerSelect, shCustomerSelect].forEach(select => {
+    select.innerHTML = '<option value="">Select a customer</option>';
+    manageDataState.allProfilesForDropdown.forEach(profile => {
+      const option = document.createElement('option');
+      option.value = profile.id;
+      option.textContent = `${profile.full_name || 'No name'}${profile.phone ? ' (' + profile.phone + ')' : ''}`;
+      select.appendChild(option);
+    });
+  });
+}
+
+function renderManageSubs(subs) {
+  const tbody = document.getElementById('manageSubsBody');
+  if (!subs || subs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No subscriptions found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = subs.map(sub => {
+    const customer = manageDataState.profiles.find(p => p.id === sub.user_id);
+    const property = manageDataState.properties.find(p => p.id === sub.property_id);
+    const custName = customer ? customer.full_name : 'Unknown';
+    const propAddr = property ? property.address : 'Unknown';
+
+    return `<tr>
+      <td><strong>${custName}</strong></td>
+      <td>${propAddr}</td>
+      <td><span class="badge badge-${sub.plan_type}">${sub.plan_type}</span></td>
+      <td><span class="badge badge-${sub.status === 'active' ? 'active' : 'inactive'}">${sub.status}</span></td>
+      <td>${sub.cleaning_hours_used || 0} / ${sub.cleaning_hours_total || 0}</td>
+      <td>${sub.sh_hours_used || 0} / ${sub.sh_hours_total || 0}</td>
+      <td>${sub.start_date || '—'}</td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openEditSubModal('${sub.id}')">Edit</button>
+        <button class="btn-action-sm danger" onclick="openDeleteConfirm('subscription', '${sub.id}', '${custName}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderManageSH(shList) {
+  const tbody = document.getElementById('manageSHBody');
+  if (!shList || shList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No SH balance records found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = shList.map(sh => {
+    const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
+    const custName = customer ? customer.full_name : 'Unknown';
+    const purchRem = (sh.purchased_total || 0) - (sh.purchased_used || 0);
+    const grantRem = (sh.override_total || 0) - (sh.override_used || 0);
+    const totalBal = purchRem + grantRem;
+    const label = sh.override_label || '—';
+
+    return `<tr>
+      <td><strong>${custName}</strong></td>
+      <td>${purchRem} / ${sh.purchased_total || 0}</td>
+      <td>${grantRem > 0 ? grantRem + ' / ' + (sh.override_total || 0) : '—'}</td>
+      <td>${grantRem > 0 ? '<span style="font-size:11px;background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:4px;">' + label + '</span>' : '—'}</td>
+      <td><strong>${totalBal}</strong></td>
+      <td class="action-cell">
+        <button class="btn-action-sm" onclick="openEditSHModal('${sh.user_id}')">Edit</button>
+        <button class="btn-action-sm danger" onclick="openDeleteConfirm('sh', '${sh.user_id}', '${custName}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterManageSubs() {
+  const query = document.getElementById('subSearchInput').value.toLowerCase();
+  const filtered = manageDataState.subscriptions.filter(sub => {
+    const customer = manageDataState.profiles.find(p => p.id === sub.user_id);
+    if (!customer) return false;
+    return (customer.full_name || '').toLowerCase().includes(query) || (customer.phone || '').toLowerCase().includes(query);
+  });
+  renderManageSubs(filtered);
+}
+
+function filterManageSH() {
+  const query = document.getElementById('shSearchInput').value.toLowerCase();
+  const filtered = manageDataState.shBalance.filter(sh => {
+    const customer = manageDataState.profiles.find(p => p.id === sh.user_id);
+    if (!customer) return false;
+    return (customer.full_name || '').toLowerCase().includes(query) || (customer.phone || '').toLowerCase().includes(query);
+  });
+  renderManageSH(filtered);
+}
+
+const PLAN_DEFAULTS = {
+  essential: { cleaning_hours: 8,  sh_hours: 2 },
+  smart:     { cleaning_hours: 12, sh_hours: 3 },
+  premium:   { cleaning_hours: 24, sh_hours: 6 },
+};
+
+function onSubPlanChange() {
+  const editId = document.getElementById('subManageEditId').value;
+  if (editId) return; // don't override values when editing
+  const plan = document.getElementById('subManagePlan').value;
+  const d = PLAN_DEFAULTS[plan] || {};
+  document.getElementById('subManageCleaningTotal').value = d.cleaning_hours || '';
+  document.getElementById('subManageCleaningUsed').value = 0;
+  document.getElementById('subManageSHTotal').value = d.sh_hours || '';
+  document.getElementById('subManageSHUsed').value = 0;
+  // Auto-set end date to 1 year from start
+  const startDate = document.getElementById('subManageStartDate').value;
+  if (startDate) {
+    const end = new Date(startDate);
+    end.setFullYear(end.getFullYear() + 1);
+    document.getElementById('subManageEndDate').value = end.toISOString().split('T')[0];
+  }
+}
+
+function openAddSubModal() {
+  document.getElementById('subManageEditId').value = '';
+  document.getElementById('subManageTitle').textContent = 'Add Subscription';
+  document.getElementById('subManageCustomer').value = '';
+  document.getElementById('subManageProperty').value = '';
+  document.getElementById('subManagePlan').value = 'essential';
+  document.getElementById('subManageStatus').value = 'active';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('subManageStartDate').value = today;
+  const endDate = new Date(); endDate.setFullYear(endDate.getFullYear() + 1);
+  document.getElementById('subManageEndDate').value = endDate.toISOString().split('T')[0];
+  document.getElementById('subManageAlert').style.display = 'none';
+  document.getElementById('subManageCleaningStartSection').style.display = 'none';
+  document.getElementById('subManageModal').classList.add('open');
+  document.getElementById('subManageProperty').innerHTML = '<option value="">Select a property first</option>';
+  onSubPlanChange(); // set defaults for essential
+}
+
+function openEditSubModal(subId) {
+  const sub = manageDataState.subscriptions.find(s => s.id === subId);
+  if (!sub) return;
+
+  document.getElementById('subManageEditId').value = sub.id;
+  document.getElementById('subManageTitle').textContent = 'Edit Subscription';
+  document.getElementById('subManageCustomer').value = sub.user_id;
+  document.getElementById('subManagePlan').value = sub.plan_type;
+  document.getElementById('subManageStatus').value = sub.status;
+  document.getElementById('subManageStartDate').value = sub.start_date || '';
+  document.getElementById('subManageEndDate').value = sub.end_date || '';
+  document.getElementById('subManageCleaningTotal').value = sub.cleaning_hours_total || '';
+  document.getElementById('subManageCleaningUsed').value = sub.cleaning_hours_used || '';
+  document.getElementById('subManageSHTotal').value = sub.sh_hours_total || '';
+  document.getElementById('subManageSHUsed').value = sub.sh_hours_used || '';
+  document.getElementById('subManageAlert').style.display = 'none';
+
+  // Show cleaning start month section
+  const csSection = document.getElementById('subManageCleaningStartSection');
+  const csValue = document.getElementById('subManageCleaningStartValue');
+  if (sub.cleaning_start_month) {
+    csValue.textContent = new Date(sub.cleaning_start_month).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+    csSection.style.display = '';
+  } else {
+    csValue.textContent = 'Not set — customer will select from dashboard';
+    csSection.style.display = '';
+  }
+
+  // Load properties for this customer
+  onSubCustomerChange();
+  document.getElementById('subManageProperty').value = sub.property_id;
+
+  document.getElementById('subManageModal').classList.add('open');
+}
+
+async function onSubCustomerChange() {
+  const customerId = document.getElementById('subManageCustomer').value;
+  const propSelect = document.getElementById('subManageProperty');
+
+  if (!customerId) {
+    propSelect.innerHTML = '<option value="">Select a customer first</option>';
+    return;
+  }
+
+  const customerProps = manageDataState.properties.filter(p => p.user_id === customerId);
+  propSelect.innerHTML = '<option value="">Select a property</option>' +
+    customerProps.map(p => {
+      const existingSub = manageDataState.subscriptions.find(s => s.property_id === p.id && s.status === 'active');
+      const tag = existingSub
+        ? ` — ${existingSub.plan_type.charAt(0).toUpperCase() + existingSub.plan_type.slice(1)} active`
+        : ' — No plan';
+      return `<option value="${p.id}">${p.address}${tag}</option>`;
+    }).join('');
+}
+
+function onSubPropertyChange() {
+  const propId = document.getElementById('subManageProperty').value;
+  const hint = document.getElementById('subManagePlanHint');
+  const planSelect = document.getElementById('subManagePlan');
+  if (!propId) { hint.textContent = ''; return; }
+  const existingSub = manageDataState.subscriptions.find(s => s.property_id === propId && s.status === 'active');
+  if (existingSub) {
+    const name = existingSub.plan_type.charAt(0).toUpperCase() + existingSub.plan_type.slice(1);
+    hint.textContent = `(Current: ${name})`;
+    hint.style.color = '#27ae60';
+    planSelect.value = existingSub.plan_type;
+  } else {
+    hint.textContent = '(No plan)';
+    hint.style.color = 'var(--orange)';
+    planSelect.value = '';
+  }
+}
+
+function closeSubManageModal() {
+  document.getElementById('subManageModal').classList.remove('open');
+}
+
+async function resetCleaningStartMonth() {
+  const editId = document.getElementById('subManageEditId').value;
+  if (!editId) return;
+  if (!confirm('Reset cleaning schedule? The customer will need to re-select their start month from the dashboard.')) return;
+
+  try {
+    // Clear cleaning_start_month and preferred_week on subscription
+    const { error } = await sb.from('subscriptions')
+      .update({ cleaning_start_month: null, preferred_week: null, confirmed_date: null })
+      .eq('id', editId);
+    if (error) throw error;
+
+    // Delete future cleaning_schedule records (keep completed ones)
+    await sb.from('cleaning_schedule')
+      .delete()
+      .eq('subscription_id', editId)
+      .in('status', ['requested', 'scheduled', 'confirmed']);
+
+    document.getElementById('subManageCleaningStartValue').textContent = 'Not set — customer will select from dashboard';
+    showToast('Cleaning schedule reset. Customer can re-select start month.');
+  } catch(e) {
+    showToast('Failed to reset: ' + e.message, true);
+    console.error(e);
+  }
+}
+
+async function saveSubManage() {
+  const editId = document.getElementById('subManageEditId').value;
+  const userId = document.getElementById('subManageCustomer').value;
+  const propertyId = document.getElementById('subManageProperty').value;
+  const planType = document.getElementById('subManagePlan').value;
+  const status = document.getElementById('subManageStatus').value;
+  const startDate = document.getElementById('subManageStartDate').value;
+  const endDate = document.getElementById('subManageEndDate').value;
+  const cleaningTotal = parseFloat(document.getElementById('subManageCleaningTotal').value) || 0;
+  const cleaningUsed = parseFloat(document.getElementById('subManageCleaningUsed').value) || 0;
+  const shTotal = parseFloat(document.getElementById('subManageSHTotal').value) || 0;
+  const shUsed = parseFloat(document.getElementById('subManageSHUsed').value) || 0;
+
+  const alertEl = document.getElementById('subManageAlert');
+
+  if (!userId || !propertyId) {
+    alertEl.textContent = 'Please select both a customer and property';
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+    return;
+  }
+
+  /* ── No Plan = full reset for this property ── */
+  if (!planType) {
+    const existingSub = manageDataState.subscriptions.find(s => s.property_id === propertyId && s.status === 'active');
+    if (!existingSub) {
+      alertEl.textContent = 'This property has no active plan to reset.';
+      alertEl.classList.remove('success'); alertEl.classList.add('error');
+      alertEl.style.display = 'block';
+      return;
+    }
+    if (!confirm('⚠ Remove plan and delete ALL related data for this property?\n\n• Subscription\n• Cleaning schedules\n• Service requests\n\nThis cannot be undone.')) return;
+
+    try {
+      await sb.from('cleaning_schedule').delete().eq('property_id', propertyId);
+      await sb.from('service_requests').delete().eq('property_id', propertyId);
+      await sb.from('subscriptions').delete().eq('id', existingSub.id);
+
+      alertEl.textContent = 'Plan removed and all data reset.';
+      alertEl.classList.remove('error'); alertEl.classList.add('success');
+      alertEl.style.display = 'block';
+      setTimeout(() => { closeSubManageModal(); loadManageData(); showToast('Property plan reset complete.'); }, 800);
+    } catch(e) {
+      alertEl.textContent = 'Error: ' + (e.message || 'Reset failed');
+      alertEl.classList.remove('success'); alertEl.classList.add('error');
+      alertEl.style.display = 'block';
+    }
+    return;
+  }
+
+  try {
+    const payload = {
+      user_id: userId,
+      property_id: propertyId,
+      plan_type: planType,
+      status: status,
+      start_date: startDate,
+      end_date: endDate || null,
+      cleaning_hours_total: cleaningTotal,
+      cleaning_hours_used: cleaningUsed,
+      sh_hours_total: shTotal,
+      sh_hours_used: shUsed,
+    };
+
+    let result;
+    if (editId) {
+      result = await sb.from('subscriptions').update(payload).eq('id', editId);
+    } else {
+      result = await sb.from('subscriptions').insert([payload]);
+    }
+
+    if (result.error) throw result.error;
+
+    alertEl.textContent = editId ? 'Subscription updated!' : 'Subscription created!';
+    alertEl.classList.remove('error');
+    alertEl.classList.add('success');
+    alertEl.style.display = 'block';
+
+    setTimeout(() => {
+      closeSubManageModal();
+      loadManageData();
+      showToast(editId ? 'Subscription updated' : 'Subscription created');
+    }, 800);
+  } catch (err) {
+    console.error('Error saving subscription:', err);
+    alertEl.textContent = 'Error: ' + (err.message || 'Unknown error');
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+  }
+}
+
+function openAddSHModal() {
+  document.getElementById('shManageEditUserId').value = '';
+  document.getElementById('shManageTitle').textContent = 'Add SH Balance';
+  document.getElementById('shManageCustomer').value = '';
+  document.getElementById('shManagePurchasedTotal').value = '';
+  document.getElementById('shManagePurchasedUsed').value = '';
+  document.getElementById('shManageGrantedTotal').value = '0';
+  document.getElementById('shManageGrantedUsed').value = '0';
+  document.getElementById('shManageGrantLabel').value = 'Bonus';
+  document.getElementById('shManageGrantLabelCustomWrap').style.display = 'none';
+  document.getElementById('shManageAlert').style.display = 'none';
+  document.getElementById('shManageModal').classList.add('open');
+}
+
+function openEditSHModal(userId) {
+  const sh = manageDataState.shBalance.find(s => s.user_id === userId);
+  if (!sh) return;
+
+  document.getElementById('shManageEditUserId').value = userId;
+  document.getElementById('shManageTitle').textContent = 'Edit SH Balance';
+  document.getElementById('shManageCustomer').value = userId;
+  document.getElementById('shManagePurchasedTotal').value = sh.purchased_total || '';
+  document.getElementById('shManagePurchasedUsed').value = sh.purchased_used || '';
+  document.getElementById('shManageGrantedTotal').value = sh.override_total || 0;
+  document.getElementById('shManageGrantedUsed').value = sh.override_used || 0;
+  // Set grant label
+  const label = sh.override_label || 'Bonus';
+  const sel = document.getElementById('shManageGrantLabel');
+  const presetMatch = Array.from(sel.options).find(o => o.value === label);
+  if (presetMatch) {
+    sel.value = label;
+    document.getElementById('shManageGrantLabelCustomWrap').style.display = 'none';
+  } else {
+    sel.value = 'Other';
+    document.getElementById('shManageGrantLabelCustomWrap').style.display = '';
+    document.getElementById('shManageGrantLabelCustom').value = label;
+  }
+  document.getElementById('shManageAlert').style.display = 'none';
+  document.getElementById('shManageModal').classList.add('open');
+}
+
+// Show/hide custom label input
+document.addEventListener('change', e => {
+  if (e.target.id === 'shManageGrantLabel') {
+    document.getElementById('shManageGrantLabelCustomWrap').style.display = e.target.value === 'Other' ? '' : 'none';
+  }
+});
+
+function closeSHManageModal() {
+  document.getElementById('shManageModal').classList.remove('open');
+}
+
+async function saveSHManage() {
+  const editUserId = document.getElementById('shManageEditUserId').value;
+  const userId = document.getElementById('shManageCustomer').value;
+  const purchasedTotal = parseFloat(document.getElementById('shManagePurchasedTotal').value) || 0;
+  const purchasedUsed = parseFloat(document.getElementById('shManagePurchasedUsed').value) || 0;
+  const grantedTotal = parseFloat(document.getElementById('shManageGrantedTotal').value) || 0;
+  const grantedUsed = parseFloat(document.getElementById('shManageGrantedUsed').value) || 0;
+  const grantLabelSel = document.getElementById('shManageGrantLabel').value;
+  const grantLabel = grantLabelSel === 'Other'
+    ? (document.getElementById('shManageGrantLabelCustom').value.trim() || 'Other')
+    : grantLabelSel;
+
+  const alertEl = document.getElementById('shManageAlert');
+
+  if (!userId) {
+    alertEl.textContent = 'Please select a customer';
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const payload = {
+      user_id: userId,
+      purchased_total: purchasedTotal,
+      purchased_used: purchasedUsed,
+      override_total: grantedTotal,
+      override_used: grantedUsed,
+      override_label: grantedTotal > 0 ? grantLabel : null,
+    };
+
+    let result;
+    if (editUserId) {
+      result = await sb.from('sh_balance').update(payload).eq('user_id', editUserId);
+    } else {
+      result = await sb.from('sh_balance').insert([payload]);
+    }
+
+    if (result.error) throw result.error;
+
+    alertEl.textContent = editUserId ? 'SH balance updated!' : 'SH balance created!';
+    alertEl.classList.remove('error');
+    alertEl.classList.add('success');
+    alertEl.style.display = 'block';
+
+    setTimeout(() => {
+      closeSHManageModal();
+      loadManageData();
+      showToast(editUserId ? 'SH balance updated' : 'SH balance created');
+    }, 800);
+  } catch (err) {
+    console.error('Error saving SH balance:', err);
+    alertEl.textContent = 'Error: ' + (err.message || 'Unknown error');
+    alertEl.classList.remove('success');
+    alertEl.classList.add('error');
+    alertEl.style.display = 'block';
+  }
+}
+
+function openDeleteConfirm(type, id, name) {
+  currentDeleteAction = { type, id, name };
+  const msgEl = document.getElementById('deleteConfirmMessage');
+  if (type === 'subscription') {
+    msgEl.textContent = `Delete subscription for ${name}? This action cannot be undone.`;
+  } else if (type === 'sh') {
+    msgEl.textContent = `Delete SH balance for ${name}? This action cannot be undone.`;
+  }
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+function closeDeleteConfirmModal() {
+  document.getElementById('deleteConfirmModal').classList.remove('open');
+  currentDeleteAction = null;
+}
+
+async function performConfirmedDelete() {
+  if (!currentDeleteAction) return;
+
+  const { type, id } = currentDeleteAction;
+  try {
+    let result;
+    if (type === 'subscription') {
+      result = await sb.from('subscriptions').delete().eq('id', id);
+    } else if (type === 'sh') {
+      result = await sb.from('sh_balance').delete().eq('user_id', id);
+    }
+
+    if (result.error) throw result.error;
+
+    closeDeleteConfirmModal();
+    loadManageData();
+    showToast(type === 'subscription' ? 'Subscription deleted' : 'SH balance deleted');
+  } catch (err) {
+    console.error('Error deleting record:', err);
+    showToast('Failed to delete', true);
+  }
+}
+
+(function initLang() {
+  const lang = localStorage.getItem('hp_lang') || 'en';
+  currentLang = lang;
+  document.querySelectorAll('.nav-lang-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('lang-' + lang);
+  if (el) el.classList.add('active');
+
+  // Initial toggle
+  document.querySelectorAll('.lang-en').forEach(el => {
+    el.style.display = lang === 'en' ? '' : 'none';
+  });
+  document.querySelectorAll('.lang-ko').forEach(el => {
+    el.style.display = lang === 'ko' ? '' : 'none';
+  });
+})();
+
+</script>
+<script>
+
+let adminLbImages = [], adminLbIndex = 0;
+function openAdminLb(imgEl, idx) {
+  const row = imgEl.closest('.admin-photo-row');
+  adminLbImages = Array.from(row.querySelectorAll('img')).map(i => i.src);
+  adminLbIndex = idx;
+  updateAdminLb();
+  document.getElementById('adminLightbox').classList.add('open');
+}
+function closeAdminLb() { document.getElementById('adminLightbox').classList.remove('open'); }
+function navAdminLb(dir) {
+  adminLbIndex = (adminLbIndex + dir + adminLbImages.length) % adminLbImages.length;
+  updateAdminLb();
+}
+function updateAdminLb() {
+  document.getElementById('adminLbImage').src = adminLbImages[adminLbIndex];
+  document.getElementById('adminLbLabel').textContent = 'Photo ' + (adminLbIndex + 1) + ' of ' + adminLbImages.length;
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('adminLightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') closeAdminLb();
+  if (e.key === 'ArrowLeft') navAdminLb(-1);
+  if (e.key === 'ArrowRight') navAdminLb(1);
+});
+
+/* ═══ Notifications ═══════════════════════════════════ */
+let notifOpen = false;
+
+function toggleNotifDropdown(e) {
+  e.stopPropagation();
+  notifOpen = !notifOpen;
+  document.getElementById('notifDropdown').classList.toggle('open', notifOpen);
+}
+
+document.addEventListener('click', (e) => {
+  if (notifOpen && !e.target.closest('.notif-bell')) {
+    notifOpen = false;
+    document.getElementById('notifDropdown').classList.remove('open');
+  }
+});
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+function notifIcon(type) {
+  if (type === 'cleaning_scheduled' || type === 'service_confirmed') return '<div class="notif-icon scheduled">📅</div>';
+  if (type === 'cleaning_reminder'  || type === 'job_reminder')      return '<div class="notif-icon reminder">⏰</div>';
+  if (type === 'cleaning_completed' || type === 'service_completed') return '<div class="notif-icon completed">✅</div>';
+  if (type === 'payment_received')  return '<div class="notif-icon scheduled">💳</div>';
+  if (type === 'payment_failed')    return '<div class="notif-icon reminder">⚠️</div>';
+  return '<div class="notif-icon scheduled">🔔</div>';
+}
+function notifTypeBadge(type) {
+  if (type?.startsWith('cleaning_')) return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#e8f5e9;color:#2e7d32;margin-right:4px;vertical-align:middle;">Cleaning</span>';
+  if (type?.startsWith('service_') || type === 'job_assigned' || type === 'job_reminder') return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#e3f2fd;color:#1565c0;margin-right:4px;vertical-align:middle;">Service</span>';
+  if (type?.startsWith('payment_')) return '<span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;background:#f3e5f5;color:#6a1b9a;margin-right:4px;vertical-align:middle;">Payment</span>';
+  return '';
+}
+
+function renderNotifications(notifications) {
+  const list = document.getElementById('notifList');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet</div>';
+    return;
+  }
+  const show = notifications.slice(0, 5);
+  list.innerHTML = show.map(n => {
+    const displayTitle = n.message && n.message !== n.title ? n.message : n.title;
+    return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
+      ${notifIcon(n.type)}
+      <div class="notif-content">
+        <div class="notif-title">${notifTypeBadge(n.type)}${displayTitle}</div>
+        <div class="notif-time">${timeAgo(n.created_at)}</div>
+      </div>
+    </div>`;
+  }).join('') + `<a class="notif-view-all" href="javascript:void(0)" onclick="switchSection('notifications');toggleNotifDropdown(event);">View all notifications</a>`;
+
+  const unread = notifications.filter(n => !n.is_read).length;
+  const badge = document.getElementById('notifBadge');
+  badge.textContent = unread > 0 ? (unread > 9 ? '9+' : unread) : '';
+}
+
+async function loadNotifications() {
+  try {
+    const { data, error } = await sb.from('notifications')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('recipient_type', 'customer')
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    renderNotifications(data || []);
+  } catch(e) {
+    console.warn('Failed to load notifications:', e);
+  }
+}
+
+async function markRead(id, el) {
+  if (el) el.classList.remove('unread');
+  try {
+    await sb.from('notifications').update({ is_read: true }).eq('id', id);
+    const badge = document.getElementById('notifBadge');
+    const current = parseInt(badge.textContent) || 0;
+    if (current > 1) badge.textContent = current - 1;
+    else badge.textContent = '';
+  } catch(e) { console.warn('markRead error:', e); }
+}
+
+async function markAllRead(e) {
+  e.stopPropagation();
+  try {
+    await sb.from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', currentUser.id)
+      .eq('is_read', false);
+    document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+    document.getElementById('notifBadge').textContent = '';
+  } catch(e) { console.warn('markAllRead error:', e); }
+}
+
+function setupNotifRealtime() {
+  sb.channel('notif-admin')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: `user_id=eq.${currentUser.id}`,
+    }, (payload) => {
+      loadNotifications();
+      // Also refresh page view if visible
+      if (document.getElementById('section-notifications')?.classList.contains('active')) loadNotifPage();
+    })
+    .subscribe();
+}
+
+/* ── Notifications Full Page ─────────────────────────── */
+let notifPageFilter = 'all'; // 'all' | 'unread' | 'read'
+
+function setNotifFilter(filter, btn) {
+  notifPageFilter = filter;
+  document.querySelectorAll('.notif-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  loadNotifPage();
+}
+
+function getNotifPeriodRange() {
+  const sel = document.getElementById('notifPeriodFilter')?.value || 'this_month';
+  const picker = document.getElementById('notifMonthPicker');
+  const now = new Date();
+
+  if (sel === 'this_month') {
+    picker.style.display = 'none';
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { from: start.toISOString(), to: null };
+  }
+  if (sel === 'this_year') {
+    picker.style.display = 'none';
+    const start = new Date(now.getFullYear(), 0, 1);
+    return { from: start.toISOString(), to: null };
+  }
+  // custom month
+  picker.style.display = '';
+  const val = picker.value; // "2026-03"
+  if (!val) return { from: null, to: null };
+  const [y, m] = val.split('-').map(Number);
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 1);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+async function loadNotifPage() {
+  if (!currentUser) return;
+  const list = document.getElementById('notifPageList');
+  list.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:13px;">Loading…</div>';
+
+  try {
+    let query = sb.from('notifications')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('recipient_type', 'customer')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (notifPageFilter === 'unread') query = query.eq('is_read', false);
+    if (notifPageFilter === 'read') query = query.eq('is_read', true);
+
+    const range = getNotifPeriodRange();
+    if (range.from) query = query.gte('created_at', range.from);
+    if (range.to) query = query.lt('created_at', range.to);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    renderNotifPage(data || []);
+  } catch(e) {
+    list.innerHTML = '<div style="padding:32px;text-align:center;color:#e74c3c;font-size:13px;">Failed to load notifications.</div>';
+    console.error('loadNotifPage error:', e);
+  }
+}
+
+function renderNotifPage(items) {
+  const list = document.getElementById('notifPageList');
+  if (!items.length) {
+    list.innerHTML = '<div style="padding:48px 32px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">🔔</div><div style="color:#aaa;font-size:14px;">No notifications found</div></div>';
+    return;
+  }
+
+  list.innerHTML = items.map(n => {
+    const icon = notifIcon(n.type);
+    const time = new Date(n.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const unread = n.is_read ? '' : ' unread';
+    return `<div class="notif-page-item${unread}" data-id="${n.id}">
+      ${icon}
+      <div class="np-content">
+        <div class="np-title">${notifTypeBadge(n.type)}${n.message && n.message !== n.title ? n.message : (n.title || 'Notification')}</div>
+        <div class="np-time">${time}</div>
+      </div>
+      <div class="np-actions">
+        ${!n.is_read ? `<button onclick="markReadPage('${n.id}',this)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-family:inherit;color:var(--text-light);cursor:pointer;" title="Mark as read">✓</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markReadPage(id, btn) {
+  try {
+    await sb.from('notifications').update({ is_read: true }).eq('id', id);
+    const item = btn.closest('.notif-page-item');
+    if (item) { item.classList.remove('unread'); btn.remove(); }
+    // Also update bell badge
+    loadNotifications();
+  } catch(e) { console.warn('markReadPage error:', e); }
+}
+
+async function markAllReadPage() {
+  try {
+    await sb.from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', currentUser.id)
+      .eq('is_read', false);
+    document.querySelectorAll('.notif-page-item.unread').forEach(el => el.classList.remove('unread'));
+    document.querySelectorAll('.notif-page-item .np-actions button').forEach(b => b.remove());
+    loadNotifications(); // refresh bell badge
+    showToast('All notifications marked as read.');
+  } catch(e) { console.warn('markAllReadPage error:', e); }
+}
+
+</script>
+<script>
+
 
 /* ══ Payments Section ════════════════════════════════════════════════ */
 
@@ -831,5 +4825,6 @@ async function executeAdditionalCharge() {
     btn.disabled = false; btn.textContent = 'Send Invoice';
   }
 }
+
 
 </script>
