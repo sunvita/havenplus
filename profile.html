@@ -1053,7 +1053,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Customer</th><th>Address</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Actual</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Customer</th><th>Address</th><th>Category</th><th>Urgency</th><th>Est. SH</th><th>Actual</th><th>Worker</th><th>Status</th><th>Manage</th></tr></thead>
             <tbody id="jobsBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -1097,7 +1097,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Team</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Time</th><th>Area</th><th>Property</th><th>Customer</th><th>Team</th><th>Hours</th><th>Status</th><th>Manage</th></tr></thead>
             <tbody id="schedulesBody"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -1159,7 +1159,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>T-code</th><th>Name</th><th>Phone</th><th>Area</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>T-code</th><th>Name</th><th>Phone</th><th>Area</th><th>Type</th><th>Status</th><th>Manage</th></tr></thead>
             <tbody id="workersBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -1209,7 +1209,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Address</th><th>Suburb</th><th>Area</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Address</th><th>Suburb</th><th>Area</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Manage</th></tr></thead>
             <tbody id="propsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -1267,7 +1267,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Customer</th><th>Property</th><th>Plan</th><th>Status</th><th>Clean Hrs</th><th>SH Hrs</th><th>Start Date</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Customer</th><th>Property</th><th>Plan</th><th>Status</th><th>Clean Hrs</th><th>SH Hrs</th><th>Start Date</th><th>Manage</th></tr></thead>
               <tbody id="manageSubsBody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
             </table>
           </div>
@@ -1281,7 +1281,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Customer</th><th>Purchased</th><th>Granted</th><th>Label</th><th>Balance</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Customer</th><th>Purchased</th><th>Granted</th><th>Label</th><th>Balance</th><th>Manage</th></tr></thead>
               <tbody id="manageSHBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
             </table>
           </div>
@@ -1340,7 +1340,7 @@
             <tr>
               <th>Date</th><th>Customer</th><th>Type</th>
               <th>Amount</th><th>Stripe Fee</th><th>Net</th>
-              <th>Status</th><th>Actions</th>
+              <th>Status</th><th>Manage</th>
             </tr>
           </thead>
           <tbody id="payTableBody">
@@ -6416,12 +6416,12 @@ async function onCancelSubReasonChange() {
   if (netRefund > 0) document.getElementById('cancelSubRefundAmt').value = netRefund.toFixed(2);
   if (cappedCharge > 0) document.getElementById('cancelSubChargeAmt').value = cappedCharge.toFixed(2);
 
-  // 확인 버튼 활성화
+  // 확인 버튼 활성화 (Case A/B 분기)
   confirmBtn.disabled = false;
-  confirmBtn.textContent = netRefund > 0
+  confirmBtn.textContent = cappedCharge > 0
+    ? `Send Invoice $${cappedCharge.toFixed(2)} & Pend Cancellation`
+    : netRefund > 0
     ? `Cancel & Refund $${netRefund.toFixed(2)}`
-    : cappedCharge > 0
-    ? `Cancel & Send Invoice $${cappedCharge.toFixed(2)}`
     : 'Cancel Subscription';
 }
 
@@ -6431,76 +6431,69 @@ async function executeCancelSub() {
   const note = document.getElementById('cancelSubNote').value.trim();
   const sub = currentCancelSub;
   const payment = currentCancelPayment;
-
   const netRefund = parseFloat(document.getElementById('cancelSubRefundAmt').value) || 0;
   const netCharge = parseFloat(document.getElementById('cancelSubChargeAmt').value) || 0;
 
-  const confirmMsg = netRefund > 0
-    ? `Cancel subscription and refund $${netRefund.toFixed(2)} AUD?`
-    : netCharge > 0
-    ? `Cancel subscription and send invoice for $${netCharge.toFixed(2)} AUD?`
-    : 'Cancel this subscription?';
+  // Case A: 즉시 취소 (netCharge = 0)
+  // Case B: Invoice 발송 후 대기 (netCharge > 0)
+  const isCaseB = netCharge > 0;
 
-  if (!confirm(confirmMsg + '\n\nThis cannot be undone.')) return;
+  const confirmMsg = isCaseB
+    ? `Send invoice of $${netCharge.toFixed(2)} AUD and pend cancellation?\n\nSubscription will be cancelled once invoice is paid.`
+    : netRefund > 0
+    ? `Cancel subscription and refund $${netRefund.toFixed(2)} AUD?\n\nThis cannot be undone.`
+    : 'Cancel this subscription?\n\nThis cannot be undone.';
+
+  if (!confirm(confirmMsg)) return;
 
   btn.disabled = true;
   btn.textContent = 'Processing...';
 
   try {
-    // 1. Stripe 구독 취소
-    const cancelRes = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
-      body: JSON.stringify({
-        action: 'cancel_subscription',
-        stripe_subscription_id: sub.stripe_subscription_id,
-        subscription_id: sub.id,
-        reason,
-        note,
-      }),
-    });
-    const cancelData = await cancelRes.json();
-    if (!cancelRes.ok || !cancelData.success) throw new Error(cancelData.error || 'Cancel failed');
-
-    // 2. 환불이 있으면 실행
-    if (netRefund > 0 && payment.stripe_charge_id) {
-      const refundRes = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
+    if (isCaseB) {
+      // ── Case B: Invoice 발송 + pending 상태 기록 ──
+      const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
         body: JSON.stringify({
-          action: 'refund',
-          payment_id: payment.id,
+          action: 'send_cancellation_invoice',
+          stripe_customer_id: sub.stripe_customer_id,
+          subscription_id: sub.id,
+          charge_amount: netCharge,
+          plan: sub.plan_type,
+          reason,
+          note,
+          customer_name: sub.profiles?.full_name || '',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to send invoice');
+
+      showToast(`Invoice of $${netCharge.toFixed(2)} sent. Subscription will be cancelled once payment is received.`);
+    } else {
+      // ── Case A: 즉시 취소 (+ 환불 있으면 함께 처리) ──
+      const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+        body: JSON.stringify({
+          action: 'cancel_subscription',
+          stripe_subscription_id: sub.stripe_subscription_id,
+          subscription_id: sub.id,
+          payment_id: netRefund > 0 ? payment.id : null,
           refund_amount: netRefund,
-          refund_reason: `Subscription cancellation — ${reason}${note ? ': ' + note : ''}`,
+          reason,
+          note,
         }),
       });
-      const refundData = await refundRes.json();
-      if (!refundRes.ok || !refundData.success) throw new Error(refundData.error || 'Refund failed');
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Cancellation failed');
+
+      const msg = netRefund > 0
+        ? `Subscription cancelled. Refund of $${netRefund.toFixed(2)} processed.`
+        : 'Subscription cancelled.';
+      showToast(msg);
     }
 
-    // 3. 추가 청구가 있으면 Invoice 발송
-    if (netCharge > 0) {
-      const chargeRes = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
-        body: JSON.stringify({
-          action: 'additional_charge',
-          customer_stripe_id: sub.stripe_customer_id,
-          additional_amount: netCharge,
-          description: `Early termination fee — ${sub.plan_type} plan (${reason})`,
-        }),
-      });
-      const chargeData = await chargeRes.json();
-      if (!chargeRes.ok || !chargeData.success) throw new Error(chargeData.error || 'Invoice failed');
-    }
-
-    const resultMsg = netRefund > 0
-      ? `Subscription cancelled. Refund of $${netRefund.toFixed(2)} processed.`
-      : netCharge > 0
-      ? `Subscription cancelled. Invoice of $${netCharge.toFixed(2)} sent.`
-      : 'Subscription cancelled.';
-
-    showToast(resultMsg);
     closeCancelSubModal();
     setTimeout(loadPaymentsSection, 2000);
 

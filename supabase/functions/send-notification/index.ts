@@ -557,6 +557,111 @@ function buildEmail(
     }
 
     default:
+    case 'subscription_cancelled': {
+      const planLabel: Record<string, string> = { essential: 'Essential Care', smart: 'Smart Care', premium: 'Premium Care' }
+      const planName = planLabel[(details.plan || '').toLowerCase()] || details.plan || 'Plan'
+      const customer = details.customer_name || ''
+      const cancelledOn = details.cancelled_on || new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+      const reason = details.reason || ''
+      const reasonLabel: Record<string, string> = {
+        general: 'General cancellation', cooling_off: 'Cooling-off', hardship: 'Hardship', property_sold: 'Property sold'
+      }
+      const refundAmt = details.refund_amount ? `$${Number(details.refund_amount).toFixed(2)} AUD` : null
+      const settlementBlock = refundAmt
+        ? `<p style="margin:0 0 8px;"><strong>Refund:</strong> ${refundAmt} has been processed to your original payment method. Please allow 5–10 business days.</p>`
+        : `<p style="margin:0;">No further charges or refunds apply.</p>`
+      if (isAdmin) return {
+        subject: `Subscription Cancelled — ${customer}`,
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#1a1a1a;">Subscription Cancelled</h2>
+          <p><strong>Customer:</strong> ${customer}</p>
+          <p><strong>Plan:</strong> ${planName}</p>
+          <p><strong>Reason:</strong> ${reasonLabel[reason] || reason}</p>
+          ${refundAmt ? `<p><strong>Refund:</strong> ${refundAmt}</p>` : '<p><strong>Settlement:</strong> None</p>'}`)
+      }
+      return {
+        subject: 'Haven Plus — Your Subscription Has Been Cancelled',
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#1a1a1a;">Your subscription has been cancelled</h2>
+          <p style="color:#555;margin:0 0 24px;">Hi${customer ? ' ' + customer : ''},</p>
+          <div style="background:#f8f9fa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 8px;"><strong>Plan:</strong> ${planName}</p>
+            <p style="margin:0 0 8px;"><strong>Cancelled on:</strong> ${cancelledOn}</p>
+            <p style="margin:0;"><strong>Reason:</strong> ${reasonLabel[reason] || reason}</p>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 4px;font-weight:700;color:#166534;">Settlement</p>
+            ${settlementBlock}
+          </div>
+          <p style="color:#555;margin:0 0 8px;">It's been a pleasure caring for your property.</p>
+          <p style="color:#555;margin:0;">We'd love to welcome you back anytime — <a href="mailto:hi@havenpluscare.com" style="color:#ff6b35;">hi@havenpluscare.com</a></p>`)
+      }
+    }
+
+    case 'subscription_cancellation_pending': {
+      const planLabel: Record<string, string> = { essential: 'Essential Care', smart: 'Smart Care', premium: 'Premium Care' }
+      const planName = planLabel[(details.plan || '').toLowerCase()] || details.plan || 'Plan'
+      const customer = details.customer_name || ''
+      const requestedOn = details.requested_on || new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+      const dueDate = details.due_date || ''
+      const chargeAmt = details.charge_amount ? `$${Number(details.charge_amount).toFixed(2)} AUD` : ''
+      const invoiceUrl = details.invoice_url || 'https://havenpluscare.com/dashboard.html'
+      if (isAdmin) return {
+        subject: `Cancellation Invoice Sent — ${customer}`,
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#1a1a1a;">Cancellation Invoice Sent</h2>
+          <p><strong>Customer:</strong> ${customer}</p>
+          <p><strong>Plan:</strong> ${planName}</p>
+          <p><strong>Term fee:</strong> ${chargeAmt}</p>
+          <p><strong>Due:</strong> ${dueDate}</p>
+          <p style="color:#888;font-size:13px;">Subscription will auto-cancel once invoice is paid.</p>`)
+      }
+      return {
+        subject: 'Haven Plus — Action Required to Complete Your Cancellation',
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#1a1a1a;">Action required to complete your cancellation</h2>
+          <p style="color:#555;margin:0 0 24px;">Hi${customer ? ' ' + customer : ''},</p>
+          <p style="color:#555;margin:0 0 20px;">We've received your cancellation request for your Haven Plus subscription.</p>
+          <div style="background:#f8f9fa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 8px;"><strong>Plan:</strong> ${planName}</p>
+            <p style="margin:0;"><strong>Requested on:</strong> ${requestedOn}</p>
+          </div>
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 8px;font-weight:700;color:#9a3412;">Early Termination Fee</p>
+            <p style="margin:0 0 8px;"><strong>Amount due:</strong> ${chargeAmt}</p>
+            ${dueDate ? `<p style="margin:0;"><strong>Due by:</strong> ${dueDate}</p>` : ''}
+          </div>
+          <p style="color:#555;margin:0 0 20px;">Please complete payment below. Your subscription will be automatically cancelled once payment is confirmed.</p>
+          <a href="${invoiceUrl}" style="display:inline-block;padding:14px 28px;background:#ff6b35;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:700;">Pay Now — ${chargeAmt} →</a>
+          <p style="color:#9ca3af;font-size:12px;margin:24px 0 0;">Questions? <a href="mailto:hi@havenpluscare.com" style="color:#9ca3af;">hi@havenpluscare.com</a></p>`)
+      }
+    }
+
+    case 'refund_confirmed': {
+      const customer = details.customer_name || ''
+      const refundAmt = details.refund_amount ? `$${Number(details.refund_amount).toFixed(2)} AUD` : ''
+      const isFullRefund = details.is_full_refund
+      if (isAdmin) return {
+        subject: `Refund Processed — ${customer}`,
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;">Refund Processed</h2>
+          <p><strong>Customer:</strong> ${customer}</p>
+          <p><strong>Amount:</strong> ${refundAmt}</p>
+          <p><strong>Type:</strong> ${isFullRefund ? 'Full refund' : 'Partial refund'}</p>`)
+      }
+      return {
+        subject: `Haven Plus — Refund of ${refundAmt} Processed`,
+        html: wrapTemplate(`
+          <h2 style="margin:0 0 16px;color:#1a1a1a;">Your refund has been processed ✅</h2>
+          <p style="color:#555;margin:0 0 24px;">Hi${customer ? ' ' + customer : ''},</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+            <p style="margin:0 0 8px;"><strong>Refund amount:</strong> ${refundAmt}</p>
+            <p style="margin:0;color:#555;font-size:13px;">Please allow 5–10 business days for the refund to appear on your statement.</p>
+          </div>
+          <p style="color:#555;margin:0;">Questions? <a href="mailto:hi@havenpluscare.com" style="color:#ff6b35;">hi@havenpluscare.com</a></p>`)
+      }
+    }
+
       return {
         subject: 'Haven Plus — Notification',
         html: wrapTemplate(`<p style="color:#555;">You have a new notification.</p>`)
@@ -597,6 +702,12 @@ function buildTitle(type: string, recipientType: string, details: { date?: strin
       return `Your ${jobLabel.toLowerCase()} has been rescheduled to ${details.date || 'a new date'}`
     case 'reschedule_request':
       return `Reschedule request${details.worker_name ? ' from ' + details.worker_name : ''}${details.date ? ' → ' + details.date : ''}`
+    case 'subscription_cancelled':
+      return `Your Haven Plus subscription has been cancelled`
+    case 'subscription_cancellation_pending':
+      return `Action required: complete your Haven Plus cancellation`
+    case 'refund_confirmed':
+      return `Refund of $${details.amount ? Number(details.amount).toFixed(2) : '0.00'} processed`
     default:
       return 'New notification'
   }

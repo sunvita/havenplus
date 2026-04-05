@@ -480,12 +480,49 @@ serve(async (req) => {
       // ── 구독 취소 ──
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
+
+        // DB에서 구독 정보 조회
+        const { data: subRecord } = await supabase
+          .from('subscriptions')
+          .select('id, user_id, plan_type, cancellation_reason, pending_cancellation')
+          .eq('stripe_subscription_id', sub.id)
+          .maybeSingle()
+
+        // status 업데이트
         const { error } = await supabase
           .from('subscriptions')
-          .update({ status: 'cancelled' })
+          .update({ status: 'cancelled', end_date: new Date().toISOString() })
           .eq('stripe_subscription_id', sub.id)
 
         if (error) console.error('subscription cancel error:', error)
+
+        // 취소 확인 이메일 발송 (Case A + Case B 완료 모두)
+        if (subRecord?.user_id) {
+          try {
+            const planLabel: Record<string, string> = {
+              essential: 'Essential Care', smart: 'Smart Care', premium: 'Premium Care'
+            }
+            const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+            await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SB_SERVICE_ROLE_KEY')}` },
+              body: JSON.stringify({
+                type: 'subscription_cancelled',
+                notify_admins: true,
+                recipients: [{ id: subRecord.user_id, type: 'customer' }],
+                reference_type: 'cleaning',
+                details: {
+                  plan: subRecord.plan_type,
+                  reason: subRecord.cancellation_reason || 'general',
+                  cancelled_on: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }),
+                },
+              }),
+            })
+            console.log(`subscription_cancelled email sent for sub: ${sub.id}`)
+          } catch(e) {
+            console.error('subscription_cancelled email error:', e)
+          }
+        }
         break
       }
 
@@ -567,10 +604,11 @@ serve(async (req) => {
       // ── 추가 납부 완료 ──
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice
-        // additional_charge 타입인 경우만 처리 (구독 갱신은 invoice.payment_succeeded에서 처리)
+
+        // payments 테이블 업데이트
         const { data: payment } = await supabase
           .from('payments')
-          .select('id')
+          .select('id, subscription_id')
           .eq('stripe_additional_invoice_id', invoice.id)
           .maybeSingle()
 
@@ -580,6 +618,25 @@ serve(async (req) => {
             paid_at: new Date().toISOString(),
           }).eq('id', payment.id)
           console.log(`additional_charge paid: invoice=${invoice.id}`)
+
+          // pending_cancellation 구독 확인 → 자동 취소
+          if (payment.subscription_id) {
+            const { data: subRecord } = await supabase
+              .from('subscriptions')
+              .select('id, stripe_subscription_id, pending_cancellation')
+              .eq('id', payment.subscription_id)
+              .maybeSingle()
+
+            if (subRecord?.pending_cancellation && subRecord?.stripe_subscription_id) {
+              try {
+                // Stripe 구독 취소 → customer.subscription.deleted webhook 발생 → DB + 이메일 처리
+                await stripe.subscriptions.cancel(subRecord.stripe_subscription_id)
+                console.log(`Pending cancellation executed: ${subRecord.stripe_subscription_id}`)
+              } catch(e) {
+                console.error('Pending cancellation error:', e)
+              }
+            }
+          }
         }
         break
       }
