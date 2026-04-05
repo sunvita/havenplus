@@ -1422,7 +1422,7 @@
         <div class="pay-modal-label">Cancel Reason</div>
         <select class="pay-modal-input" id="cancelSubReason" onchange="onCancelSubReasonChange()">
           <option value="general">General cancellation</option>
-          <option value="cooling_off">Cooling-off (within 30 days, no work done)</option>
+          <option value="cooling_off">Cooling-off (full refund — admin verified)</option>
           <option value="hardship">Hardship (50% term fee reduction)</option>
           <option value="property_sold">Property sold (term fee waived, $50 transfer fee)</option>
         </select>
@@ -6264,41 +6264,6 @@ async function openCancelSubModal(paymentId) {
   if (!sub) { showToast('Subscription not found', 'error'); return; }
   currentCancelSub = sub;
 
-  // ── 쿨링오프 자격 체크 ──
-  // 조건 1: 구독 시작 30일 이내
-  const daysSinceStart = (new Date() - new Date(sub.start_date)) / (1000 * 60 * 60 * 24);
-  const within30Days = daysSinceStart <= 30;
-
-  // 조건 2: 방문(cleaning) 완료 건 없음
-  const { data: completedCleanings } = await sb.from('cleaning_schedule')
-    .select('id')
-    .eq('subscription_id', sub.id)
-    .eq('status', 'completed')
-    .limit(1);
-
-  // 조건 3: SH 작업 완료 건 없음
-  const { data: completedServices } = await sb.from('service_requests')
-    .select('id')
-    .eq('subscription_id', sub.id)
-    .eq('status', 'completed')
-    .limit(1);
-
-  const noWorkDone = (!completedCleanings || completedCleanings.length === 0) &&
-                     (!completedServices || completedServices.length === 0);
-  const coolingOffEligible = within30Days && noWorkDone;
-
-  // 쿨링오프 옵션 활성화/비활성화
-  const coolingOffOption = document.querySelector('#cancelSubReason option[value="cooling_off"]');
-  if (coolingOffOption) {
-    if (!coolingOffEligible) {
-      coolingOffOption.disabled = true;
-      coolingOffOption.text = `Cooling-off — Not eligible (${!within30Days ? 'over 30 days' : 'work already performed'})`;
-    } else {
-      coolingOffOption.disabled = false;
-      coolingOffOption.text = 'Cooling-off (within 30 days, no work done)';
-    }
-  }
-
   document.getElementById('cancelSubCustomer').textContent = sub.profiles?.full_name || '—';
   document.getElementById('cancelSubPlan').textContent =
     `${sub.plan_type.charAt(0).toUpperCase() + sub.plan_type.slice(1)} / ${parseFloat(payment.amount) >= (PLAN_MONTHLY[sub.plan_type] * 10) ? 'Annual' : 'Monthly'} — Started ${new Date(sub.start_date).toLocaleDateString('en-AU', {day:'numeric',month:'short',year:'numeric'})}`;
@@ -6351,14 +6316,6 @@ async function onCancelSubReasonChange() {
 
   // 구독료 환불 계산
   if (reason === 'cooling_off') {
-    // 쿨링오프 비활성화된 옵션이 선택된 경우 방어 처리
-    const coolingOffOption = document.querySelector('#cancelSubReason option[value="cooling_off"]');
-    if (coolingOffOption?.disabled) {
-      document.getElementById('cancelSubReason').value = 'general';
-      calcEl.innerHTML = '<span style="color:var(--red)">Cooling-off not eligible. Switched to general cancellation.</span>';
-      setTimeout(onCancelSubReasonChange, 500);
-      return;
-    }
     subRefund = amount;
     termFee = 0;
     termFeeNote = 'Cooling-off — full refund, no termination fee';
