@@ -264,7 +264,12 @@ Edge Function 수정 및 배포 시 아래 절차를 반드시 따를 것.
 반드시 --no-verify-jwt 플래그 포함해서 배포할 것.
 Dashboard 배포 시 JWT가 ON으로 초기화되어 웹훅 401 반복 발생함.
 
+**Sunny 맥북 havenplus 경로: **
+
 ```bash
+# 배포 전 항상 최신화
+cd /Users/syna/havenplus && git pull
+
 # stripe-webhook (JWT OFF 필수 — Stripe가 JWT 없이 호출)
 supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
 
