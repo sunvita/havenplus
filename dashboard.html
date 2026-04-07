@@ -1754,15 +1754,18 @@ function initPlaces() {
   placesAC.addListener('place_changed', () => {
     const place = placesAC.getPlace();
     if (!place.address_components) return;
-    let num='',street='',suburb='',postcode='',state='';
+    let unit='',num='',street='',suburb='',postcode='',state='';
     place.address_components.forEach(c => {
+      if (c.types.includes('subpremise'))              unit    = c.long_name;
       if (c.types.includes('street_number'))           num     = c.long_name;
       if (c.types.includes('route'))                   street  = c.long_name;
       if (c.types.includes('locality'))                suburb  = c.long_name;
       if (c.types.includes('postal_code'))             postcode= c.long_name;
       if (c.types.includes('administrative_area_level_1')) state = c.short_name;
     });
-    document.getElementById('propAddress').value  = [num, street].filter(Boolean).join(' ');
+    // unit(subpremise) 있으면 "Unit/num street" 형태로 조합
+    const addrParts = unit ? [`${unit}/${num}`, street] : [num, street];
+    document.getElementById('propAddress').value  = addrParts.filter(Boolean).join(' ');
     document.getElementById('propSuburb').value   = suburb;
     document.getElementById('propPostcode').value = postcode;
     const lbl = document.getElementById('suburbAuto');
