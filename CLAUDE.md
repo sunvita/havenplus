@@ -473,3 +473,37 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS stripe_additional_invoice_id text;
 ### 코딩 원칙 추가 확인
 - 새 변수 추가 시 사용 범위(스코프) 먼저 파악 후 전역/로컬 결정
 - 수정 전 관련 함수가 전역인지 로컬인지 확인 필수
+
+---
+
+## 2026-04-07 Stripe 수수료 검증 및 수정
+
+### Stripe 수수료 구조 확정
+
+**결제 시 수수료 (balance_transaction.fee):**
+```
+Charge fee = amount × 1.7% + $0.30 (GST 포함)
+```
+
+**Billing Usage Fee (Monthly 구독 갱신에만 적용):**
+```
+Billing fee = amount × 0.7% × 1.1(GST) = amount × 0.77%
+```
+
+**유형별 총 수수료:**
+| 결제 유형 | Charge fee | Billing fee | 예시 ($150) |
+|---------|-----------|------------|------------|
+| Monthly 구독 갱신 | ✅ | ✅ | $2.85 + $1.16 = $4.01 |
+| Annual 구독 신규 (checkout) | ✅ | ❌ | $15.60 ($900) |
+| SH Bundle (checkout) | ✅ | ❌ | $11.18 ($640) |
+| 환불 시 | 미환급 (손실) | 없음 | -$2.85 손실 |
+
+### stripe-webhook 수정 내용
+- `STRIPE_BILLING_FEE = 1.16` 고정값 제거
+- Monthly 갱신: `amount × 0.7% × 1.1` 동적 계산
+- Annual/checkout 신규: `isSubscriptionInvoice: false` → Billing fee $0
+
+### 배포 완료 (2026-04-07)
+```bash
+supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+```
