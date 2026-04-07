@@ -196,7 +196,10 @@ serve(async (req) => {
             ? await supabase.from('subscriptions').upsert(subData, { onConflict: 'user_id,property_id' })
             : await supabase.from('subscriptions').upsert(subData, { onConflict: 'user_id' })
 
-          if (upsertError) console.error('subscriptions upsert error:', upsertError)
+          if (upsertError) {
+            console.error('subscriptions upsert error:', upsertError, 'subData:', JSON.stringify(subData))
+            // upsert 실패해도 payment는 기록 (subscription_id는 null이 될 수 있음)
+          }
 
           // payments 기록 (중복 방지 내장)
           // 구독 결제는 session.payment_intent가 null — invoice에서 charge 조회
@@ -429,7 +432,18 @@ serve(async (req) => {
         else console.log(`subscription renewed: ${stripeSubId}, new sh_hours_total=${newSHTotal}`)
 
         // payments 기록 (중복 방지 내장)
-        const chargeId = invoice.charge as string || null
+        // invoice.charge가 없으면 payment_intent → latest_charge로 조회
+        let chargeId = invoice.charge as string || null
+        if (!chargeId && invoice.payment_intent) {
+          try {
+            const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent as string)
+            chargeId = pi.latest_charge as string || null
+          } catch(e) { console.error('renewal chargeId fetch error:', e) }
+        }
+
+        // Annual 구독 갱신은 Billing Usage Fee 없음
+        const renewalInterval = stripeSub.items.data[0]?.plan?.interval || 'month'
+        const isMonthlyRenewal = renewalInterval === 'month'
 
         await recordPayment({
           userId: subRecord.user_id,
@@ -441,7 +455,7 @@ serve(async (req) => {
           subscriptionUUID: subRecord.id,
           stripeChargeId: chargeId,
           description: `${plan} plan renewal`,
-          isSubscriptionInvoice: true,
+          isSubscriptionInvoice: isMonthlyRenewal,
           plan: `${plan} plan renewal`,
         })
 

@@ -1613,6 +1613,14 @@ async function startCheckout() {
   if (!sb || !currentUser)
     return showToast(t('sessionError'), true);
 
+  // property 선택 검증 — null이면 진행 불가
+  const propId = sessionStorage.getItem('hp_selected_property');
+  if (!propId) {
+    document.getElementById('loading').classList.remove('show');
+    showToast('Please select a property before continuing.', true);
+    return;
+  }
+
   document.getElementById('loading').classList.add('show');
 
   if (selectedPlan && selectedSH) {
