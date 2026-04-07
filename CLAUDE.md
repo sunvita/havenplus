@@ -5,6 +5,37 @@
 
 ---
 
+## ⚠️ 코딩 대전제 — 반드시 준수
+
+### 1. 수정 전 코드 리뷰 필수
+- 수정/추가 로직이 **기존 로직에 영향을 주지 않는지** 먼저 검토
+- 관련 함수의 스코프(전역/로컬), 호출 흐름, 의존성 파악 완료 후 작업
+- 수정할 위치의 전후 컨텍스트 확인 (라인 번호, 변수명, 함수명)
+
+### 2. 수정 후 검증 필수 (HTML 파일)
+```python
+import re
+content = open('파일명').read()
+scripts = re.findall(r'<script[^>]*>([\s\S]*?)</script>', content)
+print(f"Script blocks: {len(scripts)}, sizes: {[len(s) for s in scripts]}")
+print(f"</body>:{content.count('</body>')} </html>:{content.count('</html>')}")
+# 추가한 기능 키워드 존재 여부 확인
+```
+
+### 3. 이전 버전과 diff 비교
+- 커밋 전 `git diff HEAD -- 파일명`으로 변경사항 확인
+- 의도하지 않은 변경 없는지 확인 후 커밋
+
+### 4. 한 번에 정확하게
+- 검증 통과 후 커밋 — 재수정 최소화
+- 검증 스크립트 오류 시 원인 파악 후 재검증, 오탐이면 별도 확인
+
+### 5. 배포 원칙
+- stripe-webhook, process-refund: 반드시 `--no-verify-jwt`
+- Dashboard 복붙 배포 불필요 — CLI가 GitHub 파일 그대로 업로드
+
+---
+
 ## 프로젝트 개요
 
 **Haven Plus** — Perth, Western Australia 기반 주거용 부동산 케어 구독 서비스.

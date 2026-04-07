@@ -781,7 +781,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="confirm-addr-label">Property</div>
         <div class="confirm-addr-val" id="confirmAddrVal"></div>
       </div>
-      <button class="btn-submit" onclick="closePropConfirmModal(); if(typeof selectedPropId !== 'undefined' && selectedPropId) sessionStorage.setItem('hp_selected_property', selectedPropId); window.location.href='plans.html'">Continue to Plans →</button>
+      <button class="btn-submit" onclick="closePropConfirmModal(); sessionStorage.setItem('hp_selected_property', allProperties[0].id); window.location.href='plans.html'">Continue to Plans →</button>
     </div>
   </div>
 </div>
