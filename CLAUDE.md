@@ -538,3 +538,32 @@ Billing fee = amount × 0.7% × 1.1(GST) = amount × 0.77%
 ```bash
 supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
 ```
+
+---
+
+## 백로그 — 내부 정산 정확도
+
+### Payout 이후 환불 시 unrecovered 과소 표시 이슈
+
+**배경:**
+- Stripe Billing Usage Fee (amount × 0.77%)는 결제 후 5일 뒤 payout 시 차감
+- 현재 payments.stripe_fee = balance_transaction.fee (charge fee만 저장)
+- billing_usage_fee는 별도 컬럼 없이 코드에서 합산해서 표시
+
+**현재 동작:**
+- Payout 전 환불: charge fee만 손실 → unrecovered 정확 ✅
+- Payout 후 환불: charge fee + billing fee 모두 손실인데 charge fee만 표시 → 과소 표시 ❌
+
+**실제 손실:**
+```
+charge fee:       $2.85 (balance_transaction.fee)
+billing_usage_fee: $1.16 (amount × 0.77%)
+총 손실:          $4.01
+```
+
+**해결 방향:**
+- `billing_usage_fee` 컬럼 별도 추가 (payments 테이블)
+- 환불 시 두 항목 합산해서 unrecovered 표시
+- payout 이후 환불 케이스 발생 시 Stripe Dashboard에서 실제 동작 확인 후 구현
+
+**우선순위:** 낮음 (실제 케이스 발생 전까지 운영 영향 없음)
