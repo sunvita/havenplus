@@ -51,7 +51,7 @@ async function getSubscriptionUUID(stripeSubId: string): Promise<string | null> 
   return data?.id || null
 }
 
-const STRIPE_BILLING_FEE = 1.16
+// Stripe Billing Usage Fee: 0.7% + GST(10%) = 0.77% — monthly subscription only
 
 // ── 결제 기록 헬퍼 함수 (중복 방지: stripe_payment_id + stripe_invoice_id unique 체크) ──
 async function recordPayment(opts: {
@@ -111,7 +111,8 @@ async function recordPayment(opts: {
     }
   }
 
-  const billingFee = opts.isSubscriptionInvoice ? STRIPE_BILLING_FEE : 0
+  // Billing Usage Fee: 0.7% × amount × 1.1(GST) — monthly subscription 갱신에만 적용
+  const billingFee = opts.isSubscriptionInvoice ? (opts.amount / 100) * 0.007 * 1.1 : 0
   const totalFee = chargeFee + billingFee
   const amountDollars = opts.amount / 100
   const netAmount = amountDollars - totalFee
@@ -234,7 +235,7 @@ serve(async (req) => {
             subscriptionUUID: subUUID,
             stripeChargeId: chargeId,
             description: `${plan} plan subscription`,
-            isSubscriptionInvoice: true,
+            isSubscriptionInvoice: false, // checkout.session: Annual은 Billing fee 없음
             plan: `${plan} plan`,
           })
 
