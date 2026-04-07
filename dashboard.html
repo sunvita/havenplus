@@ -617,7 +617,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
     <div class="nudge">
       <div class="nudge-title"><span class="lang-en">Add regular cleaning to your plan</span><span class="lang-ko" style="display:none;">정기 청소를 플랜에 추가하세요</span></div>
       <div class="nudge-sub"><span class="lang-en">Subscribe to get quarterly or monthly professional cleans, repair checkups, and smoke alarm servicing — plus annual Service Hour vouchers included.</span><span class="lang-ko" style="display:none;">구독하시면 분기/월별 전문 청소, 수리 점검, 화재경보기 서비스 — 연간 Service Hour 바우처까지 제공됩니다.</span></div>
-      <a href="plans.html" class="btn-nudge"><span class="lang-en">View Subscription Plans →</span><span class="lang-ko" style="display:none;">구독 플랜 보기 →</span></a>
+      <a href="plans.html" onclick="autoSelectPropertyForPlans(event)" class="btn-nudge"><span class="lang-en">View Subscription Plans →</span><span class="lang-ko" style="display:none;">구독 플랜 보기 →</span></a>
     </div>
     <div class="info-section" id="propInfoSH" style="display:none">
       <div class="info-title"><svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L8 2.5l6 5V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5z"/><path d="M6 15v-5h4v5"/></svg> <span class="lang-en">My Properties</span><span class="lang-ko" style="display:none;">내 부동산</span></div>
@@ -781,7 +781,7 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="confirm-addr-label">Property</div>
         <div class="confirm-addr-val" id="confirmAddrVal"></div>
       </div>
-      <button class="btn-submit" onclick="closePropConfirmModal(); window.location.href='plans.html'">Continue to Plans →</button>
+      <button class="btn-submit" onclick="closePropConfirmModal(); if(typeof selectedPropId !== 'undefined' && selectedPropId) sessionStorage.setItem('hp_selected_property', selectedPropId); window.location.href='plans.html'">Continue to Plans →</button>
     </div>
   </div>
 </div>
@@ -1541,6 +1541,17 @@ function confirmPropSelection() {
   sessionStorage.setItem('hp_selected_property', selectedPropId);
   closePropSelectModal();
   window.location.href = 'plans.html';
+}
+
+function autoSelectPropertyForPlans(e) {
+  // property 1개면 자동 세팅, 2개 이상이면 선택 모달
+  if (!allProperties || allProperties.length === 0) return;
+  if (allProperties.length === 1) {
+    sessionStorage.setItem('hp_selected_property', allProperties[0].id);
+  } else {
+    // 2개 이상이면 기본 링크 이동 (property 선택은 plans.html에서)
+  }
+  // href 이동은 그대로
 }
 
 function closePropSelectModal()  { document.getElementById('propSelectModal').classList.remove('active'); }

@@ -1338,7 +1338,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const hasAnyHistory = hasAnySub || hasSHPurchase;
 
     /* Determine if current property already has a subscription */
-    const selectedPropId = sessionStorage.getItem('hp_selected_property');
+    let selectedPropId = sessionStorage.getItem('hp_selected_property');
+
+    // sessionStorage에 없으면 DB에서 property 조회 — 1개면 자동 세팅
+    if (!selectedPropId) {
+      try {
+        const { data: userProps } = await sb.from('properties')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .limit(2);
+        if (userProps && userProps.length === 1) {
+          selectedPropId = userProps[0].id;
+          sessionStorage.setItem('hp_selected_property', selectedPropId);
+        }
+      } catch(e) { console.warn('auto property select error:', e); }
+    }
+
     const currentPropSub = selectedPropId && subs
       ? subs.find(s => s.property_id === selectedPropId)
       : null;
