@@ -162,7 +162,8 @@ serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session
         const userId = session.metadata?.user_id
         const priceId = session.metadata?.price_id
-        const propertyId = session.metadata?.property_id || null
+        const rawPropertyId = session.metadata?.property_id || null
+        const propertyId = rawPropertyId && rawPropertyId.trim() !== '' ? rawPropertyId : null
 
         if (!userId || !priceId) break
 
