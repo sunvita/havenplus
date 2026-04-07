@@ -4290,6 +4290,41 @@ function openWorkerModal(workerId = null) {
   initWorkerPlaces();
 }
 
+let propAreaPlacesAC = null;
+function initPropAreaPlaces() {
+  const input = document.getElementById('propAreaAddress');
+  if (!input || !window.google?.maps?.places) return;
+  if (propAreaPlacesAC) return;
+  propAreaPlacesAC = new google.maps.places.Autocomplete(input, {
+    componentRestrictions: { country: 'au' },
+    types: ['address'],
+    fields: ['address_components', 'formatted_address'],
+  });
+  propAreaPlacesAC.addListener('place_changed', () => {
+    const place = propAreaPlacesAC.getPlace();
+    if (!place.address_components) return;
+    let unit='', num='', street='', suburb='', postcode='', state='';
+    place.address_components.forEach(c => {
+      if (c.types.includes('subpremise'))                  unit     = c.long_name;
+      if (c.types.includes('street_number'))               num      = c.long_name;
+      if (c.types.includes('route'))                       street   = c.long_name;
+      if (c.types.includes('locality'))                    suburb   = c.long_name;
+      if (c.types.includes('postal_code'))                 postcode = c.long_name;
+      if (c.types.includes('administrative_area_level_1')) state    = c.short_name;
+    });
+    const addrParts = unit ? [`${unit}/${num}`, street] : [num, street];
+    document.getElementById('propAreaAddress').value  = addrParts.filter(Boolean).join(' ');
+    document.getElementById('propAreaSuburb').value   = suburb;
+    document.getElementById('propEditPostcode').value = postcode;
+    // area 자동 제안
+    const suggestion = enhancedAreaMatch(suburb, input.value);
+    if (suggestion.area) {
+      document.getElementById('propAreaSelect').value = suggestion.area;
+      document.getElementById('propAreaSuggestion').textContent = `✓ Area auto-set: ${suggestion.name}`;
+    }
+  });
+}
+
 let workerPlacesAC = null;
 function initWorkerPlaces() {
   const input = document.getElementById('workerAddress');
@@ -5049,6 +5084,7 @@ function openPropAreaModal(propId) {
   }
   
   document.getElementById('propAreaModal').classList.add('open');
+  initPropAreaPlaces();
 }
 
 function closePropAreaModal() {
