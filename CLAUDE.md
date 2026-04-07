@@ -567,3 +567,46 @@ billing_usage_fee: $1.16 (amount × 0.77%)
 - payout 이후 환불 케이스 발생 시 Stripe Dashboard에서 실제 동작 확인 후 구현
 
 **우선순위:** 낮음 (실제 케이스 발생 전까지 운영 영향 없음)
+
+---
+
+## 2026-04-07 세션 완료 작업 요약
+
+### Stripe 수수료 구조 검증 및 수정
+- balance_transaction.fee = charge fee (1.7% + $0.30, GST 포함)
+- Billing Usage Fee = amount × 0.7% × 1.1 — Monthly 갱신에만 적용, payout 시 별도 차감
+- STRIPE_BILLING_FEE 고정값 → 동적 계산으로 수정
+- Annual checkout: isSubscriptionInvoice=false (Billing fee 없음)
+
+### property 자동연결 버그 수정
+- plans.html 직접 접근 시 property 1개면 자동 sessionStorage 세팅
+- dashboard.html View Plans / Continue to Plans 경로 수정
+- create-checkout-session: property_id null이면 metadata에서 제외 (빈 문자열 방지)
+- stripe-webhook: property_id 빈 문자열 → null 처리 (방어 로직)
+- startCheckout(): property 미선택 시 차단
+
+### 결제 엣지케이스 수정 (1-3)
+1. upsert 실패 시 subData 포함 상세 로그 강화
+2. startCheckout property null guard 추가
+3. invoice.payment_succeeded chargeId fallback (payment_intent → latest_charge) + Annual 갱신 billing fee 제외
+
+### 엣지케이스 4-7 점검 결과 — 수정 불필요
+- 4: 부분환불 status 구분 이미 처리됨
+- 5: invoice.paid(추가청구) / invoice.payment_succeeded(갱신) 완전 분리
+- 6: 재구독 upsert 실테스트 이상 없음
+- 7: stripe_customer_id null 케이스 없음
+
+### Eun Joon Yi 수동 처리
+- subscriptions property_id 수동 UPDATE
+- payments subscription_id 수동 UPDATE
+- 원인: sessionStorage 미세팅 → property_id 빈 문자열 → upsert 실패
+
+### 배포 완료
+```bash
+supabase functions deploy stripe-webhook --project-ref rtkgnlcgepromqtoelre --no-verify-jwt
+supabase functions deploy create-checkout-session --project-ref rtkgnlcgepromqtoelre
+```
+
+### 백로그
+- payout 이후 환불 시 unrecovered 과소 표시 (billing_usage_fee 컬럼 분리 필요)
+- 다음 달 Monthly 갱신 시 stripe_fee $4.01 정확히 기록되는지 확인 필요
