@@ -30,7 +30,7 @@
     --success: #27ae60; --warning: #f39c12;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { overflow-x: hidden; scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; }
   body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
 
   /* ── Loading ── */
@@ -6369,12 +6369,17 @@ async function executeRefund() {
 
 async function openAdditionalChargeModal() {
   const { data } = await sb.from('subscriptions')
-    .select('user_id, plan_type, stripe_customer_id, start_date, profiles:user_id(full_name)')
+    .select('user_id, plan_type, stripe_customer_id, start_date, profiles:user_id(full_name), properties:property_id(address, suburb)')
     .eq('status', 'active');
   allSubscribersForCharge = data || [];
   const sel = document.getElementById('chargeCustomer');
   sel.innerHTML = '<option value="">Select customer...</option>' +
-    allSubscribersForCharge.map(s => `<option value="${s.stripe_customer_id}" data-user-id="${s.user_id || ''}">${s.profiles?.full_name || s.user_id} — ${s.plan_type}</option>`).join('');
+    allSubscribersForCharge.map(s => {
+      const name = s.profiles?.full_name || s.user_id;
+      const prop = s.properties ? `${s.properties.address}, ${s.properties.suburb}` : '';
+      const label = prop ? `${name} — ${prop} (${s.plan_type})` : `${name} — ${s.plan_type}`;
+      return `<option value="${s.stripe_customer_id}" data-user-id="${s.user_id || ''}">${label}</option>`;
+    }).join('');
   document.getElementById('chargeType').value = 'materials';
   document.getElementById('chargeAmount').value = '';
   document.getElementById('chargeDescription').value = '';
