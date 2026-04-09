@@ -143,12 +143,12 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
-    /* aside를 grid flow에서 완전히 제거 */
+    /* aside: grid 공간 차지 안 하게, sidebar는 fixed라 별도 표시 */
     .page > aside {
-      display: none;
+      display: contents;
     }
     .sidebar {
-      display: block !important;
+      display: block;
       position: fixed;
       top: 64px;
       left: -100%;
