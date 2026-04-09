@@ -452,7 +452,7 @@
   .stat-mini-value { font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 4px; }
 
   /* ── Admin Modals ── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; align-items: center; justify-content: center; padding: 20px; padding-top: 84px; }
   .modal-overlay.open { display: flex; }
   .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
   .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
@@ -1885,9 +1885,12 @@
         <label>Access Instructions</label>
         <textarea id="propEditAccess" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;resize:vertical;" placeholder="e.g. Key under pot, gate code 1234…"></textarea>
       </div>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-secondary" onclick="closePropAreaModal()">Cancel</button>
-        <button class="modal-btn modal-btn-primary" id="btnSavePropArea" onclick="savePropArea()">Save</button>
+      <div class="modal-actions" style="justify-content:space-between;">
+        <button class="modal-btn" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;" id="btnDeleteProp" onclick="deletePropConfirm()">Delete Property</button>
+        <div style="display:flex;gap:8px;">
+          <button class="modal-btn modal-btn-secondary" onclick="closePropAreaModal()">Cancel</button>
+          <button class="modal-btn modal-btn-primary" id="btnSavePropArea" onclick="savePropArea()">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -5199,6 +5202,40 @@ async function savePropArea() {
     alertEl.className = 'modal-alert error';
   } finally {
     btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function deletePropConfirm() {
+  const id = document.getElementById('propAreaEditId').value;
+  const alertEl = document.getElementById('propAreaAlert');
+
+  // 구독 있는지 확인
+  const { data: activeSubs } = await sb.from('subscriptions')
+    .select('id, plan_type, status')
+    .eq('property_id', id)
+    .in('status', ['active', 'suspended']);
+
+  if (activeSubs?.length) {
+    alertEl.textContent = `Cannot delete — this property has an active ${activeSubs[0].plan_type} subscription.`;
+    alertEl.className = 'modal-alert error';
+    return;
+  }
+
+  if (!confirm('Delete this property? This cannot be undone.')) return;
+
+  const btn = document.getElementById('btnDeleteProp');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+
+  try {
+    const { error } = await sb.from('properties').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Property deleted');
+    closePropAreaModal();
+    loadProperties();
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to delete';
+    alertEl.className = 'modal-alert error';
+    btn.disabled = false; btn.textContent = 'Delete Property';
   }
 }
 
