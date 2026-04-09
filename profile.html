@@ -1012,30 +1012,7 @@
           </div>
         </div>
         
-        <!-- CTA Cards Row 2: Revenue -->
-        <div class="cta-grid" style="margin-top:16px;grid-template-columns:repeat(3, 1fr);">
-          <div class="cta-card cta-revenue">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaRevenueMonth">—</div>
-              <div class="cta-label">This Month Revenue</div>
-            </div>
-          </div>
-          <div class="cta-card cta-fees">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaFeesMonth">—</div>
-              <div class="cta-label">Stripe Fees</div>
-            </div>
-          </div>
-          <div class="cta-card cta-net">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaNetMonth">—</div>
-              <div class="cta-label">Net Revenue</div>
-            </div>
-          </div>
-        </div>
+
         
         <!-- Quick Stats -->
         <div style="margin-top:24px;">
@@ -4872,10 +4849,7 @@ async function loadDashboard() {
     const totalFees = payments.reduce((sum, p) => sum + (parseFloat(p.stripe_fee) || 0), 0);
     const totalNet = payments.reduce((sum, p) => sum + (parseFloat(p.net_amount) || 0), 0);
 
-    // DB에 달러 단위로 저장됨 (cents 아님)
-    document.getElementById('ctaRevenueMonth').textContent = `$${totalRevenue.toFixed(2)}`;
-    document.getElementById('ctaFeesMonth').textContent = `$${totalFees.toFixed(2)}`;
-    document.getElementById('ctaNetMonth').textContent = `$${totalNet.toFixed(2)}`;
+
     
     // This Month Stats
     const completedCleanings = cleanings.filter(c => c.status === 'completed').length;
