@@ -635,7 +635,7 @@ serve(async (req) => {
         // payments 테이블 업데이트
         const { data: payment } = await supabase
           .from('payments')
-          .select('id, subscription_id')
+          .select('id, subscription_id, payment_type')
           .eq('stripe_additional_invoice_id', invoice.id)
           .maybeSingle()
 
@@ -644,10 +644,12 @@ serve(async (req) => {
             status: 'additional_paid',
             paid_at: new Date().toISOString(),
           }).eq('id', payment.id)
-          console.log(`additional_charge paid: invoice=${invoice.id}`)
+          console.log(`additional_charge paid: invoice=${invoice.id}, type=${payment.payment_type}`)
 
-          // pending_cancellation 구독 확인 → 자동 취소
-          if (payment.subscription_id) {
+          // pending_cancellation 구독 자동취소
+          // material_charge는 절대 구독 취소 트리거 안 함 — 치명적 오발동 방지
+          const isMaterialCharge = payment.payment_type === 'material_charge'
+          if (!isMaterialCharge && payment.subscription_id) {
             const { data: subRecord } = await supabase
               .from('subscriptions')
               .select('id, stripe_subscription_id, pending_cancellation')
@@ -663,6 +665,8 @@ serve(async (req) => {
                 console.error('Pending cancellation error:', e)
               }
             }
+          } else if (isMaterialCharge) {
+            console.log(`material_charge paid — subscription cancellation check skipped: invoice=${invoice.id}`)
           }
         }
         break

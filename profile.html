@@ -1460,8 +1460,27 @@
     <div class="pay-modal">
       <div class="pay-modal-title">Send Additional Charge</div>
       <div class="pay-modal-row">
+        <div class="pay-modal-label">Type</div>
+        <select class="pay-modal-input" id="chargeType" onchange="onChargeTypeChange()">
+          <option value="materials">Materials &amp; Others</option>
+          <option value="early_termination">Early Termination Fee</option>
+        </select>
+      </div>
+      <div class="pay-modal-row">
         <div class="pay-modal-label">Customer</div>
         <select class="pay-modal-input" id="chargeCustomer" onchange="onChargeCustomerChange()"></select>
+      </div>
+      <div id="chargePropertyRow" class="pay-modal-row">
+        <div class="pay-modal-label">Property</div>
+        <select class="pay-modal-input" id="chargeProperty" onchange="onChargePropertyChange()">
+          <option value="">Select property…</option>
+        </select>
+      </div>
+      <div id="chargeJobRow" class="pay-modal-row">
+        <div class="pay-modal-label">Service Job</div>
+        <select class="pay-modal-input" id="chargeJob">
+          <option value="">Select completed job…</option>
+        </select>
       </div>
       <div class="pay-modal-row">
         <div class="pay-modal-label">Amount (AUD)</div>
@@ -1469,7 +1488,7 @@
       </div>
       <div class="pay-modal-row">
         <div class="pay-modal-label">Description</div>
-        <input class="pay-modal-input" type="text" id="chargeDescription" placeholder="e.g. Early termination fee">
+        <input class="pay-modal-input" type="text" id="chargeDescription" placeholder="e.g. Tap washer x2, silicone sealant">
       </div>
       <div class="pay-modal-calc" id="chargeCalc" style="display:none"></div>
       <div class="pay-modal-btns">
@@ -6197,7 +6216,7 @@ function renderPaymentsSummary(data) {
 function renderPaymentsTable(data) {
   const tbody = document.getElementById('payTableBody');
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="9" class="pay-empty">No payment records found.</td></tr>'; return; }
-  const typeLabel = { subscription: 'Subscription', sh_bundle: 'SH Bundle', refund: 'Refund', additional_charge: 'Additional Charge' };
+  const typeLabel = { subscription: 'Subscription', sh_bundle: 'SH Bundle', refund: 'Refund', additional_charge: 'Additional Charge', material_charge: 'Material Charge' };
   tbody.innerHTML = data.map(p => {
     const date = new Date(p.paid_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const customer = p.profiles?.full_name || '—';
@@ -6342,54 +6361,165 @@ async function executeRefund() {
   }
 }
 
-async function openAdditionalChargeModal() {
+async async function openAdditionalChargeModal() {
   const { data } = await sb.from('subscriptions')
     .select('user_id, plan_type, stripe_customer_id, start_date, profiles:user_id(full_name)')
     .eq('status', 'active');
   allSubscribersForCharge = data || [];
   const sel = document.getElementById('chargeCustomer');
   sel.innerHTML = '<option value="">Select customer...</option>' +
-    allSubscribersForCharge.map(s => `<option value="${s.stripe_customer_id}">${s.profiles?.full_name || s.user_id} — ${s.plan_type}</option>`).join('');
+    allSubscribersForCharge.map(s => `<option value="${s.stripe_customer_id}" data-user-id="${s.user_id || ''}">${s.profiles?.full_name || s.user_id} — ${s.plan_type}</option>`).join('');
+  document.getElementById('chargeType').value = 'materials';
   document.getElementById('chargeAmount').value = '';
   document.getElementById('chargeDescription').value = '';
+  document.getElementById('chargeDescription').placeholder = 'e.g. Tap washer x2, silicone sealant';
   document.getElementById('chargeCalc').style.display = 'none';
+  document.getElementById('chargeProperty').innerHTML = '<option value="">Select property…</option>';
+  document.getElementById('chargeJob').innerHTML = '<option value="">Select completed job…</option>';
+  document.getElementById('chargePropertyRow').style.display = '';
+  document.getElementById('chargeJobRow').style.display = '';
   document.getElementById('additionalChargeModal').style.display = 'flex';
 }
 
 function closeAdditionalChargeModal() { document.getElementById('additionalChargeModal').style.display = 'none'; }
 
-function onChargeCustomerChange() {
+async function onChargeCustomerChange() {
   const stripeId = document.getElementById('chargeCustomer').value;
   const sub = allSubscribersForCharge.find(s => s.stripe_customer_id === stripeId);
   if (!sub) return;
+
+  // data-user-id를 select option에서 가져오기 위해 직접 세팅
+  const sel = document.getElementById('chargeCustomer');
+  sel.options[sel.selectedIndex].dataset.userId = sub.user_id || '';
+
+  const type = document.getElementById('chargeType').value;
+
+  // Early Termination: 정산 계산 표시
   const start = new Date(sub.start_date);
   const elapsedMonths = Math.ceil((new Date() - start) / (1000 * 60 * 60 * 24 * 30.44));
   const remaining = Math.max(0, 12 - elapsedMonths);
   const monthly = PLAN_MONTHLY[sub.plan_type] || 0;
   const calcEl = document.getElementById('chargeCalc');
-  calcEl.style.display = 'block';
-  calcEl.innerHTML = `<strong>Early Termination Fee Reference</strong><br>
-    Plan: ${sub.plan_type} / Elapsed: ${elapsedMonths}m / Remaining: ${remaining}m<br>
-    Month 2-6: $${(remaining * monthly * 0.2).toFixed(2)} | Month 7-12: $${(remaining * monthly * 0.1).toFixed(2)}`;
+  if (type === 'early_termination') {
+    calcEl.style.display = 'block';
+    calcEl.innerHTML = `<strong>Early Termination Fee Reference</strong><br>
+      Plan: ${sub.plan_type} / Elapsed: ${elapsedMonths}m / Remaining: ${remaining}m<br>
+      Month 2-6: $${(remaining * monthly * 0.2).toFixed(2)} | Month 7-12: $${(remaining * monthly * 0.1).toFixed(2)}`;
+  } else {
+    calcEl.style.display = 'none';
+  }
+
+  // Materials: 해당 고객 property 목록 로드
+  if (type === 'materials' && sub.user_id) {
+    const propSel = document.getElementById('chargeProperty');
+    propSel.innerHTML = '<option value="">Loading…</option>';
+    document.getElementById('chargeJob').innerHTML = '<option value="">Select completed job…</option>';
+    const { data: props } = await sb.from('properties')
+      .select('id, address, suburb')
+      .eq('user_id', sub.user_id);
+    propSel.innerHTML = '<option value="">Select property…</option>';
+    (props || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = [p.address, p.suburb].filter(Boolean).join(', ');
+      propSel.appendChild(opt);
+    });
+  }
+}
+
+function onChargeTypeChange() {
+  const type = document.getElementById('chargeType').value;
+  const isMaterials = type === 'materials';
+  document.getElementById('chargePropertyRow').style.display = isMaterials ? '' : 'none';
+  document.getElementById('chargeJobRow').style.display = isMaterials ? '' : 'none';
+  document.getElementById('chargeDescription').placeholder = isMaterials
+    ? 'e.g. Tap washer x2, silicone sealant — $8.50'
+    : 'e.g. Early termination fee';
+}
+
+async function onChargePropertyChange() {
+  const propId = document.getElementById('chargeProperty').value;
+  const jobSel = document.getElementById('chargeJob');
+  jobSel.innerHTML = '<option value="">Select completed job…</option>';
+  if (!propId) return;
+
+  const { data: jobs } = await sb.from('service_requests')
+    .select('id, category, scheduled_date, preferred_date, status')
+    .eq('property_id', propId)
+    .eq('status', 'completed')
+    .order('scheduled_date', { ascending: false });
+
+  if (!jobs?.length) {
+    jobSel.innerHTML = '<option value="">No completed jobs found</option>';
+    return;
+  }
+  jobs.forEach(j => {
+    const date = (j.scheduled_date || j.preferred_date || '').slice(0, 10);
+    const cat = (j.category || 'Service').replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase());
+    const opt = document.createElement('option');
+    opt.value = j.id;
+    opt.textContent = `${date} — ${cat}`;
+    jobSel.appendChild(opt);
+  });
 }
 
 async function executeAdditionalCharge() {
   const btn = document.getElementById('chargeConfirmBtn');
+  const type = document.getElementById('chargeType').value;
   const stripeId = document.getElementById('chargeCustomer').value;
   const amount = parseFloat(document.getElementById('chargeAmount').value);
   const desc = document.getElementById('chargeDescription').value.trim();
+
   if (!stripeId) { showToast('Select a customer', 'error'); return; }
   if (!amount || amount <= 0) { showToast('Enter a valid amount', 'error'); return; }
   if (!desc) { showToast('Enter a description', 'error'); return; }
+
+  // materials 타입: property/job 선택 필수
+  let serviceRequestId = null;
+  let userId = null;
+  if (type === 'materials') {
+    const propId = document.getElementById('chargeProperty').value;
+    if (!propId) { showToast('Select a property', 'error'); return; }
+    serviceRequestId = document.getElementById('chargeJob').value || null;
+    // user_id: chargeCustomer select의 data-user-id
+    const sel = document.getElementById('chargeCustomer');
+    userId = sel.options[sel.selectedIndex]?.dataset?.userId || null;
+  }
+
   if (!confirm(`Send invoice of $${amount.toFixed(2)} AUD to customer?`)) return;
   btn.disabled = true; btn.textContent = 'Sending...';
+
   try {
     const { data: { session: chargeSession } } = await sb.auth.getSession();
     if (!chargeSession) { showToast('Session expired. Please log in again.', 'error'); return; }
+
+    let body;
+    if (type === 'materials') {
+      const propId = document.getElementById('chargeProperty').value;
+      body = {
+        action: 'additional_charge',
+        customer_stripe_id: stripeId,
+        amount,
+        description: desc,
+        service_request_id: serviceRequestId,
+        property_id: propId,
+        user_id: userId,
+      };
+    } else {
+      // early_termination: 기존 방식 유지 (send_cancellation_invoice 아님, 직접 invoice)
+      body = {
+        action: 'additional_charge',
+        customer_stripe_id: stripeId,
+        amount,
+        description: desc,
+        user_id: userId,
+      };
+    }
+
     const res = await fetch(SUPABASE_URL + '/functions/v1/process-refund', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + chargeSession.access_token },
-      body: JSON.stringify({ action: 'additional_charge', customer_stripe_id: stripeId, additional_amount: amount, description: desc }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed');

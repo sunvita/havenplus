@@ -215,6 +215,68 @@ serve(async (req) => {
       })
     }
 
+    // ══ Materials & Additional Charge ══
+    if (action === 'additional_charge') {
+      const { customer_stripe_id, amount, description, service_request_id, property_id, user_id } = body
+
+      if (!customer_stripe_id || !amount || !description || !user_id) {
+        return new Response(JSON.stringify({ error: 'customer_stripe_id, amount, description, user_id required' }), { status: 400, headers: CORS })
+      }
+
+      // 1. Stripe Invoice 생성
+      await stripe.invoiceItems.create({
+        customer: customer_stripe_id,
+        amount: Math.round(amount * 100),
+        currency: 'aud',
+        description,
+      })
+
+      const invoice = await stripe.invoices.create({
+        customer: customer_stripe_id,
+        collection_method: 'send_invoice',
+        days_until_due: 14,
+        description: 'Haven Plus — Materials & Additional Charge',
+      })
+
+      const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id)
+      const invoiceUrl = finalizedInvoice.hosted_invoice_url || ''
+      const dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+        .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+
+      // 2. payments INSERT — subscription_id 없음 (자동취소 오발동 방지)
+      await supabase.from('payments').insert({
+        user_id,
+        payment_type: 'material_charge',
+        amount,
+        currency: 'aud',
+        status: 'additional_pending',
+        stripe_additional_invoice_id: invoice.id,
+        description,
+        paid_at: new Date().toISOString(),
+        additional_charge_amount: amount,
+        subscription_id: null,  // material_charge는 subscription 자동취소와 무관
+        service_request_id: service_request_id || null,
+      })
+
+      // 3. 고객 이메일 발송
+      await fetch(`${SUPABASE_URL}/functions/v1/send-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SERVICE_KEY}` },
+        body: JSON.stringify({
+          type: 'material_charge_invoice',
+          notify_admins: true,
+          recipients: [{ id: user_id, type: 'customer' }],
+          reference_type: 'service',
+          details: { description, amount, invoice_url: invoiceUrl, due_date: dueDate },
+        }),
+      })
+      console.log(`material_charge invoice sent: ${invoice.id}, amount: ${amount}`)
+
+      return new Response(JSON.stringify({ success: true, invoice_id: invoice.id, invoice_url: invoiceUrl }), {
+        headers: { ...CORS, 'Content-Type': 'application/json' }
+      })
+    }
+
     return new Response(JSON.stringify({ error: 'Unknown action' }), { status: 400, headers: CORS })
 
   } catch (err) {
