@@ -6367,7 +6367,7 @@ async function executeRefund() {
   }
 }
 
-async async function openAdditionalChargeModal() {
+async function openAdditionalChargeModal() {
   const { data } = await sb.from('subscriptions')
     .select('user_id, plan_type, stripe_customer_id, start_date, profiles:user_id(full_name)')
     .eq('status', 'active');
