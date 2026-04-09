@@ -4838,14 +4838,12 @@ async function loadDashboard() {
       sb.from('cleaning_schedule').select('id, planned_date, planned_time, status, property_id, assigned_worker_id, assigned_workers, ch_deducted, duration_hours, actual_duration')
         .gte('planned_date', getMonthStart())
         .lte('planned_date', getMonthEnd()),
-      // Unassigned service requests (active statuses)
-      sb.from('service_requests').select('id')
-        .in('status', ['requested', 'scheduled', 'confirmed', 'in_progress'])
-        .is('assigned_worker_id', null),
-      // Unassigned cleanings (active statuses)
+      // Unassigned service requests — 신규 요청 전체
+      sb.from('service_requests').select('id').eq('status', 'requested'),
+      // Unassigned cleanings — 14일 이내 + 미배정
       sb.from('cleaning_schedule').select('id')
-        .in('status', ['requested', 'scheduled', 'confirmed'])
-        .is('assigned_worker_id', null),
+        .eq('status', 'requested')
+        .lte('planned_date', new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
       // Pending cancellation subscriptions
       sb.from('subscriptions').select('id').eq('pending_cancellation', true)
     ]);
