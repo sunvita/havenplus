@@ -4856,17 +4856,19 @@ async function loadDashboard() {
     document.getElementById('ctaCancelPendingSub').textContent = cancelPendingCount;
     updateCtaCardState('cta-payment', paymentIssues);
     
-    // 3. No Plan Properties
-    const propsWithPlan = new Set(subs.map(s => s.property_id).filter(Boolean));
-    const noPlanProps = props.filter(p => !propsWithPlan.has(p.id)).length;
+    // 3. No Plan Properties — active 구독이 없는 property (suspended는 플랜 있음)
+    const propsWithActivePlan = new Set(subs.filter(s => s.status === 'active').map(s => s.property_id).filter(Boolean));
+    const noPlanProps = props.filter(p => !propsWithActivePlan.has(p.id)).length;
     document.getElementById('ctaNoPlanProps').textContent = noPlanProps;
     updateCtaCardState('cta-noplan', noPlanProps);
     
-    // 4. CH Low Alert (remaining hours <= 2)
+    // 4. CH Low Alert — 플랜별 임계값 (essential/smart: 2h, premium: 4h)
+    const CH_LOW_THRESHOLD = { essential: 2, smart: 2, premium: 4 };
     const chLowSubs = subs.filter(s => {
       if (s.status !== 'active') return false;
       const remaining = (s.cleaning_hours_total || 0) - (s.cleaning_hours_used || 0);
-      return remaining <= 2;
+      const threshold = CH_LOW_THRESHOLD[s.plan_type] ?? 2;
+      return remaining <= threshold;
     }).length;
     document.getElementById('ctaChLow').textContent = chLowSubs;
     updateCtaCardState('cta-chlow', chLowSubs);
