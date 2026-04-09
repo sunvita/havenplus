@@ -662,3 +662,148 @@ supabase functions deploy create-checkout-session --project-ref rtkgnlcgepromqto
 - async 키워드 중복 여부 검증 항목 추가
 - 두 번째 script 블록 함수를 첫 번째 블록에서 호출 시 파싱 타이밍 이슈 주의
 
+---
+
+## profile.html 반응형 레이아웃 — 확정 구조 및 가이드
+
+### 핵심 원칙
+> **aside를 `.page` grid 안에 두되, 모바일에서 `position: fixed`로 grid flow에서 자동 분리**
+> CSS `position: fixed` 요소는 grid/flex flow에서 자동으로 빠져나오므로
+> `display: none` + `!important` 충돌 없이 깔끔하게 처리됨
+
+---
+
+### HTML 구조 (변경하지 말 것)
+```html
+<!-- sidebar-overlay: page 밖, body 직속 -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- .page grid: aside + main -->
+<div class="page">
+  <aside class="sidebar">   <!-- 데스크탑: grid 220px / 모바일: fixed overlay -->
+    ...
+  </aside>
+  <main class="content">    <!-- 데스크탑: 1fr / 모바일: 전체 너비 -->
+    ...
+  </main>
+</div>
+```
+
+---
+
+### CSS 확정값 (수정 시 전체 z-index 체계 유지 필수)
+
+```css
+/* 네비바 — 최상위 고정 */
+.dash-nav {
+  position: sticky; top: 0; z-index: 400;
+  height: 64px;
+}
+
+/* 오버레이 — 네비바 아래, sidebar 아래 */
+.sidebar-overlay {
+  position: fixed;
+  top: 64px; left: 0; right: 0; bottom: 0;  /* 네비바 아래부터 */
+  z-index: 290;                               /* aside(300) 아래 */
+  background: rgba(0,0,0,.45);
+  display: none;
+}
+.sidebar-overlay.open { display: block; }
+
+/* 데스크탑 sidebar (1024px 초과) */
+.sidebar {
+  position: sticky; top: 88px;              /* grid 내 sticky */
+  overflow: hidden;                          /* 데스크탑에서 내용 clip */
+}
+.sidebar-toggle { display: none; }          /* 데스크탑: 햄버거 숨김 */
+
+/* 모바일 sidebar (1024px 이하) */
+@media (max-width: 1024px) {
+  .page {
+    grid-template-columns: 1fr;             /* aside grid 공간 제거 */
+  }
+  .page > aside {
+    position: fixed;                        /* grid flow 자동 이탈 */
+    top: 64px;                              /* 네비바 아래서 시작 */
+    left: -100%;                            /* 기본: 화면 밖 */
+    width: 260px;
+    height: calc(100vh - 64px);
+    z-index: 300;                           /* overlay(290) 위 */
+    overflow: hidden;
+    overflow-y: auto !important;            /* 데스크탑 overflow:hidden override */
+    transition: left .28s cubic-bezier(.4,0,.2,1);
+    background: var(--surface);
+  }
+  .page > aside.open {
+    left: 0;                                /* 열림: 화면 안으로 */
+    box-shadow: 4px 0 24px rgba(0,0,0,.18);
+  }
+  .sidebar-toggle { display: flex; }        /* 모바일: 햄버거 표시 */
+  .content { min-width: 0; width: 100%; }
+}
+```
+
+**z-index 순서:** `dash-nav(400) > aside(300) > overlay(290)`
+
+---
+
+### JS 확정 위치 및 로직
+
+**⚠️ 반드시 첫 번째 `<script>` 블록에 있어야 함 (line ~2302)**
+두 번째 블록은 HTML 중간(line ~5880)에 있어서 DOMContentLoaded 시점에 미파싱됨.
+
+```js
+// toggleSidebar, closeSidebar → 반드시 첫 번째 script 블록에
+function toggleSidebar() {
+  const sidebar = document.querySelector('aside.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar) return;
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay?.classList.remove('open');
+  } else {
+    sidebar.classList.add('open');
+    overlay?.classList.add('open');
+  }
+}
+
+function closeSidebar() {
+  document.querySelector('aside.sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('open');
+}
+```
+
+**switchSection에서 자동 닫기:**
+```js
+function switchSection(name) {
+  ...
+  closeSidebar(); // 모바일에서 메뉴 선택 시 자동 닫기
+  ...
+}
+```
+
+**두 번째 블록 함수 호출 시 guard 패턴:**
+```js
+// DOMContentLoaded 안에서 두 번째 블록 함수 호출 시
+if (typeof loadNotifications === 'function') {
+  loadNotifications();
+} else {
+  window.addEventListener('load', () => {
+    if (typeof loadNotifications === 'function') loadNotifications();
+  });
+}
+```
+
+---
+
+### 자주 발생했던 실수 패턴 (반복하지 말 것)
+
+| 시도 | 문제 | 결론 |
+|------|------|------|
+| `.page > aside { display: none }` + `.sidebar { display: block !important }` | specificity 충돌, aside가 grid 공간 차지 | ❌ 사용 금지 |
+| `display: contents` | aside 자식이 grid에 직접 참여 → JS 요소 탐색 실패, init 에러 | ❌ 사용 금지 |
+| `aside { width: 0 !important }` | 데스크탑에서도 적용돼 레이아웃 파괴 | ❌ 사용 금지 |
+| aside를 `.page` 밖으로 이동 | 데스크탑 grid 구조 파괴 | ❌ 사용 금지 |
+| **`aside { position: fixed }` (1024px media)** | grid flow 자동 이탈, 충돌 없음 | ✅ 확정 방식 |
+
