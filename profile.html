@@ -134,7 +134,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,.45);
-    z-index: 399;
+    z-index: 290;
   }
   .sidebar-overlay.open { display: block; }
 
@@ -152,7 +152,8 @@
       height: calc(100vh - 64px);
       z-index: 300;
       border-radius: 0;
-      overflow-y: auto;
+      overflow: hidden;
+      overflow-y: auto !important;
       transition: left .28s cubic-bezier(.4,0,.2,1);
       background: var(--surface);
       box-shadow: none;
