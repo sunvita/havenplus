@@ -2312,6 +2312,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ── Section switching ──────────────────────────────────── */
+function toggleSidebar() {
+  const sidebar = document.querySelector('aside.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar) return;
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay?.classList.remove('open');
+  } else {
+    sidebar.classList.add('open');
+    overlay?.classList.add('open');
+  }
+}
+
+function closeSidebar() {
+  document.querySelector('aside.sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('open');
+}
+
 function switchSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
@@ -6133,25 +6152,7 @@ async function markAllReadPage() {
   } catch(e) { console.warn('markAllReadPage error:', e); }
 }
 
-/* ── Sidebar Mobile Toggle ── */
-function toggleSidebar() {
-  const sidebar = document.querySelector('aside.sidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  if (!sidebar) return;
-  const isOpen = sidebar.classList.contains('open');
-  if (isOpen) {
-    sidebar.classList.remove('open');
-    overlay?.classList.remove('open');
-  } else {
-    sidebar.classList.add('open');
-    overlay?.classList.add('open');
-  }
-}
-
-function closeSidebar() {
-  document.querySelector('aside.sidebar')?.classList.remove('open');
-  document.getElementById('sidebarOverlay')?.classList.remove('open');
-}
+/* toggleSidebar, closeSidebar → first script block */
 
 /* ══ Payments Section ════════════════════════════════════════════════ */
 
