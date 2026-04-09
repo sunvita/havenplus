@@ -393,21 +393,13 @@ print(f"추가한 기능 키워드 존재 여부 확인")
 
 ---
 
-## 미해결 — 다음 세션 작업 필요 (2026-04-05)
+## 미해결 백로그
 
-### profile.html 반응형 미완성
-1. **사이드바 모바일 숨김 안 됨** — `aside` grid flow 제거 시도했으나 미해결
-2. **Payments 요약 카드 반응형 미적용** — grid 2열 전환 안 됨
-- 현재 코드: `display:none` + `display:block !important` 충돌 의심
-- 접근 방법 변경 필요: JS로 직접 style 제어 또는 CSS 구조 재검토
-
----
-
-## 내일 확인 항목 (2026-04-06)
-
-- [ ] 고객 취소 확인 이메일 수신 확인 (subscription_cancelled)
-- [ ] 고객 dashboard.html 구독 비활성 표시 확인
-- [ ] 반응형 사이드바 이슈 해결 (profile.html 미완성)
+- payout 이후 환불 시 unrecovered 과소 표시 (billing_usage_fee 컬럼 분리 필요)
+- Case B Invoice 미납 처리 (14일 만료 후)
+- 워커 앱 — 작업 시작/종료 + 영수증 업로드 (AI 파싱 옵션)
+- 워커 가용 일정 등록
+- 워커 결제 시스템
 
 ---
 
@@ -610,3 +602,63 @@ supabase functions deploy create-checkout-session --project-ref rtkgnlcgepromqto
 ### 백로그
 - payout 이후 환불 시 unrecovered 과소 표시 (billing_usage_fee 컬럼 분리 필요)
 - 다음 달 Monthly 갱신 시 stripe_fee $4.01 정확히 기록되는지 확인 필요
+
+---
+
+## 2026-04-09 세션 완료 작업 요약
+
+### profile.html 반응형 (모바일/데스크탑) 수정
+**근본 원인 및 해결:**
+- `async async` 중복 키워드(openAdditionalChargeModal) → 두 번째 script 블록 파싱 실패
+  → closeSidebar, loadNotifications 등 전체 미정의 → 메뉴 클릭 불가
+- `toggleSidebar`, `closeSidebar` 두 번째 블록 → 첫 번째 블록으로 이동
+- `loadNotifications`, `setupNotifRealtime` → typeof guard + window.load fallback
+
+**레이아웃 구조 확정:**
+- 1024px 이하: `aside { position: fixed }` (grid에서 자동 제거) + 햄버거 메뉴
+- 1024px 초과: `aside { position: sticky }` — grid 220px 컬럼
+- z-index 순서: dash-nav(400) > aside(300) > overlay(290)
+- sidebar `overflow-y: auto !important` — 데스크탑 `overflow: hidden` override
+- breakpoint: 768px → 1024px (중간 화면 content 전체 너비 확보)
+
+**Payments 테이블 최적화:**
+- page max-width: 1000px → 1200px
+- table-layout: fixed, font-size 12px, 컬럼 너비 고정
+- Property 컬럼 ellipsis 처리
+- html overflow-x 제거 → body overflow-x: hidden (네비바 밀림 방지)
+
+### Material Charge 기능 (profile.html)
+- Additional Charge 모달에 Type 선택 추가 (Materials & Others / Early Termination)
+- Materials 선택 시: Customer → Property → Service Job(완료된 job) → 설명 + 금액
+- process-refund: `additional_charge` action 추가
+  - payment_type: `material_charge`, subscription_id: **null 명시** (자동취소 오발동 방지)
+  - service_request_id 연결
+- stripe-webhook (invoice.paid): `isMaterialCharge` 체크 — pending_cancellation 자동취소 완전 skip
+- DB: `ALTER TABLE payments ADD COLUMN IF NOT EXISTS service_request_id UUID REFERENCES service_requests(id);`
+
+### Google Places 자동완성 (profile.html)
+- admin Properties Edit 모달(propAreaModal)에 initPropAreaPlaces() 추가
+- subpremise(unit) 포함 주소 조합, suburb/postcode 자동입력, area 자동 제안
+
+### Job Overview (profile.html Dashboard → 명칭 변경)
+- Dashboard → **Job Overview** (표시명만 변경, id/함수 유지)
+- 매출 카드(Revenue/Fees/Net) 제거 → Payments 섹션에서 정확하게 확인
+
+### Additional Charge Customer 목록 개선
+- subscriptions JOIN properties → Customer 목록에 Property 주소 표시
+  `Jaden Lee — 37 Fifth Road, Armadale (premium)` 형태
+
+### 계약서 v2.2 업데이트
+- 3.3 SH Deduction Rules (영문/한글 동일):
+  - Job Request 제출 = 작업 승인 (사전 견적 승인 프로세스 제거)
+  - 최소 차감: 0.5 SH → **1 SH** (서면 합의 시 예외)
+  - 0.25 SH 단위 차감 유지
+  - 이동 할증료 공지 시점: SH estimate approval → job confirmation
+  - 자재비 승인 프로세스 명확화
+- profile.html SH input step: `0.5 → 0.25` (8개 SH 필드)
+  - 예외: schedEditDuration(0.5 유지), workerCleaningRate/TechRate(금액 필드)
+
+### 코딩 원칙 추가
+- async 키워드 중복 여부 검증 항목 추가
+- 두 번째 script 블록 함수를 첫 번째 블록에서 호출 시 파싱 타이밍 이슈 주의
+
