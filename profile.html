@@ -2280,8 +2280,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('adminPinSection').style.display = 'block';
       loadAdminPin();
     }
-    loadNotifications();
-    setupNotifRealtime();
+    // 두 번째 script 블록 로드 후 실행 보장
+    if (typeof loadNotifications === 'function') {
+      loadNotifications();
+    } else {
+      window.addEventListener('load', () => { if (typeof loadNotifications === 'function') loadNotifications(); });
+    }
+    if (typeof setupNotifRealtime === 'function') {
+      setupNotifRealtime();
+    } else {
+      window.addEventListener('load', () => { if (typeof setupNotifRealtime === 'function') setupNotifRealtime(); });
+    }
 
     // Pre-fill personal info
     document.getElementById('fieldName').value   = profile?.full_name || meta.full_name || '';
@@ -2301,7 +2310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(e) {
     console.error('Profile init error:', e);
     document.getElementById('loadingScreen').classList.add('hide');
-    showToast('Error: ' + (e?.message || String(e)), true);
+    showToast('Failed to load profile. Please refresh.', true);
   }
 });
 
