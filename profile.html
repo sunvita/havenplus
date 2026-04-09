@@ -143,10 +143,15 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
-    /* sidebar는 fixed, page는 단일 컬럼 */
+    /* aside: 너비 0으로 grid 공간 제거, sidebar는 fixed라 별도 */
+    .page > aside {
+      width: 0 !important;
+      min-width: 0 !important;
+      padding: 0 !important;
+      overflow: visible;
+    }
     .sidebar {
-      display: flex !important;
-      flex-direction: column;
+      display: block !important;
       position: fixed;
       top: 64px;
       left: -100%;
@@ -628,6 +633,9 @@
 
 <!-- Page -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="page">
+
+  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-profile">
       <div class="sidebar-avatar" id="sidebarAvatar"></div>
@@ -718,7 +726,6 @@
       </div>
     </nav>
   </aside>
-<div class="page">
 
   <!-- Content -->
   <main class="content">
@@ -2276,17 +2283,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('adminPinSection').style.display = 'block';
       loadAdminPin();
     }
-    // 두 번째 script 블록 로드 후 실행 보장
-    if (typeof loadNotifications === 'function') {
-      loadNotifications();
-    } else {
-      window.addEventListener('load', () => { if (typeof loadNotifications === 'function') loadNotifications(); });
-    }
-    if (typeof setupNotifRealtime === 'function') {
-      setupNotifRealtime();
-    } else {
-      window.addEventListener('load', () => { if (typeof setupNotifRealtime === 'function') setupNotifRealtime(); });
-    }
+    loadNotifications();
+    setupNotifRealtime();
 
     // Pre-fill personal info
     document.getElementById('fieldName').value   = profile?.full_name || meta.full_name || '';
