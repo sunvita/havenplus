@@ -1282,7 +1282,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Address</th><th>Suburb</th><th>Area</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Manage</th></tr></thead>
+            <thead><tr><th>Address</th><th>Suburb</th><th>Area</th><th>Type</th><th>Bed/Bath</th><th>Owner</th><th>Plan</th><th>Manage</th></tr></thead>
             <tbody id="propsBody"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -2889,7 +2889,7 @@ async function loadSubscribers() {
 
 function renderSubscribers(list) {
   const body = document.getElementById('subsBody');
-  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  if (!list.length) { body.innerHTML = '<tr><td colspan="8" class="empty-state">No results.</td></tr>'; return; }
   body.innerHTML = list.map(s => {
     const p = s.profile;
     const planBadge   = `<span class="badge badge-${s.plan_type}">${s.plan_type}</span>`;
@@ -5083,7 +5083,7 @@ async function loadProperties() {
 
 function renderProperties(list) {
   const body = document.getElementById('propsBody');
-  if (!list.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">No results.</td></tr>'; return; }
+  if (!list.length) { body.innerHTML = '<tr><td colspan="8" class="empty-state">No results.</td></tr>'; return; }
   
   body.innerHTML = list.map(p => {
     const areaCode = p.area || '';
@@ -5092,6 +5092,10 @@ function renderProperties(list) {
     const suggestion = !p.area ? suggestAreaForSuburb(p.suburb) : null;
     const suggestionHint = suggestion?.area ? ` <span style="font-size:10px;color:#888;">(→ ${suggestion.name})</span>` : '';
     
+    const planLabel = p.plan
+      ? `<span class="badge badge-${p.plan}" style="text-transform:capitalize;">${p.plan}</span>`
+      : `<span style="font-size:11px;color:#aaa;">No Plan</span>`;
+
     return `<tr>
       <td style="font-weight:600;">${p.address || '—'}</td>
       <td>${p.suburb || '—'}${suggestionHint}</td>
@@ -5099,6 +5103,7 @@ function renderProperties(list) {
       <td style="text-transform:capitalize;">${(p.property_type || '—').replace(/_/g, ' ')}</td>
       <td>${p.bedrooms || '—'} / ${p.bathrooms || '—'}</td>
       <td>${p.owner}</td>
+      <td>${planLabel}</td>
       <td class="action-cell">
         <button class="btn-action-sm" onclick="openPropAreaModal('${p.id}')">Edit</button>
       </td>
