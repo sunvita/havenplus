@@ -2301,7 +2301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(e) {
     console.error('Profile init error:', e);
     document.getElementById('loadingScreen').classList.add('hide');
-    showToast('Failed to load profile. Please refresh.', true);
+    showToast('Error: ' + (e?.message || String(e)), true);
   }
 });
 
