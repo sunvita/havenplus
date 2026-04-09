@@ -143,12 +143,9 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
-    /* aside: grid 공간 0으로, sidebar는 fixed라 별도 표시 */
+    /* aside: grid 공간 차지 안 하게, sidebar는 fixed라 별도 표시 */
     .page > aside {
-      width: 0;
-      overflow: hidden;
-      padding: 0;
-      margin: 0;
+      display: contents;
     }
     .sidebar {
       display: block !important;
