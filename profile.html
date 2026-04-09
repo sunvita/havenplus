@@ -351,6 +351,10 @@
   .cta-pending .cta-icon, .cta-payment .cta-icon, .cta-noplan .cta-icon, .cta-chlow .cta-icon { color: #dc2626; }
   .cta-pending .cta-value, .cta-payment .cta-value, .cta-noplan .cta-value, .cta-chlow .cta-value { color: #dc2626; }
   .cta-pending .cta-label, .cta-payment .cta-label, .cta-noplan .cta-label, .cta-chlow .cta-label { color: #991b1b; }
+  .cta-pending .cta-sub { display:flex; gap:12px; margin-top:6px; padding-top:6px; border-top:1px solid #fca5a5; font-size:11px; color:#991b1b; }
+  .cta-pending .cta-sub span { display:flex; align-items:center; gap:3px; }
+  .cta-payment .cta-sub { display:flex; gap:12px; margin-top:6px; padding-top:6px; border-top:1px solid #fca5a5; font-size:11px; color:#991b1b; }
+  .cta-payment .cta-sub span { display:flex; align-items:center; gap:3px; }
   
   /* Row 1: Green when value is 0 (no issues) */
   .cta-card.cta-ok { background: #ecfdf5; border-color: #6ee7b7; }
@@ -358,20 +362,6 @@
   .cta-card.cta-ok .cta-value { color: #059669; }
   .cta-card.cta-ok .cta-label { color: #047857; }
   
-  /* Unassigned Jobs — Orange */
-  .cta-unassigned { background: #fff7ed; border-color: #fed7aa; }
-  .cta-unassigned .cta-icon { color: #ea580c; }
-  .cta-unassigned .cta-value { color: #ea580c; }
-  .cta-unassigned .cta-label { color: #9a3412; }
-  .cta-unassigned .cta-sub { display:flex; gap:12px; margin-top:6px; padding-top:6px; border-top:1px solid #fed7aa; font-size:11px; color:#9a3412; }
-  .cta-unassigned .cta-sub span { display:flex; align-items:center; gap:3px; }
-
-  /* Pending Cancellation — Purple */
-  .cta-cancel-pending { background: #faf5ff; border-color: #d8b4fe; }
-  .cta-cancel-pending .cta-icon { color: #7c3aed; }
-  .cta-cancel-pending .cta-value { color: #7c3aed; }
-  .cta-cancel-pending .cta-label { color: #5b21b6; }
-
   /* Row 2: Revenue - Ivory/Cream background */
   .cta-revenue, .cta-fees, .cta-net { background: #fdfbf7; border-color: #e8e4dc; }
   .cta-revenue .cta-icon { color: #059669; }
@@ -997,6 +987,10 @@
             <div class="cta-content">
               <div class="cta-value" id="ctaPendingJobs">—</div>
               <div class="cta-label">Pending Jobs</div>
+              <div class="cta-sub">
+                <span>🔧 <span id="ctaPendingService">—</span> Service</span>
+                <span>🧹 <span id="ctaPendingCleaning">—</span> Cleaning</span>
+              </div>
             </div>
             <div class="cta-arrow">→</div>
           </div>
@@ -1004,7 +998,11 @@
             <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
             <div class="cta-content">
               <div class="cta-value" id="ctaPaymentIssues">—</div>
-              <div class="cta-label">Payment Issues</div>
+              <div class="cta-label">Subscription Issues</div>
+              <div class="cta-sub">
+                <span>💳 <span id="ctaPaymentFailed">—</span> Failed</span>
+                <span>❌ <span id="ctaCancelPendingSub">—</span> Cancelling</span>
+              </div>
             </div>
             <div class="cta-arrow">→</div>
           </div>
@@ -1024,26 +1022,7 @@
             </div>
             <div class="cta-arrow">→</div>
           </div>
-          <div class="cta-card cta-unassigned" onclick="switchSection('jobrequests')">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><line x1="18" y1="8" x2="22" y2="8"/><line x1="20" y1="6" x2="20" y2="10"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaUnassigned">—</div>
-              <div class="cta-label">Unassigned Jobs</div>
-              <div class="cta-sub">
-                <span>🔧 <span id="ctaUnassignedService">—</span> Service</span>
-                <span>🧹 <span id="ctaUnassignedCleaning">—</span> Cleaning</span>
-              </div>
-            </div>
-            <div class="cta-arrow">→</div>
-          </div>
-          <div class="cta-card cta-cancel-pending" onclick="switchSection('payments')">
-            <div class="cta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
-            <div class="cta-content">
-              <div class="cta-value" id="ctaCancelPending">—</div>
-              <div class="cta-label">Pending Cancellation</div>
-            </div>
-            <div class="cta-arrow">→</div>
-          </div>
+
         </div>
         
 
@@ -4859,15 +4838,22 @@ async function loadDashboard() {
     if (subsRes.error) console.error('Subs error:', subsRes.error);
     if (jobsRes.error) console.error('Jobs error:', jobsRes.error);
     
-    // 1. Pending Jobs (service requests + cleanings pending/requested)
-    const pendingCleanings = cleanings.filter(c => c.status === 'requested' || c.status === 'pending').length;
-    const pendingJobs = jobs.length + pendingCleanings;
+    // 1. Pending Jobs — service(requested) + cleaning(requested, 14일 이내)
+    const pendingServiceCount = jobs.length;  // service_requests(requested)
+    const pendingCleaningCount = unassignedCleaning.length;  // cleaning(requested, 14일이내) — unassigned와 동일 데이터 재사용
+    const pendingJobs = pendingServiceCount + pendingCleaningCount;
     document.getElementById('ctaPendingJobs').textContent = pendingJobs;
+    document.getElementById('ctaPendingService').textContent = pendingServiceCount;
+    document.getElementById('ctaPendingCleaning').textContent = pendingCleaningCount;
     updateCtaCardState('cta-pending', pendingJobs);
     
-    // 2. Payment Issues (suspended subscriptions)
-    const paymentIssues = subs.filter(s => s.status === 'suspended').length;
+    // 2. Subscription Issues — suspended + pending_cancellation
+    const paymentFailed = subs.filter(s => s.status === 'suspended').length;
+    const cancelPendingCount = cancelPending.length;
+    const paymentIssues = paymentFailed + cancelPendingCount;
     document.getElementById('ctaPaymentIssues').textContent = paymentIssues;
+    document.getElementById('ctaPaymentFailed').textContent = paymentFailed;
+    document.getElementById('ctaCancelPendingSub').textContent = cancelPendingCount;
     updateCtaCardState('cta-payment', paymentIssues);
     
     // 3. No Plan Properties
@@ -4884,18 +4870,6 @@ async function loadDashboard() {
     }).length;
     document.getElementById('ctaChLow').textContent = chLowSubs;
     updateCtaCardState('cta-chlow', chLowSubs);
-
-    // 5. Unassigned Jobs
-    const unassignedTotal = unassignedService.length + unassignedCleaning.length;
-    document.getElementById('ctaUnassigned').textContent = unassignedTotal;
-    document.getElementById('ctaUnassignedService').textContent = unassignedService.length;
-    document.getElementById('ctaUnassignedCleaning').textContent = unassignedCleaning.length;
-    updateCtaCardState('cta-unassigned', unassignedTotal);
-
-    // 6. Pending Cancellation
-    const cancelPendingCount = cancelPending.length;
-    document.getElementById('ctaCancelPending').textContent = cancelPendingCount;
-    updateCtaCardState('cta-cancel-pending', cancelPendingCount);
 
     // 7. Revenue this month (from payments table)
     const paymentsRes = await sb.from('payments')
