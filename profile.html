@@ -143,12 +143,10 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
-    /* aside: grid 공간 차지 안 하게, sidebar는 fixed라 별도 표시 */
-    .page > aside {
-      display: contents;
-    }
+    /* sidebar는 fixed, page는 단일 컬럼 */
     .sidebar {
-      display: block !important;
+      display: flex !important;
+      flex-direction: column;
       position: fixed;
       top: 64px;
       left: -100%;
@@ -630,9 +628,6 @@
 
 <!-- Page -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-  <div class="page">
-
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-profile">
       <div class="sidebar-avatar" id="sidebarAvatar"></div>
@@ -723,6 +718,7 @@
       </div>
     </nav>
   </aside>
+<div class="page">
 
   <!-- Content -->
   <main class="content">
