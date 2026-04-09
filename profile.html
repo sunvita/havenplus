@@ -143,15 +143,8 @@
       grid-template-columns: 1fr;
       padding: 16px 12px;
     }
-    /* aside: 너비 0으로 grid 공간 제거, sidebar는 fixed라 별도 */
+    /* aside 자체를 fixed로 — grid 공간 자연히 0 */
     .page > aside {
-      width: 0 !important;
-      min-width: 0 !important;
-      padding: 0 !important;
-      overflow: visible;
-    }
-    .sidebar {
-      display: block !important;
       position: fixed;
       top: 64px;
       left: -100%;
@@ -161,10 +154,10 @@
       border-radius: 0;
       overflow-y: auto;
       transition: left .28s cubic-bezier(.4,0,.2,1);
-      box-shadow: none;
       background: var(--surface);
+      box-shadow: none;
     }
-    .sidebar.open {
+    .page > aside.open {
       left: 0;
       box-shadow: 4px 0 24px rgba(0,0,0,.18);
     }
