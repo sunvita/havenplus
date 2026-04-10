@@ -1871,7 +1871,7 @@
         </div>
         <div class="modal-form-group">
           <label>Bathrooms</label>
-          <input type="number" id="propEditBathrooms" min="0" max="20">
+          <input type="number" id="propEditBathrooms" min="0" max="20" step="0.5">
         </div>
       </div>
       <div class="modal-form-group">
@@ -5176,7 +5176,7 @@ async function savePropArea() {
     postcode: document.getElementById('propEditPostcode').value.trim(),
     property_type: document.getElementById('propEditType').value,
     bedrooms: parseInt(document.getElementById('propEditBedrooms').value) || null,
-    bathrooms: parseInt(document.getElementById('propEditBathrooms').value) || null,
+    bathrooms: parseFloat(document.getElementById('propEditBathrooms').value) || null,
     access_instructions: document.getElementById('propEditAccess').value.trim() || null,
     area: document.getElementById('propAreaSelect').value || null
   };
