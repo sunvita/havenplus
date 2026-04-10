@@ -512,6 +512,12 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
   </div>
 </nav>
 
+<!-- Preview Mode Banner -->
+<div id="previewBanner" style="display:none;position:sticky;top:64px;z-index:390;background:#7c3aed;color:white;padding:8px 24px;font-size:13px;font-weight:600;align-items:center;justify-content:space-between;gap:12px;">
+  <span>👁 Previewing: <span id="previewBannerName"></span> — Read Only</span>
+  <button onclick="window.close()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;padding:4px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">✕ Exit Preview</button>
+</div>
+
 <!-- Main -->
 <div class="dash-main" id="dashContent" style="display:none">
 
@@ -937,8 +943,17 @@ const ICO = {
   swap: '<svg style="display:inline-block;vertical-align:middle;width:16px;height:16px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 2 1 5 4 8"/><line x1="1" y1="5" x2="15" y2="5"/><polyline points="12 8 15 11 12 14"/><line x1="15" y1="11" x2="1" y2="11"/></svg>',
 };
 let isAdmin = false, hasActiveSub = false;
+let previewMode = false;
+let viewUserId = null; // currentUser.id or previewUid
 let srByProp = {};
 let allSubs = [];
+
+function assertNotPreview() {
+  if (previewMode) {
+    showToast('Read-only preview mode — action disabled', true);
+    throw new Error('Preview mode');
+  }
+}
 
 /* ── Init ─────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -958,6 +973,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data: profile } = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
       isAdmin = profile?.role === 'admin';
     } catch(e) { console.warn('profiles table not available:', e.message); }
+
+    // Preview mode 처리 (어드민만 가능)
+    const _previewUid = new URLSearchParams(location.search).get('preview');
+    if (_previewUid && isAdmin) {
+      previewMode = true;
+      viewUserId = _previewUid;
+      // 고객 이름 조회
+      const { data: _pProfile } = await sb.from('profiles').select('full_name, email').eq('id', _previewUid).maybeSingle();
+      const _pName = _pProfile?.full_name || _pProfile?.email || _previewUid.slice(0, 8) + '…';
+      // 배너 표시
+      const banner = document.getElementById('previewBanner');
+      if (banner) {
+        document.getElementById('previewBannerName').textContent = _pName;
+        banner.style.display = 'flex';
+      }
+      // 고객 이름으로 헤더 업데이트
+      document.getElementById('dashUserName').textContent = _pName;
+      document.getElementById('welcomeTitle').textContent = `👁 Previewing: ${_pName}`;
+    } else {
+      viewUserId = currentUser.id;
+    }
 
     await loadDashboard();
     loadNotifications();
@@ -984,10 +1020,10 @@ async function loadDashboard() {
 
   try {
     const [subsRes, shBalRes, propRes, srRes] = await Promise.all([
-      sb.from('subscriptions').select('*').eq('user_id', currentUser.id).eq('status','active').then(r => r, () => ({ data: [] })),
-      sb.from('sh_balance').select('*').eq('user_id', currentUser.id).maybeSingle().then(r => r, () => ({ data: null })),
-      sb.from('properties').select('*').eq('user_id', currentUser.id).order('created_at').then(r => r, () => ({ data: [] })),
-      sb.from('service_requests').select('id, property_id').eq('user_id', currentUser.id).then(r => r, () => ({ data: [] })),
+      sb.from('subscriptions').select('*').eq('user_id', viewUserId).eq('status','active').then(r => r, () => ({ data: [] })),
+      sb.from('sh_balance').select('*').eq('user_id', viewUserId).maybeSingle().then(r => r, () => ({ data: null })),
+      sb.from('properties').select('*').eq('user_id', viewUserId).order('created_at').then(r => r, () => ({ data: [] })),
+      sb.from('service_requests').select('id, property_id').eq('user_id', viewUserId).then(r => r, () => ({ data: [] })),
     ]);
     allSubs       = subsRes?.data || [];
     shBal         = shBalRes?.data || null;
@@ -1367,6 +1403,7 @@ function pickWeek(subId, week, btnEl) {
 }
 
 async function confirmStartSchedule(subId) {
+  assertNotPreview();
   const month = pendingMonth[subId];
   const week = pendingWeek[subId];
   if (!month || !week) return;
@@ -1488,6 +1525,7 @@ function renderPropertyList(containerId) {
 
 /* ── Delete Property (admin only) ────────────────────── */
 async function deleteProperty(propId, address) {
+  assertNotPreview();
   if (!isAdmin) return;
   if (!confirm(`Delete "${address}"?\n\nThis cannot be undone.`)) return;
   const { error } = await sb.from('properties').delete().eq('id', propId);
@@ -1655,6 +1693,7 @@ function closePropertyModal() { document.getElementById('propertyModal').classLi
 
 /* ── Save / Update Property ──────────────────────────── */
 async function saveProperty() {
+  assertNotPreview();
   const editId  = document.getElementById('propEditId').value;
   const lockStructure = !isAdmin && hasActiveSub && editId;
   const address = document.getElementById('propAddress').value.trim();
@@ -1864,7 +1903,7 @@ async function loadSubscriptionModal() {
     const { data: sub } = await sb
       .from('subscriptions')
       .select('plan_type, status, current_period_end, end_date')
-      .eq('user_id', currentUser.id)
+      .eq('user_id', viewUserId)
       .eq('status', 'active')
       .maybeSingle();
 
@@ -2101,6 +2140,7 @@ function updateShEstimate() {
 }
 
 async function submitShRequest() {
+  assertNotPreview();
   const propId = document.getElementById('shReqProperty').value;
   const cat = document.getElementById('shReqCategory').value;
   const desc = document.getElementById('shReqDesc').value.trim();
@@ -2329,7 +2369,7 @@ async function openServiceHistoryAll(filterType) {
   try {
     const srRes = await sb.from('service_requests')
       .select('id, scheduled_date, preferred_date, status, category, sh_used, description, urgency, assigned_worker_id, before_photos, after_photos, worker_notes, property_id')
-      .eq('user_id', currentUser.id)
+      .eq('user_id', viewUserId)
       .order('created_at', { ascending: false });
 
     // property_id → address 맵
@@ -2596,7 +2636,7 @@ async function loadNotifications() {
   try {
     const { data, error } = await sb.from('notifications')
       .select('*')
-      .eq('user_id', currentUser.id)
+      .eq('user_id', viewUserId)
       .eq('recipient_type', 'customer')
       .eq('is_read', false)
       .order('created_at', { ascending: false })
@@ -2609,6 +2649,7 @@ async function loadNotifications() {
 }
 
 async function markRead(id, el) {
+  assertNotPreview();
   if (el) el.classList.remove('unread');
   try {
     await sb.from('notifications').update({ is_read: true }).eq('id', id);
@@ -2620,6 +2661,7 @@ async function markRead(id, el) {
 }
 
 async function markAllRead(e) {
+  assertNotPreview();
   e.stopPropagation();
   try {
     await sb.from('notifications')
