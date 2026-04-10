@@ -1957,11 +1957,13 @@ async function saveAvailability() {
     if (selectedDays.size === 0) {
       alertEl.textContent = 'Select at least one day.';
       alertEl.style.color = '#dc2626';
+      btn.disabled = false; btn.textContent = 'Save';
       return;
     }
     if (startTime >= endTime) {
       alertEl.textContent = 'End time must be after start time.';
       alertEl.style.color = '#dc2626';
+      btn.disabled = false; btn.textContent = 'Save';
       return;
     }
 

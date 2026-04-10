@@ -33,13 +33,13 @@ serve(async (req) => {
     const [cleaningRes, srRes] = await Promise.all([
       sb.from('cleaning_schedule')
         .select('id, planned_date, planned_time, duration_hours, status, properties(address, suburb)')
-        .contains('assigned_workers', [workerId])
+        .or(`assigned_workers.cs.["${workerId}"],assigned_worker_id.eq.${workerId}`)
         .gte('planned_date', from.toISOString().split('T')[0])
         .lte('planned_date', to.toISOString().split('T')[0])
         .in('status', ['scheduled', 'confirmed', 'in_progress', 'completed']),
       sb.from('service_requests')
         .select('id, scheduled_date, scheduled_time, sh_hours_used, category, status, properties(address, suburb)')
-        .contains('assigned_workers', [workerId])
+        .or(`assigned_workers.cs.["${workerId}"],assigned_worker_id.eq.${workerId}`)
         .gte('scheduled_date', from.toISOString().split('T')[0])
         .lte('scheduled_date', to.toISOString().split('T')[0])
         .in('status', ['scheduled', 'confirmed', 'in_progress', 'completed'])
