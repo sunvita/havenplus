@@ -977,7 +977,30 @@ CREATE TABLE pm_invitations (
 5. index.html: ?invite=TOKEN 처리 (가입/로그인 후 property_access 자동 부여)
 6. dashboard.html: pmMode 플래그 + property_id 기반 조회 레이어
 7. profile.html PM 섹션 — 초대 발송 UI
-8. **결정 필요:** PM 초대 고객의 service_requests 직접 생성 허용 여부
+8. dashboard.html: 고객용 PM 채팅 위젯 (하단 고정)
+9. profile.html: PM 메시지 수신/답장 UI
+
+### 고객 액션 범위 확정
+- ✅ 조회: property 현황, 청소 일정, SR/MCR, SH 잔량
+- ✅ 채팅: PM에게 메시지로 요청/문의
+- ❌ 직접 생성: service_requests, property 편집 등 불가
+- PM이 고객 메시지 받아 대신 액션 처리
+
+### 채팅 설계
+```sql
+CREATE TABLE pm_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid REFERENCES properties(id),
+  from_user_id uuid REFERENCES auth.users(id),
+  to_user_id uuid REFERENCES auth.users(id),
+  message text NOT NULL,
+  is_read boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+```
+- Supabase Realtime 실시간 수신
+- 새 메시지 → notifications 테이블 연동
+- chat_sessions(AI Tasks용)과 완전 분리
 
 ### 백로그 우선순위
 - 현재: 어드민 preview 완료 ✅
