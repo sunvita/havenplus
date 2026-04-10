@@ -1008,3 +1008,77 @@ CREATE TABLE pm_messages (
 - 중기: 초대 이메일 플로우 구현
 - 장기: PM 전용 대시보드
 
+
+---
+
+## 2026-04-11 세션 완료 작업 요약
+
+### 워커 가용일정 시스템 (haventeam.html + profile.html + generate-ics)
+
+**구현 순서: 2→3→4→5→6→1(DB)→버그픽스**
+
+#### DB (worker_availability 테이블)
+```sql
+CREATE TABLE worker_availability (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  worker_id uuid REFERENCES workers(id) ON DELETE CASCADE,
+  type text NOT NULL CHECK (type IN ('regular','exception')),
+  day_of_week int[],
+  start_time time,
+  end_time time,
+  date date,
+  is_blocked boolean DEFAULT false,
+  effective_from date,
+  effective_until date,
+  note text,
+  created_at timestamptz DEFAULT now()
+);
+-- UNIQUE: regular는 worker당 1개
+ALTER TABLE worker_availability
+  DROP CONSTRAINT IF EXISTS worker_availability_worker_id_type_key;
+CREATE UNIQUE INDEX worker_availability_regular_unique
+  ON worker_availability (worker_id) WHERE type = 'regular';
+```
+
+#### haventeam.html — Schedule 탭 추가
+- 탭 순서: Jobs | **Schedule** | Training | Me
+- Regular Weekly Hours: 요일 토글 (월~일) + 시작/종료 시간 (30분 단위) + effective_from
+- Exceptions: 특정 날짜 추가 (🚫 Unavailable / ✅ Available + 시간)
+- saveAvailability(): regular upsert + exception delete+insert
+- loadScheduleTab(): DB graceful fallback (테이블 없으면 조용히 처리)
+- Calendar Subscription 섹션: Supabase Edge Function URL 복사
+
+#### haventeam.html — Me탭 Calendar Subscription 추가
+- buildIcsUrl(): `https://rtkgnlcgepromqtoelre.supabase.co/functions/v1/generate-ics?worker_id={id}`
+- copyMyIcsUrl(): 클립보드 복사 (fallback: prompt)
+
+#### profile.html — 배정 시 availability 체크 레이어
+- `workerAvailabilityCache` 전역변수
+- `fetchWorkerAvailabilityForDate()`: 모든 워커 availability 캐시 로드
+- `getWorkerAvailabilityStatus()`: exception 우선 > regular 패턴
+  - blocked / outside / available / unavailable / unknown(미등록)
+- `renderWorkerCheckboxList()`: 기존 conflict 표시 유지 + availability 서브라벨 추가
+- `openSchedEditModal()`: fetchWorkerAvailabilityForDate await 추가
+
+#### profile.html — service_requests 충돌 체크 추가 (Step 4)
+- `loadWorkerSchedulesForDate()`: cleaning + SR Promise.all 병렬 조회
+- SR → `planned_time: scheduled_time`, `duration_hours: sh_hours_used || 1` 맵핑
+- 기존 `checkWorkerConflictStatus()` 재사용 (변경 없음)
+
+#### generate-ics Edge Function
+- GET `?worker_id=uuid` → `.ics` 반환
+- cleaning_schedule + service_requests 이벤트 포함
+- `.or(assigned_workers.cs OR assigned_worker_id.eq)` — 구형 데이터 fallback
+- Perth 시간대 (TZID=Australia/Perth)
+- 범위: 7일 전 ~ 90일 후
+
+### 배포 전 발견/수정한 오류 3건
+1. `saveAvailability` 조기 return 시 btn.disabled 해제 누락 → 수정
+2. `UNIQUE(worker_id,type)` — exception 여러 개 insert 오류 → partial index로 교체 (DB)
+3. ICS `.contains()` 단독 → `.or()` fallback 추가
+
+### 기존 코드 영향 없음 확인
+- checkWorkerConflictStatus 로직 변경 없음
+- renderWorkerCheckboxList 시그니처 변경 없음
+- tabHome/tabTraining/tabMe 변경 없음
+- DB graceful fallback — 테이블 없어도 기존 배정 UI 정상 작동
