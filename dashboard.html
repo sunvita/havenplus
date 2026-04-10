@@ -681,9 +681,9 @@ body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: va
         <div class="form-group">
           <label class="form-label"><span class="lang-en">Bathrooms</span><span class="lang-ko" style="display:none;">욕실</span></label>
           <div class="spinner-wrap" id="spinBathrooms">
-            <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',-1)">−</button>
+            <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',-0.5)">−</button>
             <input type="text" class="spinner-value" id="propBathrooms" value="0" readonly>
-            <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',1)">+</button>
+            <button type="button" class="spinner-btn" onclick="spinValue('propBathrooms',0.5)">+</button>
           </div>
         </div>
       </div>
@@ -1662,7 +1662,7 @@ async function saveProperty() {
   const pc      = document.getElementById('propPostcode').value.trim();
   const type    = document.getElementById('propType').value;
   const beds    = parseInt(document.getElementById('propBedrooms').value) || 0;
-  const baths   = parseInt(document.getElementById('propBathrooms').value) || 0;
+  const baths   = parseFloat(document.getElementById('propBathrooms').value) || 0;
   const access  = document.getElementById('propAccess').value.trim();
   const keyName = document.getElementById('propKeyName').value.trim();
   const keyContact = document.getElementById('propKeyContact').value.trim();
@@ -1788,7 +1788,8 @@ function manualPostcodeLookup() {
 
 function spinValue(id, delta) {
   const el = document.getElementById(id);
-  el.value = Math.max(0, (parseInt(el.value) || 0) + delta);
+  const val = Math.max(0, Math.round(((parseFloat(el.value) || 0) + delta) * 10) / 10);
+  el.value = val;
 }
 
 /* ── Auth ─────────────────────────────────────────────── */
