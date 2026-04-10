@@ -3564,23 +3564,48 @@ async function loadWorkerSchedulesForDate(date) {
   if (!date) { workerScheduleCache = {}; return; }
   
   try {
-    const { data } = await sb.from('cleaning_schedule')
-      .select('id, assigned_worker_id, assigned_workers, planned_date, planned_time, duration_hours, properties(address)')
-      .eq('planned_date', date)
-      .in('status', ['scheduled', 'confirmed', 'in_progress']);
-    
+    // cleaning_schedule + service_requests 동시 조회
+    const [cleaningRes, srRes] = await Promise.all([
+      sb.from('cleaning_schedule')
+        .select('id, assigned_worker_id, assigned_workers, planned_date, planned_time, duration_hours, properties(address)')
+        .eq('planned_date', date)
+        .in('status', ['scheduled', 'confirmed', 'in_progress']),
+      sb.from('service_requests')
+        .select('id, assigned_worker_id, assigned_workers, scheduled_date, scheduled_time, sh_hours_used, category, properties(address)')
+        .eq('scheduled_date', date)
+        .in('status', ['scheduled', 'confirmed', 'in_progress'])
+    ]);
+
     workerScheduleCache = {};
-    (data || []).forEach(s => {
-      // Check assigned_workers JSONB array first, fallback to assigned_worker_id
+
+    // cleaning_schedule 처리 (기존 로직 유지)
+    (cleaningRes.data || []).forEach(s => {
       const workerIds = (s.assigned_workers && Array.isArray(s.assigned_workers) && s.assigned_workers.length > 0)
         ? s.assigned_workers
         : (s.assigned_worker_id ? [s.assigned_worker_id] : []);
-      
       workerIds.forEach(wid => {
         if (!workerScheduleCache[wid]) workerScheduleCache[wid] = [];
         workerScheduleCache[wid].push(s);
       });
     });
+
+    // service_requests 처리 — planned_time/duration_hours 필드명 맞춤
+    (srRes.data || []).forEach(s => {
+      const workerIds = (s.assigned_workers && Array.isArray(s.assigned_workers) && s.assigned_workers.length > 0)
+        ? s.assigned_workers
+        : (s.assigned_worker_id ? [s.assigned_worker_id] : []);
+      workerIds.forEach(wid => {
+        if (!workerScheduleCache[wid]) workerScheduleCache[wid] = [];
+        // checkWorkerConflictStatus가 planned_time/duration_hours를 사용하므로 맞춤
+        workerScheduleCache[wid].push({
+          ...s,
+          planned_time: s.scheduled_time,
+          duration_hours: s.sh_hours_used || 1,
+          _type: 'service'
+        });
+      });
+    });
+
   } catch(e) {
     console.warn('Could not load worker schedules:', e);
     workerScheduleCache = {};

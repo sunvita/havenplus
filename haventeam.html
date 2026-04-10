@@ -985,6 +985,13 @@ body {
             <button class="btn-load-more" id="btnLoadMoreEarnings" onclick="loadMoreEarnings()" style="display:none;width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:white;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;margin-top:8px;">Load more</button>
           </div>
 
+          <!-- Calendar Subscription -->
+          <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+            <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">📅 Calendar Subscription</div>
+            <div style="font-size:12px;color:#888;margin-bottom:10px;">Subscribe to your work schedule in Google, Outlook or Apple Calendar</div>
+            <button onclick="copyMyIcsUrl()" style="width:100%;background:#f8fafc;border:1px solid #e5e7eb;padding:10px;border-radius:8px;font-size:13px;font-weight:600;color:#1a3a5c;cursor:pointer;">Copy Calendar URL</button>
+          </div>
+
           <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
         </div>
       </div>
@@ -2017,13 +2024,30 @@ async function saveAvailability() {
 
 async function copyIcsUrl() {
   if (!currentWorker?.id) return;
-  // ics token = worker_id (나중에 별도 토큰으로 교체 가능)
-  const url = `${window.location.origin}/api/ics/worker-${currentWorker.id}.ics`;
+  const url = buildIcsUrl();
   try {
     await navigator.clipboard.writeText(url);
     showToast('Calendar URL copied!');
   } catch(e) {
-    showToast(url); // fallback: URL 토스트로 표시
+    showToast(url);
+  }
+}
+
+function buildIcsUrl() {
+  // Supabase Edge Function URL
+  const supabaseUrl = 'https://rtkgnlcgepromqtoelre.supabase.co/functions/v1/generate-ics';
+  return `${supabaseUrl}?worker_id=${currentWorker.id}`;
+}
+
+async function copyMyIcsUrl() {
+  if (!currentWorker?.id) return;
+  const url = buildIcsUrl();
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('Calendar URL copied! Add it to Google or Outlook Calendar.');
+  } catch(e) {
+    // fallback: 모달 없이 프롬프트
+    prompt('Copy this URL and add to your calendar app:', url);
   }
 }
 
