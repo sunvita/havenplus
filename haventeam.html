@@ -215,6 +215,8 @@ body {
 .tab-btn svg { width: 22px; height: 22px; transition: all .2s; }
 .tab-btn.active { color: var(--primary); }
 .tab-btn.active svg { stroke-width: 2.2; }
+.day-toggle { padding:8px 10px; border:2px solid #e5e7eb; border-radius:8px; background:white; color:#888; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; min-width:44px; }
+.day-toggle.active { background:#1a3a5c; border-color:#1a3a5c; color:white; }
 
 /* ═══ Section Headers ═══ */
 .section-header {
@@ -891,6 +893,65 @@ body {
       </div>
 
       <!-- Me Tab -->
+      <div class="tab-content" id="tabSchedule">
+        <div class="tab-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:17px;font-weight:700;color:#1a1a1a;">My Availability</div>
+            <button onclick="saveAvailability()" style="background:#1a3a5c;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" id="btnSaveAvail">Save</button>
+          </div>
+
+          <!-- Regular Weekly Schedule -->
+          <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+            <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;">Regular Weekly Hours</div>
+            <div id="weekdayToggles" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+              <button class="day-toggle" data-day="1" onclick="toggleDay(this)">Mon</button>
+              <button class="day-toggle" data-day="2" onclick="toggleDay(this)">Tue</button>
+              <button class="day-toggle" data-day="3" onclick="toggleDay(this)">Wed</button>
+              <button class="day-toggle" data-day="4" onclick="toggleDay(this)">Thu</button>
+              <button class="day-toggle" data-day="5" onclick="toggleDay(this)">Fri</button>
+              <button class="day-toggle" data-day="6" onclick="toggleDay(this)">Sat</button>
+              <button class="day-toggle" data-day="0" onclick="toggleDay(this)">Sun</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px;">START TIME</label>
+                <select id="availStartTime" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;">
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px;">END TIME</label>
+                <select id="availEndTime" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;">
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px;">
+              <label style="font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px;">EFFECTIVE FROM</label>
+              <input type="date" id="availEffectiveFrom" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;box-sizing:border-box;">
+            </div>
+          </div>
+
+          <!-- Exceptions -->
+          <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div style="font-size:13px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em;">Exceptions</div>
+              <button onclick="addException()" style="background:#f0f4ff;color:#1a3a5c;border:1px solid #c7d7f0;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">+ Add</button>
+            </div>
+            <div id="exceptionList" style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:13px;color:#aaa;text-align:center;padding:12px 0;" id="exceptionEmpty">No exceptions added</div>
+            </div>
+          </div>
+
+          <!-- Calendar Subscription -->
+          <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+            <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Calendar Subscription</div>
+            <div style="font-size:12px;color:#888;margin-bottom:10px;">Add your work schedule to Google, Outlook or Apple Calendar</div>
+            <button onclick="copyIcsUrl()" style="width:100%;background:#f8fafc;border:1px solid #e5e7eb;padding:10px;border-radius:8px;font-size:13px;font-weight:600;color:#1a3a5c;cursor:pointer;" id="btnCopyIcs">📅 Copy Calendar URL</button>
+          </div>
+
+          <div id="availAlert" style="margin-top:12px;font-size:13px;text-align:center;"></div>
+        </div>
+      </div>
+
       <div class="tab-content" id="tabMe">
         <div class="tab-section">
           <div class="profile-card">
@@ -936,6 +997,10 @@ body {
   <button class="tab-btn active" data-tab="tabHome" onclick="switchTab('tabHome')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     <span>Jobs</span>
+  </button>
+  <button class="tab-btn" data-tab="tabSchedule" onclick="switchTab('tabSchedule')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14" stroke-width="2.5"/><line x1="12" y1="14" x2="12" y2="14" stroke-width="2.5"/><line x1="16" y1="14" x2="16" y2="14" stroke-width="2.5"/></svg>
+    <span>Schedule</span>
   </button>
   <button class="tab-btn" data-tab="tabTraining" onclick="switchTab('tabTraining')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -1302,6 +1367,7 @@ function switchTab(tabId) {
   document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
   
   if (tabId === 'tabMe') loadMeTab();
+  if (tabId === 'tabSchedule') loadScheduleTab();
 }
 
 // ═══ Load Data ═══
@@ -1745,6 +1811,222 @@ function updateBeforePhotoGrid() {
   countEl.className = `photo-count ${valid ? 'valid' : ''}`;
   btn.disabled = !valid;
 }
+
+
+/* ══ Schedule Tab ══════════════════════════════════════ */
+let myAvailability = { regular: null, exceptions: [] };
+let selectedDays = new Set();
+
+function initTimeOptions() {
+  const start = document.getElementById('availStartTime');
+  const end = document.getElementById('availEndTime');
+  if (!start || start.options.length > 0) return;
+  for (let h = 6; h <= 20; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const val = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const label = `${h > 12 ? h-12 : h}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+      start.appendChild(new Option(label, val));
+      end.appendChild(new Option(label, val));
+    }
+  }
+  start.value = '08:00';
+  end.value = '17:00';
+}
+
+function toggleDay(btn) {
+  const day = parseInt(btn.dataset.day);
+  if (selectedDays.has(day)) {
+    selectedDays.delete(day);
+    btn.classList.remove('active');
+  } else {
+    selectedDays.add(day);
+    btn.classList.add('active');
+  }
+}
+
+function addException() {
+  const list = document.getElementById('exceptionList');
+  const empty = document.getElementById('exceptionEmpty');
+  if (empty) empty.style.display = 'none';
+
+  const id = 'exc_' + Date.now();
+  const div = document.createElement('div');
+  div.id = id;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:8px;background:#f8fafc;border-radius:8px;';
+  div.innerHTML = `
+    <input type="date" style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+    <select style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;">
+      <option value="blocked">🚫 Unavailable</option>
+      <option value="available">✅ Available</option>
+    </select>
+    <div style="display:flex;gap:4px;">
+      <input type="time" style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;width:90px;">
+      <input type="time" style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;width:90px;">
+    </div>
+    <button onclick="document.getElementById('${id}').remove();checkExceptionEmpty();" style="background:#fee2e2;border:none;color:#dc2626;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;">✕</button>`;
+  list.appendChild(div);
+}
+
+function checkExceptionEmpty() {
+  const list = document.getElementById('exceptionList');
+  const empty = document.getElementById('exceptionEmpty');
+  if (empty) empty.style.display = list.children.length <= 1 ? 'block' : 'none';
+}
+
+async function loadScheduleTab() {
+  initTimeOptions();
+  document.getElementById('availEffectiveFrom').value = new Date().toISOString().split('T')[0];
+
+  if (!currentWorker?.id) return;
+
+  try {
+    const { data, error } = await sb
+      .from('worker_availability')
+      .select('*')
+      .eq('worker_id', currentWorker.id);
+
+    if (error) {
+      // 테이블 미생성 시 graceful fallback
+      console.warn('worker_availability not ready:', error.message);
+      return;
+    }
+
+    if (!data?.length) return;
+
+    // regular 패턴 로드
+    const regular = data.find(d => d.type === 'regular');
+    if (regular) {
+      selectedDays = new Set(regular.day_of_week || []);
+      document.querySelectorAll('.day-toggle').forEach(btn => {
+        if (selectedDays.has(parseInt(btn.dataset.day))) btn.classList.add('active');
+      });
+      document.getElementById('availStartTime').value = regular.start_time?.slice(0,5) || '08:00';
+      document.getElementById('availEndTime').value = regular.end_time?.slice(0,5) || '17:00';
+      if (regular.effective_from) document.getElementById('availEffectiveFrom').value = regular.effective_from;
+    }
+
+    // exceptions 로드
+    const exceptions = data.filter(d => d.type === 'exception');
+    exceptions.forEach(exc => {
+      const list = document.getElementById('exceptionList');
+      const empty = document.getElementById('exceptionEmpty');
+      if (empty) empty.style.display = 'none';
+      const id = 'exc_' + exc.id;
+      const div = document.createElement('div');
+      div.id = id;
+      div.dataset.excId = exc.id;
+      div.style.cssText = 'display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:8px;background:#f8fafc;border-radius:8px;';
+      div.innerHTML = `
+        <input type="date" value="${exc.date || ''}" style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;">
+        <select style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;">
+          <option value="blocked" ${exc.is_blocked ? 'selected' : ''}>🚫 Unavailable</option>
+          <option value="available" ${!exc.is_blocked ? 'selected' : ''}>✅ Available</option>
+        </select>
+        <div style="display:flex;gap:4px;">
+          <input type="time" value="${exc.start_time?.slice(0,5) || ''}" style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;width:90px;">
+          <input type="time" value="${exc.end_time?.slice(0,5) || ''}" style="padding:6px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;width:90px;">
+        </div>
+        <button onclick="document.getElementById('${id}').remove();checkExceptionEmpty();" style="background:#fee2e2;border:none;color:#dc2626;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;">✕</button>`;
+      list.appendChild(div);
+    });
+
+  } catch(e) {
+    console.warn('Schedule tab error:', e.message);
+  }
+}
+
+async function saveAvailability() {
+  if (!currentWorker?.id) return;
+  const btn = document.getElementById('btnSaveAvail');
+  const alertEl = document.getElementById('availAlert');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  alertEl.textContent = '';
+
+  try {
+    const startTime = document.getElementById('availStartTime').value;
+    const endTime = document.getElementById('availEndTime').value;
+    const effectiveFrom = document.getElementById('availEffectiveFrom').value;
+
+    if (selectedDays.size === 0) {
+      alertEl.textContent = 'Select at least one day.';
+      alertEl.style.color = '#dc2626';
+      return;
+    }
+    if (startTime >= endTime) {
+      alertEl.textContent = 'End time must be after start time.';
+      alertEl.style.color = '#dc2626';
+      return;
+    }
+
+    // regular 패턴 upsert
+    const { error: regErr } = await sb.from('worker_availability').upsert({
+      worker_id: currentWorker.id,
+      type: 'regular',
+      day_of_week: [...selectedDays],
+      start_time: startTime,
+      end_time: endTime,
+      effective_from: effectiveFrom || null,
+      effective_until: null,
+      is_blocked: false,
+    }, { onConflict: 'worker_id,type' });
+
+    if (regErr) throw regErr;
+
+    // exceptions upsert
+    const excRows = Array.from(document.getElementById('exceptionList').querySelectorAll('[id^="exc_"]'))
+      .filter(div => div.querySelector('input[type=date]')?.value)
+      .map(div => {
+        const inputs = div.querySelectorAll('input');
+        const sel = div.querySelector('select');
+        const isBlocked = sel?.value === 'blocked';
+        return {
+          worker_id: currentWorker.id,
+          type: 'exception',
+          date: inputs[0]?.value,
+          is_blocked: isBlocked,
+          start_time: isBlocked ? null : (inputs[1]?.value || startTime),
+          end_time: isBlocked ? null : (inputs[2]?.value || endTime),
+          day_of_week: null,
+          effective_from: null,
+          effective_until: null,
+        };
+      });
+
+    // 기존 exceptions 삭제 후 재insert
+    await sb.from('worker_availability')
+      .delete()
+      .eq('worker_id', currentWorker.id)
+      .eq('type', 'exception');
+
+    if (excRows.length > 0) {
+      const { error: excErr } = await sb.from('worker_availability').insert(excRows);
+      if (excErr) throw excErr;
+    }
+
+    alertEl.textContent = '✓ Availability saved';
+    alertEl.style.color = '#059669';
+    showToast('Availability saved');
+
+  } catch(e) {
+    alertEl.textContent = e.message || 'Failed to save';
+    alertEl.style.color = '#dc2626';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function copyIcsUrl() {
+  if (!currentWorker?.id) return;
+  // ics token = worker_id (나중에 별도 토큰으로 교체 가능)
+  const url = `${window.location.origin}/api/ics/worker-${currentWorker.id}.ics`;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('Calendar URL copied!');
+  } catch(e) {
+    showToast(url); // fallback: URL 토스트로 표시
+  }
+}
+
 
 async function confirmStartJob() {
   if (beforePhotos.length < 1) return;

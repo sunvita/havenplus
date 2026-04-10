@@ -3532,6 +3532,7 @@ async function openSchedEditModal(schedId) {
 
   // Load workers with distance sorting
   await loadWorkerSchedulesForDate(sched.planned_date);
+  await fetchWorkerAvailabilityForDate(sched.planned_date); // availability 캐시 로드 (DB 준비 전까지 graceful)
   renderWorkerCheckboxList(prop.area);
   updateChCalculation();
 
@@ -3586,6 +3587,71 @@ async function loadWorkerSchedulesForDate(date) {
   }
 }
 
+// worker_availability 체크 (DB 미생성 시 graceful fallback)
+async function fetchWorkerAvailabilityForDate(date) {
+  if (!date) return;
+  try {
+    const { data, error } = await sb
+      .from('worker_availability')
+      .select('worker_id, type, day_of_week, start_time, end_time, date, is_blocked, effective_from, effective_until')
+      .in('type', ['regular', 'exception']);
+    if (error) {
+      // 테이블 미생성 시 조용히 처리 — 기존 배정 UI 그대로
+      console.warn('worker_availability not ready:', error.message);
+      workerAvailabilityCache = {};
+      return;
+    }
+    // worker_id별 그룹화
+    workerAvailabilityCache = {};
+    (data || []).forEach(row => {
+      if (!workerAvailabilityCache[row.worker_id]) workerAvailabilityCache[row.worker_id] = [];
+      workerAvailabilityCache[row.worker_id].push(row);
+    });
+  } catch(e) {
+    console.warn('fetchWorkerAvailability error:', e.message);
+    workerAvailabilityCache = {};
+  }
+}
+
+function getWorkerAvailabilityStatus(workerId, date, startTime, endTime) {
+  const rows = workerAvailabilityCache[workerId];
+  if (!rows || rows.length === 0) return { status: 'unknown', label: '⚪ Not set' };
+
+  const d = new Date(date);
+  const dayOfWeek = d.getDay(); // 0=Sun..6=Sat
+
+  // exception 우선 체크
+  const exception = rows.find(r => r.type === 'exception' && r.date === date);
+  if (exception) {
+    if (exception.is_blocked) return { status: 'blocked', label: '🔴 Unavailable' };
+    // available exception — 시간 범위 체크
+    if (startTime && endTime && exception.start_time && exception.end_time) {
+      if (startTime >= exception.start_time && endTime <= exception.end_time)
+        return { status: 'available', label: `✅ ${exception.start_time.slice(0,5)}~${exception.end_time.slice(0,5)}` };
+      return { status: 'outside', label: '🟠 Outside hours' };
+    }
+    return { status: 'available', label: '✅ Available' };
+  }
+
+  // regular 패턴 체크
+  const regular = rows.find(r =>
+    r.type === 'regular' &&
+    Array.isArray(r.day_of_week) &&
+    r.day_of_week.includes(dayOfWeek) &&
+    (!r.effective_from || r.effective_from <= date) &&
+    (!r.effective_until || r.effective_until >= date)
+  );
+  if (!regular) return { status: 'unavailable', label: '❌ Day off' };
+
+  // 시간 범위 체크
+  if (startTime && endTime && regular.start_time && regular.end_time) {
+    if (startTime >= regular.start_time && endTime <= regular.end_time)
+      return { status: 'available', label: `✅ ${regular.start_time.slice(0,5)}~${regular.end_time.slice(0,5)}` };
+    return { status: 'outside', label: '🟠 Outside hours' };
+  }
+  return { status: 'available', label: `✅ ${regular.start_time?.slice(0,5)}~${regular.end_time?.slice(0,5)}` };
+}
+
 function renderWorkerCheckboxList(propertyArea) {
   const container = document.getElementById('schedEditWorkerList');
   
@@ -3601,12 +3667,23 @@ function renderWorkerCheckboxList(propertyArea) {
     return distA - distB;
   });
   
+  // 날짜/시간 읽기 (availability 체크용)
+  const _date = document.getElementById('schedEditDate')?.value || '';
+  const _startTime = document.getElementById('schedEditTime')?.value || '';
+  const _duration = parseFloat(document.getElementById('schedEditDuration')?.value) || 2;
+  const _endTime = _startTime ? (() => {
+    const [h, m] = _startTime.split(':').map(Number);
+    const total = h * 60 + m + _duration * 60;
+    return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
+  })() : '';
+
   container.innerHTML = sortedWorkers.map(w => {
     const isSelected = selectedWorkerIds.includes(w.id);
     const distance = getAreaDistance(w.area, propertyArea);
     const distanceText = distance === 0 ? 'Same area' : `~${distance} min`;
     const conflict = checkWorkerConflictStatus(w.id);
-    
+
+    // 기존 conflict 로직 유지
     let statusClass = 'available';
     let statusText = '✓ Available';
     if (conflict.type === 'overlap') {
@@ -3616,9 +3693,25 @@ function renderWorkerCheckboxList(propertyArea) {
       statusClass = 'warning';
       statusText = '⚠ Tight';
     }
-    
+
+    // availability 서브라벨 (conflict 표시 아래 추가)
+    let availLabel = '';
+    if (_date) {
+      const avail = getWorkerAvailabilityStatus(w.id, _date, _startTime, _endTime);
+      if (avail.status === 'blocked') {
+        availLabel = `<div style="font-size:10px;color:#dc2626;margin-top:2px;">${avail.label}</div>`;
+      } else if (avail.status === 'outside') {
+        availLabel = `<div style="font-size:10px;color:#d97706;margin-top:2px;">${avail.label}</div>`;
+      } else if (avail.status === 'available') {
+        availLabel = `<div style="font-size:10px;color:#059669;margin-top:2px;">${avail.label}</div>`;
+      } else if (avail.status === 'unavailable') {
+        availLabel = `<div style="font-size:10px;color:#dc2626;margin-top:2px;">${avail.label}</div>`;
+      }
+      // unknown (미등록)은 서브라벨 없음
+    }
+
     const itemClass = isSelected ? (conflict.type === 'overlap' ? 'selected conflict' : conflict.type === 'tight' ? 'selected warning' : 'selected') : '';
-    
+
     return `<label class="worker-checkbox-item ${itemClass}" data-worker-id="${w.id}">
       <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleWorkerSelection('${w.id}')">
       <div class="worker-info">
@@ -3626,7 +3719,10 @@ function renderWorkerCheckboxList(propertyArea) {
         <div class="worker-meta">${w.area ? getAreaName(w.area) : 'No area'}</div>
       </div>
       <div class="worker-distance">${distanceText}</div>
-      <div class="worker-status ${statusClass}">${statusText}</div>
+      <div>
+        <div class="worker-status ${statusClass}">${statusText}</div>
+        ${availLabel}
+      </div>
     </label>`;
   }).join('');
 }
@@ -4274,6 +4370,7 @@ async function saveJobEdit() {
 
 /* ══ Admin: Workers ═════════════════════════════════════════ */
 let allWorkersData = [];
+let workerAvailabilityCache = {}; // { workerId: [availability rows] } — DB 준비 전까지 빈 객체
 
 async function loadWorkers() {
   if (!isAdmin) return;
