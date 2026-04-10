@@ -905,18 +905,30 @@ property별 고유 share token 생성 (DB 저장)
 장점: 가장 단순, 계정 불필요
 단점: 링크 유출 시 누구나 접근
 
-### 추천: 방안 A (Magic Link + tokenMode)
-- Supabase Auth 기반 단기 JWT → 검증 신뢰성 높음
-- 현재 previewMode 구조 확장으로 구현 가능
-- 만료(24~72h) 설정으로 보안 관리
+### 확정: 방안 B (초대 → 가입 → 영구 인증)
+- 초대 토큰은 가입/연결 1회만 사용 (만료 없음)
+- 이후 접근은 Supabase Auth 로그인 기반 → 영구 인증
+- property 접근 권한 DB 저장 (account-based)
+- 현재 어드민 preview 모드와 완전 분리된 별도 플로우
+
+**흐름:**
+```
+PM → 초대 이메일 (Resend)
+→ 링크: index.html?invite=TOKEN (1회용, 가입 유도)
+→ 신규 가입 or 기존 계정 로그인
+→ 가입 완료 시 해당 property 자동 연결 (DB 권한 부여)
+→ 이후 일반 로그인 → dashboard에서 해당 property 조회
+→ 조회 범위: PM이 초대한 property만 표시
+```
 
 ### 구현 필요 항목 (추후)
 1. PM 역할 (role: 'pm') 추가 — profiles 테이블
-2. pm_invitations 테이블 (token, property_id, email, expires_at, used_at)
-3. send-invitation Edge Function (Resend 이메일 발송)
-4. dashboard.html tokenMode 처리 (previewMode와 유사)
-5. property 접근 범위 제한 (해당 property만 표시)
-6. profile.html PM 섹션 — 초대 발송 UI
+2. pm_invitations 테이블 (token, property_id, invited_email, accepted_at, accepted_by)
+3. property_access 테이블 (user_id, property_id, role: 'owner'|'viewer')
+4. send-invitation Edge Function (Resend 이메일 발송)
+5. index.html: ?invite=TOKEN 처리 (가입/로그인 후 권한 연결)
+6. dashboard.html: property_access 기반 조회 범위 제한
+7. profile.html PM 섹션 — 초대 발송 UI
 
 ### 백로그 우선순위
 - 현재: 어드민 preview 완료 ✅
