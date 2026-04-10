@@ -807,3 +807,120 @@ if (typeof loadNotifications === 'function') {
 | aside를 `.page` 밖으로 이동 | 데스크탑 grid 구조 파괴 | ❌ 사용 금지 |
 | **`aside { position: fixed }` (1024px media)** | grid flow 자동 이탈, 충돌 없음 | ✅ 확정 방식 |
 
+
+---
+
+## 2026-04-10 세션 완료 작업 요약
+
+### Customers 테이블 개선 (profile.html)
+- profiles.email 컬럼 추가 (DB) + 기존 고객 수동 업데이트 완료
+- loadCustomers: profiles + subscriptions JOIN (user_id 기준)
+- 컬럼 구성: Name | Email | Plan (×N) | Status | Phone | Joined | View
+- Plan: 구독별 집계 (premium ×2 형태, badge 표시)
+- Status: active/suspended/cancelled badge
+- 이메일 검색 추가
+- View 버튼: dashboard.html?preview=USER_ID 새 탭 (어드민 계정 제외)
+
+### Customer Preview 모드 (dashboard.html)
+- `?preview=USER_ID` 파라미터로 어드민이 고객 대시보드 read-only 확인
+- 전역변수: `previewMode`, `viewUserId`
+- Init: isAdmin 체크 후에만 활성화, 아니면 무시
+- 읽기 쿼리: currentUser.id → viewUserId 교체 (role 체크는 currentUser.id 유지)
+- 쓰기 차단: assertNotPreview() — confirmStartSchedule, deleteProperty, saveProperty, submitShRequest, markRead, markAllRead
+- 보라색 배너: "👁 Previewing: 고객명 — Read Only" + [✕ Exit Preview] (탭 닫기)
+- 진입: profile.html Customers → [View] 버튼 → 새 탭
+
+### Job Overview CTA 카드 개선 (profile.html)
+- Pending Jobs + Unassigned 병합: 🔧 N Service / 🧹 N Cleaning (14일 이내)
+- Payment Issues + Pending Cancellation 병합 → Subscription Issues
+  💳 N Failed / ❌ N Cancelling
+- No Plan: active 구독 없는 property만 (suspended 제외)
+- CH Low Alert: 플랜별 임계값 (Essential/Smart ≤2h, Premium ≤4h)
+
+### Properties 테이블 개선 (profile.html)
+- Plan 컬럼 추가 (Address 다음)
+- Delete 버튼 추가 (active/suspended 구독 있으면 차단)
+- modal-overlay z-index: 200→500, padding-top: 84px (네비바 가림 수정)
+- Bathrooms: step=0.5, parseFloat (powder room 0.5 단위)
+
+### dashboard.html Bathrooms
+- spinValue() parseFloat + 반올림
+- propBathrooms +/- delta 1→0.5
+- 저장 parseInt→parseFloat
+
+### 계약서 v2.2
+- 3.3 SH Deduction Rules 영문/한글 수정
+- Job Request 제출 = 작업 승인 (사전 견적 승인 제거)
+- 최소 차감 0.5→1 SH (서면 합의 예외)
+- SH input step 0.5→0.25 (8개 필드)
+
+---
+
+## PM(Property Manager) 고객 초대 기능 — 설계 초안
+
+### 배경
+현재 preview 모드는 어드민 전용 (session 기반).
+향후 Haven Plus가 PM(부동산 관리자)에게 서비스를 제공할 경우,
+PM이 자신이 관리하는 property를 고객(임대인/소유주)이 조회할 수 있도록
+초대 링크를 발송하는 기능이 필요.
+
+### 핵심 요구사항
+- PM이 고객 이메일로 초대 발송
+- 이메일 링크 클릭 → 이메일 검증 → 해당 property 조회
+- 고객은 Haven Plus 계정 없어도 접근 가능 (또는 신규 가입)
+- 조회 범위: PM이 등록한 특정 property에 한정
+
+### 설계 방향
+
+**방안 A: Supabase Magic Link 활용**
+```
+PM → 초대 이메일 발송 (Resend)
+→ 링크: dashboard.html?token=JWT_TOKEN
+→ 토큰: property_id + email + expiry 서명
+→ 클릭 시 token 검증 → 해당 property 데이터만 표시
+→ 계정 없어도 접근 (tokenMode)
+```
+장점: 계정 불필요, 구현 단순
+단점: 토큰 만료 관리 필요, 링크 공유 위험
+
+**방안 B: 초대 → 가입 유도**
+```
+PM → 초대 이메일
+→ 링크: index.html?invite=TOKEN
+→ 신규 가입 또는 로그인
+→ 가입 완료 시 해당 property 자동 연결
+→ 일반 customer dashboard
+```
+장점: 완전한 계정 기반, 보안 강화
+단점: 가입 마찰
+
+**방안 C: 읽기 전용 공개 링크 (현재 preview 확장)**
+```
+property별 고유 share token 생성 (DB 저장)
+→ dashboard.html?share=SHARE_TOKEN
+→ token → property_id 조회
+→ 해당 property 정보만 read-only 표시
+→ 만료일/접근 횟수 제한 가능
+```
+장점: 가장 단순, 계정 불필요
+단점: 링크 유출 시 누구나 접근
+
+### 추천: 방안 A (Magic Link + tokenMode)
+- Supabase Auth 기반 단기 JWT → 검증 신뢰성 높음
+- 현재 previewMode 구조 확장으로 구현 가능
+- 만료(24~72h) 설정으로 보안 관리
+
+### 구현 필요 항목 (추후)
+1. PM 역할 (role: 'pm') 추가 — profiles 테이블
+2. pm_invitations 테이블 (token, property_id, email, expires_at, used_at)
+3. send-invitation Edge Function (Resend 이메일 발송)
+4. dashboard.html tokenMode 처리 (previewMode와 유사)
+5. property 접근 범위 제한 (해당 property만 표시)
+6. profile.html PM 섹션 — 초대 발송 UI
+
+### 백로그 우선순위
+- 현재: 어드민 preview 완료 ✅
+- 단기: PM 역할 설계 확정
+- 중기: 초대 이메일 플로우 구현
+- 장기: PM 전용 대시보드
+
