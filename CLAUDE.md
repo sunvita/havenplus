@@ -909,26 +909,75 @@ property별 고유 share token 생성 (DB 저장)
 - 초대 토큰은 가입/연결 1회만 사용 (만료 없음)
 - 이후 접근은 Supabase Auth 로그인 기반 → 영구 인증
 - property 접근 권한 DB 저장 (account-based)
-- 현재 어드민 preview 모드와 완전 분리된 별도 플로우
+- 현재 어드민 preview 모드와 완전 분리된 별도 플로우 (pmMode 플래그)
 
 **흐름:**
 ```
 PM → 초대 이메일 (Resend)
 → 링크: index.html?invite=TOKEN (1회용, 가입 유도)
 → 신규 가입 or 기존 계정 로그인
-→ 가입 완료 시 해당 property 자동 연결 (DB 권한 부여)
-→ 이후 일반 로그인 → dashboard에서 해당 property 조회
-→ 조회 범위: PM이 초대한 property만 표시
+→ 가입 완료 시 property_access 테이블에 권한 자동 부여
+→ 이후 일반 로그인 → pmMode로 dashboard 접근
+→ 조회 범위: PM이 초대한 property만 (property_id 기준 조회)
+```
+
+### 로직 충돌 분석 (검토 완료)
+
+현재 구조: 모든 데이터 user_id = 고객 본인
+PM 모델: properties/subscriptions/sh_balance.user_id = PM
+
+| 테이블 | 현재 | PM 모델 | 충돌 |
+|--------|------|---------|------|
+| properties | 고객 ID | PM ID | ❌ |
+| subscriptions | 고객 ID | PM ID | ❌ |
+| sh_balance | 고객 ID | PM ID | ❌ |
+| cleaning_schedule | — | property_id 기준 | ✅ |
+| service_requests | 고객 ID | 고객 or PM? | 결정 필요 |
+
+**해결: property_access 기반 별도 조회 레이어**
+```
+고객 로그인
+→ property_access WHERE user_id = 고객 ID → property_id 목록 확보
+→ property_id 기준으로 subscriptions, cleaning_schedule 등 조회
+→ user_id 기준 쿼리 아님 — 기존 로직과 완전 분리
+```
+
+**기존 고객 플로우 영향 없음:**
+- property_access는 신규 테이블 → 기존 로직 변경 없음
+- pmMode 플래그로 완전히 분리된 코드 경로
+
+### DB 스키마 (추후 구현 시)
+```sql
+CREATE TABLE property_access (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid REFERENCES properties(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES auth.users(id),  -- 접근 허용된 고객
+  role text DEFAULT 'viewer',              -- 'viewer' | 'owner'
+  invited_by uuid REFERENCES auth.users(id), -- PM user_id
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE pm_invitations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  token text UNIQUE NOT NULL,
+  property_id uuid REFERENCES properties(id),
+  invited_email text NOT NULL,
+  invited_by uuid REFERENCES auth.users(id),
+  accepted_at timestamptz,
+  accepted_by uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now()
+);
 ```
 
 ### 구현 필요 항목 (추후)
 1. PM 역할 (role: 'pm') 추가 — profiles 테이블
-2. pm_invitations 테이블 (token, property_id, invited_email, accepted_at, accepted_by)
-3. property_access 테이블 (user_id, property_id, role: 'owner'|'viewer')
+2. pm_invitations 테이블 생성
+3. property_access 테이블 생성
 4. send-invitation Edge Function (Resend 이메일 발송)
-5. index.html: ?invite=TOKEN 처리 (가입/로그인 후 권한 연결)
-6. dashboard.html: property_access 기반 조회 범위 제한
+5. index.html: ?invite=TOKEN 처리 (가입/로그인 후 property_access 자동 부여)
+6. dashboard.html: pmMode 플래그 + property_id 기반 조회 레이어
 7. profile.html PM 섹션 — 초대 발송 UI
+8. **결정 필요:** PM 초대 고객의 service_requests 직접 생성 허용 여부
 
 ### 백로그 우선순위
 - 현재: 어드민 preview 완료 ✅
