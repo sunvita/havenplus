@@ -1299,7 +1299,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Language</th><th>Role</th><th>Joined</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Phone</th><th>Joined</th><th>View</th></tr></thead>
             <tbody id="customersBody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -5273,37 +5273,70 @@ let allCustomersData = [];
 async function loadCustomers() {
   if (!isAdmin) return;
   const body = document.getElementById('customersBody');
-  body.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
+  body.innerHTML = '<tr><td colspan="8" class="empty-state">Loading…</td></tr>';
 
-  const { data } = await sb.from('profiles')
-    .select('id, full_name, phone, preferred_language, role, created_at')
-    .order('created_at', { ascending: false }).limit(200);
-    
-  if (!data?.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No customers found.</td></tr>'; return; }
+  const [profilesRes, subsRes] = await Promise.all([
+    sb.from('profiles')
+      .select('id, full_name, email, phone, preferred_language, role, created_at')
+      .order('created_at', { ascending: false }).limit(200),
+    sb.from('subscriptions')
+      .select('user_id, plan_type, status')
+      .in('status', ['active', 'suspended', 'cancelled'])
+  ]);
 
-  // Get emails from auth (we store email in profiles or fetch via user lookup)
-  // Since we can't directly query auth.users, we rely on profiles data
-  // The email might need to be added to profiles table if not there
-  
-  allCustomersData = data;
+  const profiles = profilesRes.data || [];
+  if (!profiles.length) { body.innerHTML = '<tr><td colspan="8" class="empty-state">No customers found.</td></tr>'; return; }
+
+  // 구독 정보 user_id별 집계
+  const subsByUser = {};
+  (subsRes.data || []).forEach(s => {
+    if (!subsByUser[s.user_id]) subsByUser[s.user_id] = [];
+    subsByUser[s.user_id].push(s);
+  });
+
+  allCustomersData = profiles.map(p => ({ ...p, subs: subsByUser[p.id] || [] }));
   renderCustomers(allCustomersData);
 }
 
 function renderCustomers(list) {
   const body = document.getElementById('customersBody');
-  if (!list.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No results.</td></tr>'; return; }
-  
+  if (!list.length) { body.innerHTML = '<tr><td colspan="8" class="empty-state">No results.</td></tr>'; return; }
+
   body.innerHTML = list.map(c => {
     const joined = c.created_at ? new Date(c.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
-    const roleBadge = c.role === 'admin' ? '<span class="admin-badge">Admin</span>' : '';
-    const lang = c.preferred_language === 'ko' ? '한국어' : 'English';
+    const isAdmin = c.role === 'admin';
+
+    // Plan + Status 집계
+    const activeSubs = c.subs.filter(s => s.status === 'active');
+    const suspendedSubs = c.subs.filter(s => s.status === 'suspended');
+    let planCell = '—';
+    if (c.subs.length > 0) {
+      const planGroups = {};
+      c.subs.filter(s => s.status !== 'cancelled').forEach(s => {
+        planGroups[s.plan_type] = (planGroups[s.plan_type] || 0) + 1;
+      });
+      planCell = Object.entries(planGroups)
+        .map(([plan, cnt]) => `<span class="badge badge-${plan}" style="text-transform:capitalize;">${plan}${cnt > 1 ? ` ×${cnt}` : ''}</span>`)
+        .join(' ') || '—';
+    }
+
+    let statusCell = '—';
+    if (activeSubs.length > 0) statusCell = '<span class="badge badge-active">active</span>';
+    else if (suspendedSubs.length > 0) statusCell = '<span class="badge badge-inactive">suspended</span>';
+    else if (c.subs.length > 0) statusCell = '<span class="badge" style="background:#f3f4f6;color:#6b7280;">cancelled</span>';
+
+    const viewBtn = !isAdmin
+      ? `<button class="btn-action-sm" onclick="window.open('dashboard.html?preview=${c.id}','_blank')">View</button>`
+      : '—';
+
     return `<tr>
       <td style="font-weight:600;">${c.full_name || '—'}</td>
-      <td style="color:var(--text-light);">—</td>
+      <td style="color:var(--text-light);font-size:12px;">${c.email || '—'}</td>
+      <td>${planCell}</td>
+      <td>${statusCell}</td>
       <td>${c.phone || '—'}</td>
-      <td>${lang}</td>
-      <td>${roleBadge || 'Customer'}</td>
       <td style="color:var(--text-light);">${joined}</td>
+      <td class="action-cell">${viewBtn}</td>
     </tr>`;
   }).join('');
 }
@@ -5313,7 +5346,8 @@ function filterCustomers() {
   const filtered = allCustomersData.filter(c => {
     const name = (c.full_name || '').toLowerCase();
     const phone = (c.phone || '').toLowerCase();
-    return !q || name.includes(q) || phone.includes(q);
+    const email = (c.email || '').toLowerCase();
+    return !q || name.includes(q) || phone.includes(q) || email.includes(q);
   });
   renderCustomers(filtered);
 }
